@@ -74,17 +74,21 @@ same way in every shell. In shell **e**, e₁ = 20 and e₂ = 60. In shell **f**
 f₁ = **120** and f₂ = **12** — the bigger set has the smaller subscript. In shell
 **g**, g₁ = 30 and g₂ = 60. If the program lists a layer's orbits by size, its
 "first" orbit in layer 5 is Du Val's **f₂**, not **f₁**. Independent
-confirmations of these assignments: Inchbald says **g₁** is "specifically, 30
-bipyramids" and that **f₂** is twelve disconnected trapezohedra; Wheeler's own
-name for the **f₂** stellation is a discrete twelve-pointed group and for the
-**De₁** stellation is a twenty-pointed figure (so e₁ = 20); and the compound of
+confirmations of these assignments: Inchbald describes **g₁** as "a collection of
+thirty bipyramids" and **f₂** as "twelve quite disconnected trapezohedra floating
+in space"; in Wikipedia's table Wheeler's descriptive names are "Discrete
+twelve-pointed, crown-rimmed group" for **f₂** (Crennell 16) and "Twenty-pointed,
+six-edged" for **De₁** (Crennell 21), which pins e₁ = 20; and the compound of
 ten tetrahedra, which needs all 120 shell-**f** cells, is written **Ef₁**.
 
 **Capital-letter shorthand.** If a stellation contains *every* cell out to and
 including some shell, it is named after that shell in capitals. So
 **A** = a; **B** = a+b; **C** = a+b+c; **D** = through d; **E** = through e;
-**F** = through f; **G** = through g; **H** = everything. Coxeter calls these
-eight the **mainline** stellations. Mixed names concatenate: **Ef₁g₁** means
+**F** = through f; **G** = through g; **H** = everything. These eight are
+commonly called the **mainline** stellations (the term is used in Wikipedia's
+article without attribution). **UNCERTAIN** whether "mainline" is Coxeter's or
+Du Val's own word — I found no source that attributes it to either of them, so do
+not put it in Coxeter's mouth in the tutorial. Mixed names concatenate: **Ef₁g₁** means
 "everything through shell e, plus the f₁ cells, plus the g₁ cells".
 
 **Chirality notation.** Because **f₁** is an enantiomorphic (mirror-image) pair of
@@ -96,22 +100,26 @@ is taken. This is the single most important notational fact for our tutorial.
 
 ## 2. Miller's rules (what makes the count 59)
 
-J. C. P. Miller — a colleague of Coxeter and Petrie who did not otherwise write
-the book — proposed five criteria for a "properly significant and distinct"
-stellation. Paraphrased:
+J. C. P. Miller — described by Wikipedia as a close colleague of Coxeter and
+Petrie who did not contribute to the book directly — proposed five criteria for a
+"properly significant and distinct" stellation. Paraphrased (the wording below is
+mine; see §9 for the source text):
 
 1. **(i)** All faces lie in the icosahedron's twenty face planes.
 2. **(ii)** Every plane carries the same figure, though that figure may be in
    several disconnected pieces.
-3. **(iii)** The figure in each plane has three-fold symmetry, with or without
-   reflection. (i)–(iii) together force icosahedral symmetry on the whole solid.
+3. **(iii)** The figure in each plane is symmetric under a three-fold rotation
+   (reflection optional). (i)–(iii) together force icosahedral symmetry on the
+   whole solid.
 4. **(iv)** Every part of every face must be *accessible* from outside — no
    sealed internal cavities. This stops two stellations from looking identical
    from the outside.
 5. **(v)** Reject anything that splits into two sets each of which already has the
-   full symmetry — i.e. no disconnected compounds of simpler stellations. There
-   is one stated exception: an enantiomorphic pair with no part in common is
-   allowed, and the book says this happens in exactly one case.
+   full symmetry — i.e. no disconnected compounds of simpler stellations. One
+   exception is stated: a compound of two enantiomorphous solids with no common
+   part is allowed. **UNCERTAIN:** the rule as quoted does not say how many
+   figures actually invoke this exception; the "exactly one case" reading is mine,
+   not the book's (see §7).
 
 Applying them gives 58 stellations plus the icosahedron itself = **59**. Of the
 59, **32 are reflexible** (mirror-symmetric) and **27 are chiral**, listed only in
@@ -120,18 +128,24 @@ number of non-empty cell selections is 2¹² − 1 = **4095** (Inchbald 2002) �
 Miller's rules throw away the overwhelming majority.
 
 Numbering 1–59 was **not** in the 1938 or 1982 editions. Kate and David Crennell
-added it for Tarquin's 1999 third edition, following the order the figures appear
-in the plates. Everyone (Wikipedia, George Hart, MathWorld) now cites the Crennell
-numbers.
+added it for Tarquin's 1999 third edition. The ordering is *not* simply the plate
+order: indices 1–32 are the reflexible forms and 33–59 the chiral ones, with only
+the right-handed member of each chiral pair listed. Everyone (Wikipedia, George
+Hart, MathWorld) now cites the Crennell numbers.
 
 **Fully supported** stellations are those with no "overhang" — every visible part
 of every face is seen from the same side, which makes them the pleasant ones to
 build in card. There are **18**: 16 reflexible and 2 chiral (Robert Webb's *Stella*
-documentation, via MathWorld). I re-derived the list from the face-region data in
-Wikipedia's table and got exactly 18: the eight mainline forms A–H, plus
-De₁, Ef₁ (ten tetrahedra), Fg₁, Ef₁g₁ (excavated dodecahedron), De₂, Ef₂, Fg₂,
-De₂f₂, and — the only two chiral ones — **Ef₁ (compound of five tetrahedra)** and
-**Ef₁f₂**.
+documentation, via MathWorld — MathWorld's exact words are "18 of the 59
+stellations are fully supported. Of these, 16 are reflexible and 2 are chiral").
+The *total* 18/16/2 is sourced; the membership list below is **not**.
+**UNCERTAIN:** I re-derived a list from the face-region data in Wikipedia's table
+and got 18 — the eight mainline forms A–H, plus De₁, Ef₁ (ten tetrahedra), Fg₁,
+Ef₁g₁ (excavated dodecahedron), De₂, Ef₂, Fg₂, De₂f₂, and, as the two chiral
+ones, **Ef₁ (compound of five tetrahedra)** and **Ef₁f₂** — but I found no
+published list to check it against, and the count matching 18 is weak evidence
+that each individual entry is right. Verify against *Stella* before publishing
+any of these names.
 
 ---
 
@@ -156,9 +170,12 @@ from the literature.
 * **Dual:** the small ditrigonal icosidodecahedron (a uniform polyhedron), which
   makes the small triambic icosahedron a **uniform dual**.
 * **Who/when:** the *shape* is very old — a non-convex triakis icosahedron was
-  drawn by Leonardo da Vinci for Pacioli's *De divina proportione* (1509) as the
-  *icosaedron elevatum*, though that version has a different pyramid height (see
-  §4). Brückner photographed it in *Vielecke und Vielflache* (1900, Taf. VIII
+  drawn by Leonardo da Vinci for Pacioli's *Divina proportione* (written 1498,
+  printed 1509) as the *icosahedron elevatum*, though that version has a different
+  pyramid height (see §4). Wikipedia's *Triakis icosahedron* article confirms the
+  attribution: the icosahedron elevatum was "first depicted in a non-convex form
+  with equilateral triangle faces by Leonardo da Vinci in Luca Pacioli's *Divina
+  proportione*". Brückner photographed it in *Vielecke und Vielflache* (1900, Taf. VIII
   Fig. 2). Wheeler listed it in 1924 ("hexagonal", his no. 2).
 * **Outer form:** 32 outer vertices — the icosahedron's 12, plus 20 pyramid
   apexes at radius 2.028 (core circumradius 1.902), so the spikes are shallow.
@@ -204,9 +221,9 @@ from the literature.
   6 left-handed. **Brückner** 1900, Taf. IX Fig. 11.
 * **Who/when:** Hess 1876 per Wikipedia; Cauchy 1812/13 per Inchbald. Same
   disagreement as above.
-* **Oddity worth mentioning in the tutorial:** its dual is its own *enantiomorph*.
-  Dualising turns right-twisted faces into left-twisted vertices, so the reciprocal
-  figure is the other hand. Very few polyhedra behave like that.
+* **Oddity worth mentioning in the tutorial:** reciprocating it returns the
+  opposite hand rather than the same figure, so the compound's dual is its own
+  mirror image. Wikipedia calls this behaviour extremely rare among polyhedra.
 
 ### 3.4 Compound of ten tetrahedra
 
@@ -232,8 +249,11 @@ from the literature.
 
 * **Du Val symbol:** **G** = every cell out to and including shell g.
   **413 cells** (473 − the 60 cells of shell h).
-* **Crennell no.** 7 of 59. **Wenninger** 41 (also "16th of 17" in Wenninger's own
-  numbering of stellated icosahedra). Uniform polyhedron U53.
+* **Crennell no.** 7 of 59. **Wenninger** 41. (Wenninger's seventeen icosahedron
+  stellations run W26–W42, so W41 is the sixteenth of them — that is my arithmetic
+  from his numbering, consistent with W29 = "fourth stellation", W34 = "ninth" and
+  W37 = "twelfth"; Wenninger himself labels W41 simply *great icosahedron*.)
+  Uniform polyhedron U53.
 * **Elements:** Schläfli symbol {3, 5/2}; **20 triangular faces, 30 edges,
   12 vertices**, density 7. Its 12 vertices sit on the 5-fold axes; I measured
   them at φ³ ≈ 4.236 times the core icosahedron's circumradius, from which the
@@ -264,10 +284,13 @@ from the literature.
   and **self-dual**. It is also a faceting of the dodecahedron, and is one of ten
   abstract regular polyhedra of index two with vertices in a single orbit
   (Cutler & Schulte, 2010).
-* **Shape:** a dodecahedron with a concave pentagonal pyramid dug into each face.
-  All 20 vertices and 30 of its 60 edges belong to the dodecahedral hull; the other
-  30 edges are longer and belong to a great stellated dodecahedron, each containing
-  one edge of the icosahedral core. That description is a neat cross-check on the
+* **Shape:** picture a dodecahedron whose twelve faces have each been replaced by
+  a pentagonal pyramid pointing inwards. Its edges come in two lengths: half of the
+  60 are ordinary dodecahedron edges (and its 20 vertices are the dodecahedron's),
+  while the remaining 30 are the longer edges of a great stellated dodecahedron.
+  *(Wikipedia states the vertex/edge split; the extra observation that each long
+  edge contains one edge of the icosahedral core is my own computation.)*
+  That description is a neat cross-check on the
   cell content: **g₁** is exactly 30 cells (triangular bipyramids) reaching the
   dodecahedron's vertex radius, i.e. one per dodecahedron edge.
 * **Who/when:** Brückner 1900 (Taf. VIII Fig. 26); Wheeler 9, who called it
@@ -424,23 +447,31 @@ them is excluded by Miller's rules. The interesting exclusions are elsewhere:
   stellation of the rhombic triacontahedron). It is the *dual* of the compound of
   five octahedra.
 * **Df₂** — D plus the twelve **f₂** trapezohedra. N. J. Bridge found it in 1974
-  while reciprocating "tidy" facetings of the dodecahedron ("Facetting the
-  dodecahedron", *Acta Crystallographica* **A30**, 1974, pp. 548–552). Miller's
-  rule (v) reads it as a compound of the two separate stellations D and f₂ and
-  throws it out, but Inchbald argues it is a single polyhedron whose faces are
-  clean dodecagons — a well-known counter-example to the rules. Inchbald's history
-  page calls it "a uniform dual"; his longer *Tidy Dodecahedra and Icosahedra*
-  essay presents it as the reciprocal of a facet-pair figure that is not uniform.
-  **UNCERTAIN — the two pages of the same author disagree.**
+  while reciprocating "tidy" facetings of the dodecahedron ("Faceting the
+  dodecahedron", *Acta Crystallographica* **A30**, 1974, pp. 548–552 — note the
+  journal spells it *Faceting*; Inchbald's bibliography spells it *Facetting*).
+  Miller's rule (v) reads it as a compound of the two separate stellations D and
+  f₂ and throws it out, but Inchbald treats it as a single polyhedron: in *Tidy
+  Dodecahedra and Icosahedra* he writes that "each face is a tidy dodecagon".
+  Inchbald's history page calls it "a uniform dual but nevertheless not present
+  among the 59"; the *Tidy* essay does not repeat that description, deriving the
+  figure instead by reciprocating a vertex figure. **UNCERTAIN — I could not
+  reconcile the two pages; treat "uniform dual" as the history page's claim only.**
 * **De₁f₁f₂ and its enantiomorph** — Inchbald's two "lost icosahedra" (2002).
   Genuine single stellations with no cavities, excluded only because rule (v)
   divides them into De₁f₁ plus f₂, joined along edges. He also flags
   De₁f₁f₂g₁ and its mirror as similar cases.
-* **Non-Miller Flather models.** In 2005 Inchbald identified two card models in
-  the Cambridge pure-maths department, sitting alongside Flather's famous set of
-  59, that break Miller's rules but satisfy the looser rules of Hudson & Kingston
-  (*Mathematical Intelligencer* **10**, 1988, pp. 50–61). He tentatively attributes
-  them to Flather, made before he met Coxeter in 1932.
+* **Non-Miller Flather models.** Inchbald's *Some lost stellations of the
+  icosahedron* covers two figures, **Ce₂** and **De₁g₁**, that break Miller's
+  rules. Dates, corrected: he says he rediscovered the stellation on 1 January
+  2005, but "did not come across the Cambridge model until July 2006" — he and
+  Vince Matsko visited the Department of Pure Mathematics & Mathematical
+  Statistics on 7 July 2006. He attributes the models to Flather tentatively,
+  made "around 1930, before he met Coxeter" — the page gives no year for that
+  meeting, so **do not write "1932"**. **UNCERTAIN:** the page does not mention
+  Hudson & Kingston, so the claim that these models satisfy their looser rules
+  (*Mathematical Intelligencer* **10**, 1988, pp. 50–61 — citation itself
+  verified) is unsourced and should not be asserted.
 * **Wheeler's hollow forms.** Wheeler (1924) allowed hollow figures and sets of
   discrete pieces; Miller's rule (iv) removes those with sealed cavities. Note
   though that two of Wheeler's fully discrete figures *did* survive into the 59:
