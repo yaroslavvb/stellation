@@ -91,10 +91,14 @@ Then open <http://localhost:8731>.
 - See the **stellation diagram**: one face plane with every other face plane's trace
   drawn across it.
 - See the **solid** in WebGL, coloured by layer so the shell structure is readable.
-- Load and save `.stel` files in the original program's format, and export **STL**,
-  **OBJ**, **OFF**, diagram **SVG**, and **PNG**.
+- **Saves as JSON**, in the SymmHub preset shape — the same
+  `{name, appInfo:{appName, fileFormatRelease}, params:{…}}` envelope the other
+  SymmHub apps write, with `par-YY-MM-DD-HH-MM-SS-mmm` document names. The
+  original program's `.stel` files still open; one **Open…** button takes either.
+- Export **STL**, **OBJ**, **OFF**, diagram **SVG**, **PNG**, and `.stel` for the
+  Java program.
 - Light and dark themes, following the system by default.
-- Every state is in the URL: `#u27/Ih/I/{0,1,2}`.
+- Every state is in the URL, build depth included: `#u27/Ih/I/d12/{0,1,2}`.
 
 ### Choosing cells
 
@@ -120,6 +124,14 @@ On the solid, <kbd>shift</kbd> grows outward from the face you point at and
 <kbd>ctrl</kbd> carves away the cell just inside it; picking is done by ray-casting
 the pointer against the mesh, so it is exact.
 
+Clicking the same spot twice puts it back. That is not a plain toggle, because the
+surface moves: grow at a face and the cell you just added *becomes* the surface
+there, so the second click is pointing at a different face and would otherwise grow
+again forever. The tell is that the cell you last toggled is now on the other side
+of the face under the cursor — inside it if you grew, outside it if you carved —
+and when that holds the click is treated as the same click and reverted, undoing
+the exact set that changed rather than just the one cell.
+
 ### How it is organised
 
 | file | what it holds |
@@ -129,6 +141,7 @@ the pointer against the mesh, so it is exact.
 | `docs/js/render3d.js` | a small dependency-free WebGL2 renderer, with ray-cast picking |
 | `docs/js/diagram.js` | the interactive 2D stellation diagram |
 | `docs/js/cells.js` | the Cells table, a close port of the Java `Selection` canvas |
+| `docs/js/preset.js` | JSON documents in the SymmHub shape, and reading `.stel` |
 | `docs/js/app.js` | the UI |
 | `docs/data/symmetry.json` | all 85 symmetry groups, **dumped from the Java** rather than re-derived |
 | `docs/data/catalog.json` | the `PolyNames` catalog |

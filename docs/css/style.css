@@ -241,7 +241,19 @@ details.group[open] > summary { margin-bottom: 7px; }
 .ghost.icon { width: 30px; text-align: center; padding: 4px 0; }
 
 .filebtn { display: block; margin-top: 5px; text-align: center; }
+.filebtn.inline { margin-top: 0; }
 .filebtn input { display: none; }
+.buttons button.primary {
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  font-weight: 600;
+}
+.note code {
+  font: 11px var(--mono);
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--panel-2);
+}
 
 .field {
   display: flex; align-items: center; gap: 8px;

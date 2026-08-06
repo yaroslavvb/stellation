@@ -42,6 +42,9 @@ export class CellsPanel {
       if (!same(h, this.hover)) {
         this.hover = h;
         canvas.style.cursor = h ? 'pointer' : 'default';
+        // a real hover tooltip, as the Java window has: hold still and the
+        // details appear, so the boxes themselves can stay bare numbers
+        canvas.title = h ? this.describe(h) : '';
         this.draw();
         this.onHover?.(h);
       }

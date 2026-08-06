@@ -235,7 +235,7 @@ export class Renderer3D {
     };
 
     if (this.showEdges && this.lineCount) {
-      drawLines(this.lineVao, this.lineCount, [0.06, 0.05, 0.09, 0.85], 1);
+      drawLines(this.lineVao, this.lineCount, [0.05, 0.04, 0.07, 0.92], 2);
     }
     if (this.hlCount) {
       gl.disable(gl.DEPTH_TEST);

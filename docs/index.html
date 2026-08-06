@@ -97,39 +97,51 @@
         <span>stellation</span>
         <select id="stellSym"></select>
       </label>
-      <label class="field">
-        <span>depth <b id="depthLabel">12</b></span>
+      <label class="field" title="How many shells of cells to build outward from the core. Higher reaches further stellations; dense solids get slow past about 15.">
+        <span>build out to <b id="depthLabel">12</b> shells</span>
         <input id="depth" type="range" min="2" max="40" value="12">
       </label>
-      <label class="field">
+      <label class="field" title="Which face of the polyhedron the stellation diagram is drawn on. Solids with more than one kind of face have a different diagram for each.">
         <span>diagram face</span>
         <input id="planeIndex" type="number" min="0" value="0">
       </label>
       <p class="note">
         Cells are grouped into orbits of the first group, then split by the second —
         that split is what lets a chiral cell offer just one of its two hands.
-        Depth is how many half-spaces deep to carve.
       </p>
     </details>
 
     <details class="group">
       <summary><h2>View</h2></summary>
-      <label class="check"><input id="autoRotate" type="checkbox"> spin</label>
-      <label class="check"><input id="showEdges" type="checkbox" checked> edges</label>
-      <label class="check"><input id="showAllFacets" type="checkbox" checked> all diagram cells</label>
+      <label class="check"><input id="autoRotate" type="checkbox"> spin the solid</label>
+      <label class="check"><input id="showEdges" type="checkbox" checked> draw edges</label>
+      <label class="check" title="Tint the cells you have not chosen, so you can see what else is available on this plane">
+        <input id="showAllFacets" type="checkbox" checked> shade unchosen cells
+      </label>
     </details>
 
     <details class="group">
-      <summary><h2>Files &amp; export</h2></summary>
+      <summary><h2>Save &amp; export</h2></summary>
       <div class="row buttons">
-        <button id="exportStl">STL</button>
+        <button id="saveJson" class="primary" title="Save everything on screen as a JSON document">Save JSON</button>
+        <label class="filebtn inline" title="Opens our .json documents and the original program's .stel files">
+          Open…
+          <input id="loadDoc" type="file" accept=".json,.stel,.txt">
+        </label>
+      </div>
+      <p class="note">
+        Saves in the SymmHub preset shape. <code>.stel</code> files from the
+        original Java program still open.
+      </p>
+      <div class="row buttons">
+        <button id="exportStl" title="Mesh for 3D printing">STL</button>
         <button id="exportObj">OBJ</button>
         <button id="exportOff">OFF</button>
       </div>
       <div class="row buttons">
-        <button id="exportStel">.stel</button>
-        <button id="exportSvg">diagram SVG</button>
+        <button id="exportSvg" title="The diagram as vector art, for printing or cutting">diagram SVG</button>
         <button id="exportPng">view PNG</button>
+        <button id="exportStel" title="For the original Java program">.stel</button>
       </div>
       <div class="row buttons">
         <button class="sample" data-file="sample_01.stel">sample 1</button>
@@ -137,10 +149,6 @@
         <button class="sample" data-file="sample_03.stel">3</button>
         <button class="sample" data-file="sample_04.stel">4</button>
       </div>
-      <label class="filebtn">
-        open a .stel file…
-        <input id="loadStel" type="file" accept=".stel,.txt">
-      </label>
     </details>
 
   </aside>

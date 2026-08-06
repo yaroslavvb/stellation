@@ -7,6 +7,7 @@ import { Renderer3D } from './render3d.js';
 import { DiagramView } from './diagram.js';
 import { CellsPanel } from './cells.js';
 import { toOFF, toOBJ, toSTL, writeStel } from './core.js';
+import { writePreset, readDocument, newDocumentName } from './preset.js';
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
@@ -86,7 +87,7 @@ async function boot() {
   });
 
   cells = new CellsPanel($('#cells'), {
-    onChange: () => refresh(),
+    onChange: () => { last3D = null; refresh(); },
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
 
@@ -95,13 +96,14 @@ async function boot() {
   applyTheme(localStorage.getItem('theme') || 'auto');   // now that the views exist
 
   // handy from the console, and what the browser tests drive
-  window.stellation = { state, cells, diagram, renderer, call, select, refresh, applyToCell };
+  window.stellation = { state, cells, diagram, renderer, call, select, refresh, applyToCell, openDocument };
 
   const hash = decodeURIComponent(location.hash.slice(1));
-  const m = hash.match(/^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/(\{.*\}))?$/);
+  const m = hash.match(/^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/d(\d+))?(?:\/(\{.*\}))?$/);
   if (m && geometry[m[1]]) {
+    if (m[4]) { state.depth = Number(m[4]); $('#depth').value = state.depth; $('#depthLabel').textContent = state.depth; }
     await select(findItem(m[1]) || { file: m[1], name: m[1], symmetry: m[2] || 'Ih' },
-                 { polySym: m[2], stellSym: m[3], cells: m[4] });
+                 { polySym: m[2], stellSym: m[3], cells: m[5] });
   } else {
     await select(findItem('u27'));
   }
@@ -125,6 +127,7 @@ function findItem(file) {
  */
 function applyToCell(key, mod) {
   if (!key) return;
+  last3D = null;                       // any other edit invalidates the 3D undo
   const sel = state.selected;
   if (mod.shift) {
     for (const k of cells.supportKeys(key)) sel.add(k);
@@ -134,6 +137,15 @@ function applyToCell(key, mod) {
     sel.has(key) ? sel.delete(key) : sel.add(key);
   }
   refresh();
+}
+
+/** add or remove a set of keys, returning exactly what changed, so it can be undone */
+function applyChange(keys, add) {
+  const sel = state.selected, changed = new Set();
+  for (const k of keys) {
+    if (add ? !sel.has(k) : sel.has(k)) { add ? sel.add(k) : sel.delete(k); changed.add(k); }
+  }
+  return changed;
 }
 
 /** everything resting on `key`, transitively — mirror of CellsPanel.supportKeys */
@@ -154,16 +166,47 @@ function applyToFacet(facet, mod) {
   applyToCell(facet.ref.join('.'), mod);
 }
 
+/*
+ * Clicking the solid, and clicking it again to change your mind.
+ *
+ * The catch that makes this not a plain toggle: the surface moves. Grow at a
+ * face and the cell you just added becomes the new surface there, so a second
+ * click in the same spot is pointing at a *different* face and would happily
+ * grow again, forever.
+ *
+ * The tell is that the cell you last toggled is now on the other side of the
+ * face under the cursor — inside it if you grew, outside it if you carved. When
+ * that holds, the click is the same click, so undo it instead. We revert the
+ * exact set that changed, not just the one cell, because growing also pulls in
+ * whatever was needed to support it.
+ */
+let last3D = null;   // { key, added, changed:Set }
+
 function onPick3D(hit, mod) {
   const mesh = state.mesh;
   if (!mesh) return;
-  // shift grows outward from this face; ctrl carves the cell just inside it
-  const key = mod.shift ? mesh.faceOutside[hit.face] : mesh.faceInside[hit.face];
-  if (!key) {
-    setStatus(mod.shift ? 'nothing further out on that face — raise the depth' : 'no cell inside that face', false);
+  const inside = mesh.faceInside[hit.face];
+  const outside = mesh.faceOutside[hit.face];
+
+  if (last3D && last3D.changed.size &&
+      (last3D.added ? inside === last3D.key : outside === last3D.key)) {
+    applyChange(last3D.changed, !last3D.added);
+    setStatus(`undid ${last3D.added ? 'growing' : 'carving'} at ${last3D.key}`, false);
+    last3D = null;
+    refresh();
     return;
   }
-  applyToCell(key, mod);
+
+  if (mod.shift) {
+    if (!outside) { setStatus('nothing further out on that face — raise the build depth', false); return; }
+    last3D = { key: outside, added: true, changed: applyChange(cells.supportKeys(outside), true) };
+  } else if (mod.ctrl) {
+    if (!inside) { setStatus('no cell inside that face', false); return; }
+    last3D = { key: inside, added: false, changed: applyChange(dependentKeys(inside), false) };
+  } else {
+    return;
+  }
+  refresh();
 }
 
 function onHover3D(hit, mod) {
@@ -290,6 +333,7 @@ function syncSymmetrySelects() {
 async function build(cellsString) {
   if (state.building) return;
   state.building = true;
+  last3D = null;
   setStatus('building the plane arrangement…', true);
 
   const g = state.geometry[state.current.file];
@@ -341,7 +385,7 @@ async function refresh() {
   const { cells: str } = await call('formatCells', { selected });
   state.cellsString = str;
   $('#cellsString').value = str;
-  location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/${str}`;
+  location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/d${state.depth}/${str}`;
 }
 
 // ------------------------------------------------------------------ controls
@@ -366,15 +410,18 @@ function wireControls() {
   $('#planeIndex').onchange = (e) => { state.planeIndex = Number(e.target.value) || 0; refresh(); };
 
   $('#selectCore').onclick = async () => {
+    last3D = null;
     const { keys } = await call('layerKeys', { n: 1 });
     state.selected = new Set(keys); refresh();
   };
-  $('#selectNone').onclick = () => { state.selected.clear(); refresh(); };
+  $('#selectNone').onclick = () => { last3D = null; state.selected.clear(); refresh(); };
   $('#selectAll').onclick = async () => {
+    last3D = null;
     const { keys } = await call('layerKeys', { n: state.outline.length });
     state.selected = new Set(keys); refresh();
   };
   $('#growLayer').onclick = async () => {
+    last3D = null;
     let n = 0;
     state.outline.forEach((layer, l) => {
       if (layer.cells.some(c => c.subCells.some(s => state.selected.has(`${l}.${c.index}.${s.index}`)))) n = l + 1;
@@ -390,6 +437,7 @@ function wireControls() {
   $('#cellsString').onchange = async (e) => {
     try {
       const { selected } = await call('parseCells', { cells: e.target.value });
+      last3D = null;
       state.selected = new Set(selected);
       refresh();
     } catch (err) { setStatus('could not read that cell string: ' + err.message, false); }
@@ -398,6 +446,19 @@ function wireControls() {
   $('#exportOff').onclick = () => download(`${name()}.off`, toOFF(state.mesh));
   $('#exportObj').onclick = () => download(`${name()}.obj`, toOBJ(state.mesh));
   $('#exportStl').onclick = () => download(`${name()}.stl`, toSTL(state.mesh, name()));
+  $('#saveJson').onclick = () => {
+    const docName = newDocumentName();
+    download(`${docName}.json`, writePreset({
+      name: docName,
+      polyhedron: state.current.name, file: state.current.file,
+      polySymmetry: state.polySym, stellSymmetry: state.stellSym,
+      planeDepth: state.depth, cells: state.cellsString,
+      diagramFace: state.planeIndex,
+      showEdges: $('#showEdges').checked,
+      showAllFacets: $('#showAllFacets').checked,
+      spin: $('#autoRotate').checked,
+    }), 'application/json');
+  };
   $('#exportStel').onclick = () => download(`${name()}.stel`, writeStel({
     polyhedron: state.current.name, polySymmetry: state.polySym,
     stellSymmetry: state.stellSym, cells: state.cellsString,
@@ -410,15 +471,15 @@ function wireControls() {
     a.click();
   };
 
-  $('#loadStel').onchange = async (e) => {
+  $('#loadDoc').onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await loadStelText(await file.text());
+    await openDocument(await file.text(), file.name);
     e.target.value = '';
   };
 
   $$('.sample').forEach(b => {
-    b.onclick = async () => loadStelText(await fetch(`samples/${b.dataset.file}`).then(r => r.text()));
+    b.onclick = async () => openDocument(await fetch(`samples/${b.dataset.file}`).then(r => r.text()), b.dataset.file);
   });
 
   $('#help').onclick = () => $('#helpDialog').showModal();
@@ -489,17 +550,45 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
 
 const name = () => `${state.current.file}-${state.polySym}-${state.stellSym}`;
 
-async function loadStelText(text) {
-  const { parseStel } = await import('./core.js');
-  const spec = parseStel(text);
-  let item = null;
-  if (spec.polyhedron) {
+/** open either our JSON preset or an original .stel file */
+async function openDocument(text, filename = '') {
+  let doc;
+  try {
+    doc = readDocument(text);
+  } catch (err) {
+    setStatus(`could not read ${filename || 'that file'}: ${err.message}`, false);
+    return;
+  }
+
+  // JSON records the catalog file id; .stel only has the human name
+  let item = doc.file ? findItem(doc.file) : null;
+  if (!item && doc.polyhedron) {
     for (const cat of state.catalog)
       for (const it of cat.items)
-        if (it.name.toLowerCase() === spec.polyhedron.toLowerCase()) item = { ...it, category: cat.category };
+        if (it.name.toLowerCase() === doc.polyhedron.toLowerCase()) item = { ...it, category: cat.category };
   }
-  if (!item) { setStatus(`the file names "${spec.polyhedron}", which is not in the catalog`, false); return; }
-  await select(item, { polySym: spec.polySymmetry, stellSym: spec.stellSymmetry, cells: spec.cells });
+  if (!item) {
+    setStatus(`${filename || 'that file'} names "${doc.polyhedron}", which is not in the catalog`, false);
+    return;
+  }
+
+  if (doc.planeDepth) {
+    state.depth = doc.planeDepth;
+    $('#depth').value = state.depth;
+    $('#depthLabel').textContent = state.depth;
+  }
+  state.planeIndex = doc.diagramFace || 0;
+  $('#planeIndex').value = state.planeIndex;
+
+  if (doc.source === 'json') {
+    for (const [id, val] of [['#showEdges', doc.showEdges], ['#showAllFacets', doc.showAllFacets], ['#autoRotate', doc.spin]]) {
+      $(id).checked = !!val;
+      $(id).dispatchEvent(new Event('change'));
+    }
+  }
+
+  await select(item, { polySym: doc.polySymmetry, stellSym: doc.stellSymmetry, cells: doc.cells });
+  setStatus(`opened ${doc.name || filename} (${doc.source === 'json' ? 'JSON' : '.stel'})`, false);
 }
 
 function download(filename, text, mime = 'text/plain') {
