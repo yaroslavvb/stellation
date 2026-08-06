@@ -463,3 +463,19 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(2px); 
   .panel.right { max-height: none; }
   #stats { display: none; }
 }
+
+/* the key to the Cells bar colours */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+  font-size: 10.5px;
+  color: var(--dim);
+}
+.legend-label { letter-spacing: 0.04em; text-transform: uppercase; font-size: 9.5px; }
+.legend-item { display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); }
+.legend-item i { width: 11px; height: 3px; border-radius: 2px; display: inline-block; }
+.note a { color: var(--accent-2); text-decoration: none; }
+.note a:hover { text-decoration: underline; }

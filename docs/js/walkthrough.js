@@ -300,6 +300,19 @@ async function boot() {
   };
   applyTheme(localStorage.getItem('theme') || 'auto');
 
+  // the key to the bar colours, drawn from the real palette
+  const legendHost = $('#barLegend');
+  if (legendHost) {
+    const entries = figs.get('figLayers')?.cells?.legend() || [];
+    legendHost.innerHTML = entries.map(e =>
+      `<span class="legend-item"><i style="background:${e.color}"></i>${e.count} ${e.count === 1 ? 'piece' : 'pieces'}</span>`).join('');
+    const rare = entries[entries.length - 1];
+    const rareEl = $('#barRare');
+    if (rare && rareEl) {
+      rareEl.innerHTML = `<i class="swatch" style="background:${rare.color}"></i> the ${rare.count}-piece colour`;
+    }
+  }
+
   // the layer legend swatches
   $$('[data-layerswatch]').forEach(el => {
     const c = layerColor(Number(el.dataset.layerswatch)).map(v => Math.round(v * 255));

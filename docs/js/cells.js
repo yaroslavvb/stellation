@@ -18,10 +18,21 @@
  *   click layer number act on the whole layer
  */
 
-const FONT_H = 15;
-const Y_SPACE = 8, X_SPACE = 8;
-const Y_PAD = 3, X_PAD = 2;
-const BAR = 3;
+/* Geometry. The colour bar sits in its own lane at the foot of each box, with the
+   digit centred in the space above it — in the original they shared the same few
+   pixels and collided. */
+const BOX_W    = 27;   // a cell box
+const BOX_H    = 28;
+const BAR_H    = 3;    // the colour bar
+const BAR_INSET = 4;   // its margin from the box's left and right edges
+const BAR_LIFT = 4;    // how far its top sits above the box's bottom edge
+const GAP_X    = 3;    // between boxes
+const GAP_Y    = 5;    // between rows
+const LAYER_W  = 30;   // the layer-number column
+const PAD      = 8;    // around the whole table
+const GROUP_PAD = 4;   // inside a sub-cell group's container
+const FONT = (px, weight = 600) =>
+  `${weight} ${px}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 
 export class CellsPanel {
   constructor(canvas, { onChange, onHover } = {}) {
@@ -34,9 +45,11 @@ export class CellsPanel {
     this.selected = new Set();
     this.hit = [];            // hit rectangles in CSS pixels
     this.hover = null;
-    this.scroll = 0;
+    this.scroll = 0;     // vertical
+    this.scrollX = 0;    // horizontal — deep layers run wide
 
     canvas.addEventListener('pointermove', (e) => {
+      if (this._onDragMove && this._onDragMove(e)) return;
       const h = this.hitTest(e);
       const same = (a, b) => a === b || (a && b && a.key === b.key && a.kind === b.kind);
       if (!same(h, this.hover)) {
@@ -52,11 +65,43 @@ export class CellsPanel {
     canvas.addEventListener('pointerleave', () => {
       if (this.hover) { this.hover = null; this.draw(); this.onHover?.(null); }
     });
-    canvas.addEventListener('click', (e) => {
-      const h = this.hitTest(e);
-      if (!h) return;
-      this.apply(h, modifiersOf(e));
+    // Deep tables are wider and taller than the panel, so the canvas pans. A drag
+    // must not toggle whatever it started on, so a click counts only if the
+    // pointer barely moved.
+    let down = null, moved = 0;
+    const capture = (e, on) => {
+      try { on ? canvas.setPointerCapture?.(e.pointerId) : canvas.releasePointerCapture?.(e.pointerId); }
+      catch { /* nothing to capture */ }
+    };
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.button === 2) return;
+      down = { x: e.clientX, y: e.clientY, sx: this.scrollX, sy: this.scroll };
+      moved = 0;
+      capture(e, true);
     });
+    canvas.addEventListener('pointerup', (e) => {
+      if (!down) return;
+      const wasDrag = moved > 3;
+      down = null;
+      capture(e, false);
+      if (wasDrag) return;
+      const h = this.hitTest(e);
+      if (h) this.apply(h, modifiersOf(e));
+    });
+    canvas.addEventListener('pointercancel', () => { down = null; });
+    this._dragState = () => down;
+    this._onDragMove = (e) => {
+      if (!down) return false;
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      moved = Math.max(moved, Math.hypot(dx, dy));
+      if (moved <= 3) return true;
+      this.scrollX = down.sx - dx;
+      this.scroll = down.sy - dy;
+      this._clampScroll();
+      canvas.style.cursor = 'grabbing';
+      this.draw();
+      return true;
+    };
     // macOS turns ctrl-click into the secondary click, so the page is handed a
     // contextmenu event and never a ctrl-click. Take that event as "carve", the
     // same as a right-click, which is what a user reaching for ctrl meant.
@@ -66,10 +111,13 @@ export class CellsPanel {
       if (h) this.apply(h, { shift: e.shiftKey, ctrl: !e.shiftKey });
     });
     canvas.addEventListener('wheel', (e) => {
-      const max = Math.max(0, this.contentHeight - canvas.clientHeight);
-      if (max <= 0) return;
+      const overY = this.contentHeight - canvas.clientHeight;
+      const overX = this.contentWidth - canvas.clientWidth;
+      if (overY <= 0 && overX <= 0) return;
       e.preventDefault();
-      this.scroll = Math.min(max, Math.max(0, this.scroll + e.deltaY));
+      if (e.shiftKey) this.scrollX += e.deltaY;
+      else { this.scroll += e.deltaY; this.scrollX += e.deltaX; }
+      this._clampScroll();
       this.draw();
     }, { passive: false });
 
@@ -93,6 +141,12 @@ export class CellsPanel {
     this.fit();
   }
 
+  _clampScroll() {
+    const c = this.canvas;
+    this.scroll  = Math.min(Math.max(0, (this.contentHeight || 0) - c.clientHeight), Math.max(0, this.scroll));
+    this.scrollX = Math.min(Math.max(0, (this.contentWidth  || 0) - c.clientWidth),  Math.max(0, this.scrollX));
+  }
+
   /** shrink the frame to the table, up to a sensible ceiling, then scroll */
   fit() {
     const wrap = this.canvas.parentElement;
@@ -102,6 +156,9 @@ export class CellsPanel {
   }
 
   setSelected(selected) { this.selected = selected; this.draw(); }
+
+  /** what each bar colour means: one entry per distinct piece-count */
+  legend() { return this.palette?.entries ?? []; }
 
   // ---------------------------------------------------------------- selection
 
@@ -150,43 +207,43 @@ export class CellsPanel {
 
   // ---------------------------------------------------------------- layout
 
-  _metrics() {
-    const ctx = this.ctx;
-    ctx.font = `600 ${FONT_H}px ui-sans-serif, system-ui, sans-serif`;
-    const gridX = Math.ceil(ctx.measureText('W').width) + X_SPACE;
-    return { gridX, gridY: FONT_H + Y_SPACE };
-  }
-
   /** walk the table, calling back with the rect for every drawable box */
   _walk(cb) {
     if (!this.outline) return;
-    const { gridX, gridY } = this._metrics();
-    let y = 1 - this.scroll;
+    const rowH = BOX_H + GAP_Y;
+    let widest = 0;
+    let y = PAD - this.scroll;
+    const x0 = PAD - this.scrollX;
 
     for (const layer of this.outline) {
-      let x = 1;
-      cb({ kind: 'layer', layer, x, y, w: 2 * gridX - 3, h: gridY });
-      x += 2 * gridX;
+      let x = x0;
+      cb({ kind: 'layer', layer, x, y, w: LAYER_W, h: BOX_H });
+      x += LAYER_W + GAP_X * 2;
 
       for (const cell of layer.cells) {
         const n = cell.subCells.length;
         if (n > 1) {
-          cb({ kind: 'header', layer, cell, x, y, w: gridX, h: gridY });
-          let sx = x + gridX;
+          // header + its sub-cells, wrapped in one container
+          const inner = (n + 1) * BOX_W + n * GAP_X;
+          cb({ kind: 'group', layer, cell, x: x - GROUP_PAD, y: y - GROUP_PAD,
+               w: inner + 2 * GROUP_PAD, h: BOX_H + 2 * GROUP_PAD });
+          cb({ kind: 'header', layer, cell, x, y, w: BOX_W, h: BOX_H });
+          let sx = x + BOX_W + GAP_X;
           for (const sub of cell.subCells) {
-            cb({ kind: 'sub', layer, cell, sub, x: sx, y, w: gridX, h: gridY });
-            sx += gridX;
+            cb({ kind: 'sub', layer, cell, sub, x: sx, y, w: BOX_W, h: BOX_H });
+            sx += BOX_W + GAP_X;
           }
-          cb({ kind: 'groupbar', layer, cell, x: x + gridX, y, w: gridX * n, h: gridY });
-          x += (n + 1) * gridX;
+          x += inner + GAP_X + 2 * GROUP_PAD;
         } else {
-          cb({ kind: 'cell', layer, cell, sub: cell.subCells[0], x, y, w: gridX, h: gridY });
-          x += gridX;
+          cb({ kind: 'cell', layer, cell, sub: cell.subCells[0], x, y, w: BOX_W, h: BOX_H });
+          x += BOX_W + GAP_X;
         }
       }
-      y += gridY;
+      y += rowH;
+      widest = Math.max(widest, x + this.scrollX);
     }
-    this.contentHeight = y + this.scroll + 4;
+    this.contentHeight = y + this.scroll - GAP_Y + PAD;
+    this.contentWidth = widest;
   }
 
   hitTest(e) {
@@ -194,7 +251,7 @@ export class CellsPanel {
     const px = e.clientX - r.left, py = e.clientY - r.top;
     let found = null;
     this._walk((b) => {
-      if (b.kind === 'groupbar') return;
+      if (b.kind === 'group') return;
       if (px < b.x || px > b.x + b.w || py < b.y || py > b.y + b.h) return;
       found = this._toHit(b);
     });
@@ -240,81 +297,75 @@ export class CellsPanel {
     this._walk((b) => {
       const L = b.layer.layer;
 
+      // ---- the layer number: a plain figure with an accent rule when the row is in play
       if (b.kind === 'layer') {
         // an empty layer (the depth limit cut it off) must not read as "all on":
         // `every` over nothing is true, which would light the whole row up
         const any = b.layer.cells.length > 0;
         const on = any && b.layer.cells.every(c => c.subCells.every(s => sel.has(`${L}.${c.index}.${s.index}`)));
         const some = any && b.layer.cells.some(c => c.subCells.some(s => sel.has(`${L}.${c.index}.${s.index}`)));
-        ctx.fillStyle = on ? S.layerOn : some ? S.layerSome : S.bg;
-        ctx.fillRect(b.x + 1, b.y, b.w, b.h);
-        ctx.strokeStyle = hoverKey === `L${L}` ? S.hover : S.line;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(b.x + 1.5, b.y + 0.5, b.w, b.h);
-        ctx.fillStyle = any ? S.text : S.dim;
-        ctx.font = `700 ${FONT_H}px ui-sans-serif, system-ui, sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(String(L), b.x + 1 + b.w / 2, b.y + b.h / 2 + 0.5);
+
+        if (hoverKey === `L${L}`) {
+          roundRect(ctx, b.x, b.y, b.w, b.h, 7);
+          ctx.fillStyle = S.rowHover; ctx.fill();
+        }
+        ctx.fillStyle = on ? S.accent : some ? S.accentSoft : S.line;
+        roundRect(ctx, b.x, b.y + 4, 2.5, b.h - 8, 1.5);
+        ctx.fill();
+
+        ctx.fillStyle = !any ? S.faint : on ? S.accent : S.text;
+        ctx.font = FONT(14, on ? 700 : 550);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(L), b.x + b.w - 6, b.y + b.h / 2);
         if (!any) {
-          ctx.fillStyle = S.dim;
-          ctx.font = `400 10px ui-sans-serif, system-ui, sans-serif`;
+          ctx.fillStyle = S.faint;
+          ctx.font = FONT(10.5, 400);
           ctx.textAlign = 'left';
-          ctx.fillText('— beyond the depth limit', b.x + b.w + 8, b.y + b.h / 2 + 0.5);
+          ctx.fillText('beyond the build depth', b.x + b.w + GAP_X * 2, b.y + b.h / 2);
         }
         return;
       }
 
-      if (b.kind === 'groupbar') {
-        // the bar under a whole group: colour of the parent cell
-        ctx.fillStyle = this.palette(b.cell.primitives);
-        ctx.fillRect(b.x + X_PAD - 2, b.y + b.h - Y_PAD - BAR, b.w - 2 * X_PAD + 1, BAR);
+      // ---- the container behind a header and its sub-cells
+      if (b.kind === 'group') {
+        roundRect(ctx, b.x, b.y, b.w, b.h, 9);
+        ctx.fillStyle = S.groupFill; ctx.fill();
+        ctx.strokeStyle = S.groupLine; ctx.lineWidth = 1; ctx.stroke();
         return;
       }
 
-      if (b.kind === 'header') {
-        ctx.fillStyle = S.headerFill;
-        ctx.fillRect(b.x + X_PAD - 1, b.y + Y_PAD - 1, b.w - 2 * X_PAD - 1, b.h - 2 * Y_PAD - 1);
-        ctx.strokeStyle = hoverKey === `${L}.${b.cell.index}` ? S.hover : S.lineSoft;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(b.x + X_PAD - 1.5, b.y + Y_PAD - 1.5, b.w - 2 * X_PAD, b.h - 2 * Y_PAD);
-        ctx.fillStyle = S.text;
-        ctx.font = `700 ${FONT_H}px ui-sans-serif, system-ui, sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(String(b.cell.index), b.x + b.w / 2 - 1, b.y + b.h / 2 + 0.5);
-        // the two dots the original draws to say "this one expands to the right"
-        ctx.fillStyle = S.dim;
-        ctx.fillRect(b.x + b.w - 3, b.y + b.h / 2 - 4, 2, 2);
-        ctx.fillRect(b.x + b.w - 3, b.y + b.h / 2 + 2, 2, 2);
-        return;
-      }
+      const isHeader = b.kind === 'header';
+      const key = isHeader ? null : `${L}.${b.cell.index}.${b.sub.index}`;
+      const hovered = hoverKey === (isHeader ? `${L}.${b.cell.index}` : key);
+      // a header reads as "on" when all of its sub-cells are
+      const on = isHeader
+        ? b.cell.subCells.every(s => sel.has(`${L}.${b.cell.index}.${s.index}`))
+        : sel.has(key);
+      const part = isHeader && !on && b.cell.subCells.some(s => sel.has(`${L}.${b.cell.index}.${s.index}`));
 
-      // a selectable box: a lone cell, or one sub-cell of a group
-      const key = `${L}.${b.cell.index}.${b.sub.index}`;
-      const on = sel.has(key);
-      const isSub = b.kind === 'sub';
+      // box
+      roundRect(ctx, b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1, 7);
+      ctx.fillStyle = on ? S.accent : part ? S.accentFaint : S.boxFill;
+      ctx.fill();
+      ctx.strokeStyle = hovered ? S.accent : on ? S.accent : S.boxLine;
+      ctx.lineWidth = hovered ? 1.6 : 1;
+      ctx.stroke();
 
-      ctx.fillStyle = on ? S.cellOn : S.cellOff;
-      ctx.fillRect(b.x + X_PAD - 1, b.y + Y_PAD - 1, b.w - 2 * X_PAD - 1, b.h - 2 * Y_PAD - 1);
-      ctx.strokeStyle = hoverKey === key ? S.hover : (on ? S.cellOnLine : S.lineSoft);
-      ctx.lineWidth = hoverKey === key ? 1.5 : 1;
-      ctx.strokeRect(b.x + X_PAD - 1.5, b.y + Y_PAD - 1.5, b.w - 2 * X_PAD, b.h - 2 * Y_PAD);
+      // the colour bar, in its own lane at the foot of the box — never under the digit
+      const count = isHeader ? b.cell.primitives : b.sub.primitives;
+      roundRect(ctx, b.x + BAR_INSET, b.y + b.h - BAR_LIFT - BAR_H,
+                b.w - 2 * BAR_INSET, BAR_H, BAR_H / 2);
+      ctx.fillStyle = this.palette(count);
+      ctx.globalAlpha = on ? 1 : 0.9;
+      ctx.fill();
+      ctx.globalAlpha = 1;
 
-      if (isSub) {
-        // sub-cells carry their own bar on top; the group's bar runs underneath
-        ctx.fillStyle = this.palette(b.sub.primitives);
-        ctx.fillRect(b.x + X_PAD - 1, b.y + Y_PAD - 2, b.w - 2 * X_PAD + 1, BAR);
-      } else {
-        ctx.fillStyle = this.palette(b.cell.primitives);
-        ctx.fillRect(b.x + X_PAD - 2, b.y + b.h - Y_PAD - BAR, b.w - 2 * X_PAD + 1, BAR);
-      }
-
-      ctx.fillStyle = on ? S.textOn : S.text;
-      const label = isSub ? String(b.sub.index) : String(b.cell.index);
-      ctx.font = isSub
-        ? `400 ${label.length > 2 ? 10 : 12}px ui-sans-serif, system-ui, sans-serif`
-        : `700 ${FONT_H}px ui-sans-serif, system-ui, sans-serif`;
+      // the digit, centred in the space above the bar
+      const label = String(isHeader ? b.cell.index : b.sub.index);
+      ctx.fillStyle = on ? S.onText : S.text;
+      ctx.font = FONT(isHeader || b.kind === 'cell' ? 14 : 12, isHeader || b.kind === 'cell' ? 640 : 480);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(label, b.x + b.w / 2 - 1, b.y + b.h / 2 + 1);
+      ctx.fillText(label, b.x + b.w / 2, b.y + (b.h - BAR_LIFT - BAR_H) / 2 + 1);
     });
   }
 
@@ -343,6 +394,11 @@ export class CellsPanel {
  * cmd both mean the same thing, and a right-click does too (see the contextmenu
  * handlers). shift always wins, so shift-alt is still "add".
  */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
+}
+
 function modifiersOf(e) {
   const shift = e.shiftKey;
   return { shift, ctrl: !shift && (e.ctrlKey || e.metaKey || e.altKey), alt: e.altKey };
@@ -361,8 +417,15 @@ function buildPalette(outline) {
     }
   const sorted = [...counts].sort((a, b) => a - b);
   const map = new Map();
-  sorted.forEach((c, i) => map.set(c, hsb(i / sorted.length, 0.8, 0.9)));
-  return (n) => map.get(n) || '#888';
+  // spread the hues but keep them all at a readable weight, and skip the muddy
+  // yellow-green band that the original's raw HSB sweep lands in
+  sorted.forEach((c, i) => {
+    const t = sorted.length > 1 ? i / (sorted.length - 1) : 0;
+    map.set(c, hsb((0.02 + 0.86 * t) % 1, 0.72, 0.86));
+  });
+  const fn = (n) => map.get(n) || '#8b93a7';
+  fn.entries = sorted.map(c => ({ count: c, color: map.get(c) }));
+  return fn;
 }
 
 function hsb(h, s, v) {
@@ -384,19 +447,20 @@ function themeColors() {
   const cs = getComputedStyle(document.documentElement);
   const v = (n, fallback) => (cs.getPropertyValue(n).trim() || fallback);
   const dark = document.documentElement.dataset.theme !== 'light';
+  const accent = v('--accent', dark ? '#f5b942' : '#c8860a');
   return {
     bg: v('--panel', dark ? '#12151c' : '#fff'),
-    text: v('--text', dark ? '#e6e9f0' : '#12151c'),
-    textOn: dark ? '#0b0d11' : '#12151c',
-    dim: v('--dim', '#8b93a7'),
-    line: v('--line', dark ? '#242a36' : '#dde1e8'),
-    lineSoft: dark ? 'rgba(160,172,196,0.35)' : 'rgba(60,70,90,0.30)',
-    cellOff: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-    cellOn: v('--accent', '#f5b942'),
-    cellOnLine: dark ? '#fff' : '#000',
-    headerFill: dark ? 'rgba(120,140,200,0.22)' : 'rgb(230,230,255)',
-    layerOn: dark ? 'rgba(245,185,66,0.22)' : 'rgba(245,185,66,0.30)',
-    layerSome: dark ? 'rgba(245,185,66,0.09)' : 'rgba(245,185,66,0.13)',
-    hover: v('--accent', '#f5b942'),
+    text: v('--text', dark ? '#e6e9f0' : '#14181f'),
+    faint: dark ? 'rgba(230,233,240,0.34)' : 'rgba(20,24,31,0.34)',
+    line: v('--line', dark ? '#242a36' : '#d9dee7'),
+    accent,
+    accentSoft: dark ? 'rgba(245,185,66,0.45)' : 'rgba(200,134,10,0.45)',
+    accentFaint: dark ? 'rgba(245,185,66,0.17)' : 'rgba(200,134,10,0.15)',
+    onText: dark ? '#14100a' : '#fffaf0',
+    boxFill: dark ? 'rgba(255,255,255,0.035)' : 'rgba(20,30,60,0.028)',
+    boxLine: dark ? 'rgba(200,212,235,0.20)' : 'rgba(40,55,85,0.20)',
+    groupFill: dark ? 'rgba(111,168,255,0.09)' : 'rgba(37,99,201,0.06)',
+    groupLine: dark ? 'rgba(111,168,255,0.28)' : 'rgba(37,99,201,0.22)',
+    rowHover: dark ? 'rgba(255,255,255,0.05)' : 'rgba(20,30,60,0.045)',
   };
 }

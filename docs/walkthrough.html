@@ -159,13 +159,31 @@
         <li><b class="k4">0 1</b> the two halves it splits into, 60 cells each. This is
           a <b>chiral pair</b>: mirror images of one another. Take one and you get a
           left-handed solid, take the other and you get its reflection.</li>
+        <li><b class="k5">▬</b> the bar at the foot of every box — its colour is the
+          number of congruent pieces, explained just below</li>
       </ul>
-      <p class="anatomy-bars">
-        The coloured bar under each box encodes <em>how many congruent pieces</em> the
-        bundle contains — one hue per count. Boxes sharing a colour are the same kind
-        of thing, which lets you spot structure across the whole table at a glance.
-      </p>
     </figure>
+
+    <h3>What the coloured bars mean</h3>
+    <p>
+      The bar under a box is not decoration and it is not a selection state. It says
+      <b>how many congruent cells the box stands for</b> — one hue per count. For the
+      icosahedron only six counts occur in the whole table:
+    </p>
+    <div id="barLegend" class="legend big"></div>
+    <p>
+      So every box with the same colour holds the same number of pieces, and that
+      number is not arbitrary: it is 120 divided by how much symmetry a single cell
+      keeps, as the table below shows. Scanning a column of colour down the table is
+      scanning for cells of the same <em>kind</em> — all the vertex-centred ones, all
+      the edge-centred ones — which is precisely the structure you need to see when
+      you are hunting for a particular solid.
+    </p>
+    <p>
+      The one to watch for is the rarest: <span id="barRare"></span>, which occurs
+      exactly once, in layer 5. That is the bundle with no symmetry of its own, and
+      the only one that splits into two hands.
+    </p>
 
     <p>
       That splitting is not decoration. The program groups cells under the full

@@ -384,6 +384,7 @@ async function build(cellsString) {
 
     state.outline = info.outline;
     cells.setOutline(info.outline);
+    renderLegend();
 
     if (cellsString) {
       const { selected } = await call('parseCells', { cells: cellsString });
@@ -424,6 +425,15 @@ async function refresh() {
   state.cellsString = str;
   $('#cellsString').value = str;
   location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/d${state.depth}/${str}`;
+}
+
+/** the key to the bar colours: one swatch per distinct number of congruent pieces */
+function renderLegend() {
+  const host = $('#cellsLegend');
+  if (!host) return;
+  const entries = cells.legend();
+  host.innerHTML = '<span class="legend-label">pieces per cell</span>' + entries.map(e =>
+    `<span class="legend-item"><i style="background:${e.color}"></i>${e.count}</span>`).join('');
 }
 
 // ------------------------------------------------------------------ controls
