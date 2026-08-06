@@ -115,6 +115,10 @@
       <summary><h2>View</h2></summary>
       <label class="check"><input id="autoRotate" type="checkbox"> spin the solid</label>
       <label class="check"><input id="showEdges" type="checkbox" checked> draw edges</label>
+      <label class="field" title="Thickness of the edge lines, in pixels">
+        <span>edge weight <b id="edgeWidthLabel">3.0</b></span>
+        <input id="edgeWidth" type="range" min="0.5" max="8" step="0.5" value="3">
+      </label>
       <label class="check" title="Tint the cells you have not chosen, so you can see what else is available on this plane">
         <input id="showAllFacets" type="checkbox" checked> shade unchosen cells
       </label>

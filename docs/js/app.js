@@ -69,6 +69,12 @@ async function boot() {
   try {
     renderer = new Renderer3D($('#view3d'));
     renderer.autoRotate = false;             // still by default; spin is opt-in
+    const savedEdge = Number(localStorage.getItem('edgeWidth'));
+    if (savedEdge > 0) {
+      renderer.edgeWidth = savedEdge;
+      $('#edgeWidth').value = savedEdge;
+      $('#edgeWidthLabel').textContent = savedEdge.toFixed(1);
+    }
     renderer.start();
     renderer.onPick = onPick3D;
     renderer.onPickHover = onHover3D;
@@ -457,6 +463,12 @@ function wireControls() {
 
   $('#autoRotate').onchange = (e) => { if (renderer) renderer.autoRotate = e.target.checked; };
   $('#showEdges').onchange = (e) => { if (renderer) { renderer.showEdges = e.target.checked; renderer.draw(); } };
+  $('#edgeWidth').oninput = (e) => {
+    const w = Number(e.target.value);
+    $('#edgeWidthLabel').textContent = w.toFixed(1);
+    localStorage.setItem('edgeWidth', w);
+    if (renderer) { renderer.edgeWidth = w; renderer.draw(); }
+  };
   $('#showAllFacets').onchange = (e) => { diagram.showAll = e.target.checked; diagram.draw(); };
 
   $('#cellsString').onchange = async (e) => {

@@ -44,7 +44,7 @@ void main() {
   vec3 V = normalize(-vEye);
   vec3 H = normalize(L1 + V);
   float spec = pow(max(dot(n, H), 0.0), 48.0) * 0.35;
-  vec3 c = vColor * (0.22 + d) + spec;
+  vec3 c = vColor * (0.34 + d) + spec;   // keep shadowed faces light enough that black edges still read
   // slight rim to separate touching facets
   float rim = pow(1.0 - max(dot(n, V), 0.0), 3.0) * 0.12;
   fragColor = vec4(c + rim, 1.0);
@@ -136,7 +136,7 @@ export class Renderer3D {
     this.lineVao = gl.createVertexArray();
     this.lineBufs = { a: gl.createBuffer(), b: gl.createBuffer(), side: gl.createBuffer(), end: gl.createBuffer() };
     this.lineCount = 0;
-    this.edgeWidth = 2.2;   // CSS pixels of total line width, scaled by dpr at draw
+    this.edgeWidth = 3.0;   // CSS pixels of total line width, scaled by dpr at draw
 
     this.rotation = quatFromEuler(-0.42, 0.6, 0);
     this.distance = 1.0;   // relative zoom; the fit distance is computed per frame
