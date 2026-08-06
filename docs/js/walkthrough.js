@@ -93,7 +93,7 @@ class Figure {
       try {
         this.renderer = new Renderer3D(cv);
         this.renderer.autoRotate = el.dataset.spin === 'true';
-        this.renderer.edgeWidth = 2.4;
+        this.renderer.edgeWidth = 1;   // the figures are small — hairlines read better here
         this.renderer.start();
       } catch { wrap.textContent = 'WebGL2 unavailable'; }
     }
