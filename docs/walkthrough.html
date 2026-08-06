@@ -437,6 +437,25 @@
       selection rules are Miller's, the diagram is Brückner's, and the solids are
       mostly Hess's and Poinsot's. What the program adds is that you can click them.
     </p>
+    <aside class="note-box">
+      <b>Why a table at all?</b> Most stellation software asks you to pick cells
+      <em>geometrically</em> — click a region of the stellation diagram, or a face of
+      the solid. That is intuitive, but it answers "which cell is behind this facet?"
+      only indirectly, and one click can cascade into many cells. A table instead
+      shows you the whole state space at once, at the cost of abstraction.
+      <br><br>
+      Of the stellation programs written since 1980, a survey turns up essentially
+      only Bulatov's that offers a layers × cells × sub-cells grid. The nearest
+      relative is Great Stella's cell diagram, which holds the same information drawn
+      as a graph rather than a grid — and its author cautions in his own manual that
+      it is usually not an intuitive way to build stellations.
+      <br><br>
+      What makes the grid pay for itself here is the third column: the sub-cell
+      split, which only appears once you let the stellation have less symmetry than
+      the polyhedron. Take that away and the table really is just a list. With it,
+      the table is the only place the handedness of a solid is something you can
+      point at.
+    </aside>
     <ul class="refs">
       <li>
         H. S. M. Coxeter, P. Du Val, H. T. Flather and J. F. Petrie,
