@@ -57,6 +57,14 @@ export class CellsPanel {
       if (!h) return;
       this.apply(h, modifiersOf(e));
     });
+    // macOS turns ctrl-click into the secondary click, so the page is handed a
+    // contextmenu event and never a ctrl-click. Take that event as "carve", the
+    // same as a right-click, which is what a user reaching for ctrl meant.
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const h = this.hitTest(e);
+      if (h) this.apply(h, { shift: e.shiftKey, ctrl: !e.shiftKey });
+    });
     canvas.addEventListener('wheel', (e) => {
       const max = Math.max(0, this.contentHeight - canvas.clientHeight);
       if (max <= 0) return;
@@ -99,12 +107,21 @@ export class CellsPanel {
 
   /** every sub-cell key holding `key` up, transitively (the graph came from the worker) */
   supportKeys(key) {
+    return this._closure(key, 'bottom');
+  }
+
+  /** everything resting on `key`, transitively */
+  dependentKeys(key) {
+    return this._closure(key, 'top');
+  }
+
+  _closure(key, dir) {
     const out = new Set([key]);
     const stack = [key];
     while (stack.length) {
       const k = stack.pop();
-      for (const b of (this.byKey.get(k)?.sub.bottom || [])) {
-        if (!out.has(b)) { out.add(b); stack.push(b); }
+      for (const n of (this.byKey.get(k)?.sub[dir] || [])) {
+        if (!out.has(n)) { out.add(n); stack.push(n); }
       }
     }
     return out;
@@ -115,9 +132,14 @@ export class CellsPanel {
     const keys = hit.keys;                       // the sub-cells this hit covers
 
     if (mod.shift || mod.ctrl) {
-      // operate on the full supporting set, as the original does
+      // Grow pulls in what holds the cell up; carve takes away what rests on it.
+      // The original's carve cleared the supporting set instead — downward — which
+      // leaves the cells above it floating in mid-air. Both directions here keep
+      // the selection a solid that holds together.
       const all = new Set();
-      for (const k of keys) for (const s of this.supportKeys(k)) all.add(s);
+      for (const k of keys) {
+        for (const s of (mod.shift ? this.supportKeys(k) : this.dependentKeys(k))) all.add(s);
+      }
       for (const k of all) mod.shift ? sel.add(k) : sel.delete(k);
     } else {
       const anyOff = keys.some(k => !sel.has(k));
@@ -315,8 +337,15 @@ export class CellsPanel {
   }
 }
 
+/**
+ * "Carve" has to be reachable on every platform. ctrl is the obvious key but on
+ * macOS it is the secondary-click gesture and never arrives, so alt/option and
+ * cmd both mean the same thing, and a right-click does too (see the contextmenu
+ * handlers). shift always wins, so shift-alt is still "add".
+ */
 function modifiersOf(e) {
-  return { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey };
+  const shift = e.shiftKey;
+  return { shift, ctrl: !shift && (e.ctrlKey || e.metaKey || e.altKey), alt: e.altKey };
 }
 
 /**

@@ -109,10 +109,18 @@ The same three gestures work in the **Cells table**, on the **diagram**, and on 
 |---|---|
 | click | toggle that cell (on the solid, plain drag orbits instead) |
 | <kbd>shift</kbd>-click | add it *and everything supporting it* |
-| <kbd>ctrl</kbd>/<kbd>cmd</kbd>-click | remove it *and everything resting on it* |
+| <kbd>alt</kbd>/<kbd>⌥</kbd>-click, or right-click | remove it *and everything resting on it* |
+
+Carving is deliberately not on <kbd>ctrl</kbd>: on macOS ctrl-click **is** the
+secondary click, so the system turns it into a context menu and the page never
+sees a ctrl-click at all. <kbd>alt</kbd> and <kbd>cmd</kbd> both work, and the
+`contextmenu` event itself is taken as a carve — which is exactly what someone
+reaching for ctrl on a Mac meant.
 
 Both modified forms keep the selection **fully supported**, so what you get is always
-a solid that holds together. The supporting set comes from the cell connectivity
+a solid that holds together. (The original's carve cleared the supporting set —
+*downward* — which leaves whatever sat on top floating in mid-air; carving here goes
+upward instead.) The supporting set comes from the cell connectivity
 graph — a port of `Stellation.makeConnectivityGraph` and `Selection.getSupportCells`,
 built at the sub-cell level rather than the whole-cell level the original indexes by.
 
@@ -260,12 +268,12 @@ cells, then fewest facets, then fewest vertices, then smallest volume).
 
 ## 4. Where the pieces came from
 
-- everything outside `docs/` and `notes/` is the upstream repository unchanged, apart
-  from the three driver classes added under `src/test/java/vbulatov/`.
+- `stellation/` — a clone of <https://github.com/vbulatov2011/stellation>, plus the
+  three driver classes under `src/test/java/vbulatov/`.
 - `notes/` — nine detailed specs reverse-engineered from the Java source, covering the
   plane arrangement, cells and layers, symmetry, polyhedron I/O, mesh extraction, the
   diagram, the UI, the `.stel` grammar, and the catalog.
-- `notes/reference/` — renders produced by the Java itself, used to check the port.
+- `out/` — reference renders produced by the Java, used to check the port.
 
 Original program and all the polyhedron data: **Vladimir Bulatov**,
 <http://bulatov.org/polyhedra/stellation_applet/>. The applet also credits Jef

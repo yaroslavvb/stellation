@@ -45,7 +45,7 @@
       <div class="view">
         <canvas id="view3d"></canvas>
         <div class="view-label">
-          <span>drag to turn · <kbd>shift</kbd>-click to grow · <kbd>ctrl</kbd>-click to carve</span>
+          <span>drag to turn · <kbd>shift</kbd>-click grows · <kbd class="kSub">alt</kbd>-click or right-click carves</span>
           <span id="hover3d" class="hover"></span>
         </div>
       </div>
@@ -80,8 +80,8 @@
       <div id="cellInfo" class="info mono"></div>
       <p class="note">
         Click a cell to toggle it. <kbd>shift</kbd>-click also pulls in everything
-        holding it up; <kbd>ctrl</kbd>-click takes it and whatever rests on it away.
-        Click a row number for the whole layer.
+        holding it up; <kbd class="kSub">alt</kbd>-click — or a right-click — takes it
+        and whatever rests on it away. Click a row number for the whole layer.
       </p>
       <input id="cellsString" class="mono" spellcheck="false"
              title="cell-selection string, same syntax as the original .stel files">
@@ -198,10 +198,13 @@
       pair. Bar colours group cells by how many congruent pieces they contain.</li>
     <li><b>Click</b> toggles. <kbd>shift</kbd>-click also selects everything
       supporting that cell, so the result always holds together.
-      <kbd>ctrl</kbd>-click removes it and whatever rests on it.</li>
+      <kbd class="kSub">alt</kbd>-click — or a <b>right-click</b> — removes it and
+      whatever rests on it. (On macOS, ctrl-click is the system's secondary click
+      and never reaches the page, so alt and right-click are the ones that work;
+      cmd works too.)</li>
     <li>The same works on the <b>diagram</b>, and on the <b>solid</b> itself —
-      <kbd>shift</kbd>-click a face to grow outward there, <kbd>ctrl</kbd>-click to
-      carve it away.</li>
+      <kbd>shift</kbd>-click a face to grow outward there, <kbd class="kSub">alt</kbd>-click
+      to carve it away. Clicking the same spot again undoes it.</li>
     <li><em>core</em> and <em>+ layer</em> walk out one shell at a time: layer 0
       alone is the original polyhedron, 0+1 is its first stellation.</li>
   </ul>

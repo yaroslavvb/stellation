@@ -98,6 +98,10 @@ async function boot() {
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
 
+  // macOS spells this key "option"; everywhere else it is "alt"
+  const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  $$('.kSub').forEach(k => { k.textContent = mac ? '\u2325 option' : 'alt'; });
+
   wireControls();
   startWorker();
   applyTheme(localStorage.getItem('theme') || 'auto');   // now that the views exist

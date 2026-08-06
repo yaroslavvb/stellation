@@ -406,12 +406,17 @@ export class Renderer3D {
     const c = this.canvas;
     let px = 0, py = 0;
 
-    // Shift or ctrl/cmd means "I am pointing at a cell", not "turn the model" —
-    // that is what keeps picking and orbiting out of each other's way.
-    const picking = (e) => e.shiftKey || e.ctrlKey || e.metaKey;
+    // A modifier means "I am pointing at a cell", not "turn the model" — that is
+    // what keeps picking and orbiting out of each other's way. alt counts too,
+    // because on macOS ctrl-click is the secondary click and never reaches us.
+    const picking = (e) => e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
+    const mods = (e) => {
+      const shift = e.shiftKey;
+      return { shift, ctrl: !shift && (e.ctrlKey || e.metaKey || e.altKey), alt: e.altKey };
+    };
 
     const down = (e) => {
-      if (picking(e)) return;
+      if (picking(e) || e.button === 2) return;
       this.dragging = true;
       const p = point(e, c); px = p.x; py = p.y;
       c.setPointerCapture?.(e.pointerId);
@@ -422,7 +427,7 @@ export class Renderer3D {
           const hit = picking(e) ? this.pick(e) : null;
           c.style.cursor = hit ? 'crosshair' : 'grab';
           this.setHighlight(hit ? hit.face : -1);
-          this.onPickHover(hit, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
+          this.onPickHover(hit, mods(e));
         }
         return;
       }
@@ -445,10 +450,16 @@ export class Renderer3D {
     c.addEventListener('click', (e) => {
       if (!picking(e) || !this.onPick) return;
       const hit = this.pick(e);
-      if (hit) this.onPick(hit, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey });
+      if (hit) this.onPick(hit, mods(e));
     });
 
-    c.addEventListener('contextmenu', (e) => e.preventDefault());
+    // ctrl-click on macOS arrives only as this; treat it, and a right-click, as carve
+    c.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (!this.onPick) return;
+      const hit = this.pick(e);
+      if (hit) this.onPick(hit, { shift: e.shiftKey, ctrl: !e.shiftKey });
+    });
 
     c.addEventListener('wheel', (e) => {
       e.preventDefault();

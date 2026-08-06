@@ -31,6 +31,7 @@ export class DiagramView {
     };
 
     canvas.addEventListener('pointerdown', (e) => {
+      if (e.button === 2) return;           // secondary press carves, never pans
       down = { x: e.clientX, y: e.clientY, pan: { ...this.pan } };
       moved = 0;
       capture(e, true);
@@ -65,10 +66,7 @@ export class DiagramView {
       canvas.style.cursor = 'grab';
       if (wasDrag) return;
       const i = this.hitTest(e);
-      if (i >= 0) {
-        this.onToggle?.(this.data.facets[i],
-          { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey });
-      }
+      if (i >= 0) this.onToggle?.(this.data.facets[i], mods(e));
     };
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', () => { down = null; });
@@ -78,6 +76,15 @@ export class DiagramView {
     });
 
     canvas.addEventListener('dblclick', () => this.resetView());
+
+    // macOS delivers ctrl-click as a contextmenu, never as a ctrl-click, so
+    // that event is the carve gesture here too — as is a plain right-click.
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      down = null;
+      const i = this.hitTest(e);
+      if (i >= 0) this.onToggle?.(this.data.facets[i], { shift: e.shiftKey, ctrl: !e.shiftKey });
+    });
 
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -232,6 +239,12 @@ export class DiagramView {
     out.push('</svg>');
     return out.join('\n');
   }
+}
+
+/** shift adds; alt, cmd or ctrl carve — see the note in cells.js */
+function mods(e) {
+  const shift = e.shiftKey;
+  return { shift, ctrl: !shift && (e.ctrlKey || e.metaKey || e.altKey), alt: e.altKey };
 }
 
 function pointInPoly(x, y, poly) {
