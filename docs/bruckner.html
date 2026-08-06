@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/walkthrough.css">
 <link rel="stylesheet" href="css/bruckner.css">
+<link rel="stylesheet" href="css/bruckner-grid.css">
 <script>
   (() => {
     const saved = localStorage.getItem('theme') || 'auto';
@@ -24,6 +25,7 @@
   <a class="brand" href="index.html">✦ Stellation</a>
   <span class="crumb">Brückner 1900</span>
   <div class="spacer"></div>
+  <a class="ghost" href="bruckner-grid.html">The plates, clickable</a>
   <a class="ghost" href="historical.html">History</a>
   <a class="ghost" href="walkthrough.html">Cells walkthrough</a>
   <a class="ghost" href="index.html">Open the app →</a>
@@ -116,6 +118,14 @@
       necessary to avoid wasting plate space, and apologises for the flipping back and
       forth it forces on the reader. In the preface he separately thanks the printers and
       the publisher for absorbing the not inconsiderable cost of producing them.
+    </p>
+    <p>
+      There is also a <a href="bruckner-grid.html">clickable edition of the five
+      photographic plates</a>: every one of the 146 models has been identified where
+      the book's text or the modern literature allows it, and the ones the engine can
+      rebuild are live — click a model on the plate and it is rebuilt beneath, with
+      its history. The small plate photographs further down this page are clickable
+      in the same way.
     </p>
     <div class="plates" id="plates"></div>
   </section>
@@ -741,5 +751,6 @@
 <div id="lightbox"><button class="close" aria-label="Close">×</button><img alt=""></div>
 
 <script type="module" src="js/bruckner.js"></script>
+<script type="module" src="js/bruckner-hotspots.js"></script>
 </body>
 </html>

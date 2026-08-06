@@ -18,8 +18,20 @@
 .gsheet-frame {
   position: relative; border: 1px solid var(--line); border-radius: 10px;
   overflow: hidden; background: var(--line);
+  aspect-ratio: 1600 / 1952;   /* every sheet scan has this shape: no reflow on load */
 }
 .gsheet-frame img { display: block; width: 100%; height: auto; }
+
+/* hotspots overlaid on the small plate photographs of bruckner.html */
+.hs-wrap { position: relative; display: block; }
+.hs-wrap img { display: block; width: 100%; }
+.hs-wrap .hs { border-width: 1px; border-radius: 4px; }
+
+@keyframes bfig-flash {
+  0% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 65%, transparent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+.bfig.flash { animation: bfig-flash 0.9s ease-out 1; }
 .gsheet-cap {
   display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
   font-size: 13px; color: var(--dim); padding: 7px 4px 0;

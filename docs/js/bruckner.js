@@ -43,7 +43,7 @@ const PAGES = {
    caption is on the second sheet (257, 259, 263) and the first carries the
    running foot instead. `sheets` lists every sheet the plate runs across. */
 const PLATES = [
-  { n: 'I',    kind: 'litho', leaf: 243, sheets: [243], note: 'Polygons: construction figures.' },
+  { n: 'I',    kind: 'litho', leaf: 242, sheets: [242, 243], note: 'Polygons: construction figures.' },
   { n: 'II',   kind: 'litho', leaf: 245, sheets: [244, 245],
     note: 'Carries Fig. 17, the complete figure of the planes of the icosahedron — the stellation diagram this program draws. Fig. 16 is the dodecahedron’s.' },
   { n: 'III',  kind: 'litho', leaf: 247, sheets: [246, 247], note: 'Nets and spherical nets.' },

@@ -1,6 +1,6 @@
 /* The historical page: a timeline you scroll, with live solids in the margin of
    the story. Shares the walkthrough's document styling and adds the timeline
-   rail, the era headers, and the "build it yourself" banner. */
+   rail and the era headers. */
 
 /* ------------------------------------------------------------------ rail */
 
@@ -97,50 +97,6 @@
   text-transform: uppercase;
   color: var(--accent-2);
 }
-
-/* ------------------------------------------------------------------ build-it banner */
-
-.goal {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin: -2px 0 11px;
-  padding: 8px 11px;
-  border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  font-size: 13.5px;
-  transition: background 0.18s ease, border-color 0.18s ease;
-}
-.goal-tag {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--bg);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.goal-text { flex: 1; min-width: 180px; }
-.goal button {
-  padding: 3px 10px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--panel);
-  color: var(--dim);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.goal button:hover { border-color: var(--accent); color: var(--accent); }
-.goal.won {
-  border-style: solid;
-  border-color: #3fbf7f;
-  background: color-mix(in srgb, #3fbf7f 12%, transparent);
-}
-.goal.won .goal-tag { background: #3fbf7f; }
 
 /* ------------------------------------------------------------------ figures */
 

@@ -245,8 +245,11 @@ async function boot() {
   ({ build } = makeBuilder(geometry, symmetry, catalog));
 
   const root = $('#platesRoot');
+  // ?only=IX — render a single plate, for development and deep links
+  const only = new URLSearchParams(location.search).get('only');
+  const shown = only ? plates.sheets.filter(s => s.plate === only.toUpperCase()) : plates.sheets;
   const byPlate = new Map();
-  for (const s of plates.sheets) {
+  for (const s of shown) {
     if (!byPlate.has(s.plate)) byPlate.set(s.plate, []);
     byPlate.get(s.plate).push(s);
   }
@@ -304,6 +307,21 @@ async function boot() {
 
   labelKeys();
   $('#loading')?.remove();
+
+  // deep link from bruckner.html: #f-<leaf>-<fig> opens that model's viewer
+  const m = location.hash.match(/^#f-(\d+)-(\d+)$/);
+  if (m) {
+    const sheet = shown.find(s => s.leaf === +m[1]);
+    const fig = sheet?.figs.find(f => f.fig === +m[2]);
+    const sheetEl = document.getElementById('sheet-' + m[1]);
+    const hs = sheetEl && [...sheetEl.querySelectorAll('.hs')]
+      .find(h => h.getAttribute('aria-label')?.startsWith(`Figure ${m[2]}:`));
+    if (sheet && fig && hs) {
+      openViewer(sheetEl.closest('.gsheet') || sheetEl, sheet, fig, hs);
+      setTimeout(() => hs.scrollIntoView({ block: 'center' }), 80);
+    }
+  }
+
   window.brucknerGrid = { plates, figs, build };
 }
 
