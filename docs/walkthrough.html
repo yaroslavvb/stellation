@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cells walkthrough — Stellation</title>
+<meta name="description" content="How the Cells table works, and how to build the classical stellations of the icosahedron with it.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/walkthrough.css">
+<script>
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' || (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
+</head>
+<body class="doc">
+
+<header class="doc-head">
+  <a class="brand" href="index.html">✦ Stellation</a>
+  <span class="crumb">Cells walkthrough</span>
+  <div class="spacer"></div>
+  <a class="ghost" href="index.html">Open the app →</a>
+  <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
+</header>
+
+<nav id="rail" aria-label="Contents"></nav>
+
+<main class="doc-body">
+
+  <div id="loading" class="loading">building the icosahedron's plane arrangement…</div>
+
+  <h1>Cells walkthrough</h1>
+  <p class="standfirst">
+    The <b>Cells</b> table is the control that actually builds a stellation. It looks
+    like a wall of numbers. It is really a map of the shells of space around a
+    polyhedron — and once you can read one row of it, you can build the great
+    icosahedron by hand in about four clicks.
+  </p>
+  <p class="byline">
+    Every figure below is live and clickable. They run the same code as the app.
+  </p>
+
+  <!-- ─────────────────────────────────────────── 1 -->
+  <section id="idea" data-short="The idea">
+    <h2>1 · The idea, in two dimensions</h2>
+    <p>
+      Take a pentagon and extend its five sides. Each side runs on until it meets
+      another, and the crossings outline a five-pointed star — a pentagram. Nothing
+      was added: it is <em>the same five lines, followed further</em>.
+    </p>
+    <div class="fig-wrap" data-penta></div>
+    <p>
+      That is a stellation. The word is Kepler's, from <i>stella</i>, star; he used
+      the construction in 1619 to obtain two star polyhedra that now carry his name.
+    </p>
+    <p>
+      In three dimensions you extend a polyhedron's face <b>planes</b> rather than a
+      polygon's edges. The planes carry on past the solid, cut through one another,
+      and slice the space around it into bounded pieces.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 2 -->
+  <section id="planes" data-short="One face">
+    <h2>2 · Twenty planes, seen from one face</h2>
+    <p>
+      An icosahedron has twenty faces, so twenty planes. Stand on one of them and
+      look straight down: the other nineteen cross your plane in a set of lines, and
+      those lines cut it into regions. This picture is the
+      <b>stellation diagram</b>, and it has been the working drawing of the subject
+      since Max Brückner's <i>Vielecke und Vielflache</i> of 1900.
+    </p>
+    <div class="fig fig-wide" id="figDiagram" data-parts="diagram" data-cells="{0}" data-locked="true"></div>
+    <p>
+      The little triangle at dead centre is the icosahedron's own face. Everything
+      further out is space the extended planes have carved up. The ten-pointed star
+      is characteristic of the icosahedron; every solid has its own signature diagram.
+    </p>
+    <aside class="note-box">
+      <b>A distinction worth getting right early.</b> The regions you see here are
+      two-dimensional: they are pieces of <em>one plane</em>. The things you select
+      to build a solid are three-dimensional <b>cells</b> — the little volumes the
+      full set of planes encloses. A cell is bounded above and below by regions like
+      these, generally on different planes. The diagram is a cross-section of the
+      structure, not the structure itself.
+    </aside>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 3 -->
+  <section id="cells" data-short="Cells & layers">
+    <h2>3 · Cells, and the shells they sit in</h2>
+    <p>
+      The twenty planes cut the space around the icosahedron into 67 bounded cells.
+      They are not scattered at random: they fall into concentric <b>shells</b>, and
+      the program numbers those shells <b>layers</b>, counting outward from the solid
+      itself.
+    </p>
+    <p>
+      Layer 0 is the icosahedron. Layer 1 is the first shell of cells resting on its
+      faces — twenty of them, one per face. Layer 2 is the next shell out, and so on
+      to layer 7, where the last cells run off into the long spikes of the diagram.
+    </p>
+    <aside class="note-box">
+      <b>These layers are not an invention of the program.</b> Patrick Du Val, working
+      on <i>The Fifty-Nine Icosahedra</i> in the 1930s, noticed exactly this
+      structure and named the shells with letters — <b>a</b> for the core, then
+      <b>b</b> through <b>h</b>. Eight shells, which is what the table has. He
+      counted them by <em>power</em>: how many face planes a ray from the centre
+      crosses on its way out to the cell. That is the same number the program
+      computes for every facet, and the reason the rows come out in this order.
+    </aside>
+    <div class="fig" id="figLayers" data-parts="cells solid" data-cells="{0}"></div>
+    <p class="fig-caption">
+      Click any box. Click the row number to take a whole layer at once.
+    </p>
+    <div class="try">
+      <span>Walk outward:</span>
+      <button data-target="figLayers" data-cells="{0}" class="on">just the core</button>
+      <button data-target="figLayers" data-cells="{0,1}">+ layer 1</button>
+      <button data-target="figLayers" data-cells="{0,1,2}">+ layer 2</button>
+      <button data-target="figLayers" data-cells="{0,1,2,3}">+ layer 3</button>
+      <button data-target="figLayers" data-cells="{0,1,2,3,4}">+ layer 4</button>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 4 -->
+  <section id="row" data-short="Reading a row">
+    <h2>4 · How to read one row</h2>
+    <p>
+      Here is the whole grammar of the table. A row is a layer. Along it sit the
+      cells of that layer — but not one box per cell, which would be unusable:
+      layer 3 alone has sixty cells.
+    </p>
+    <p>
+      Instead, cells that the solid's symmetry can carry onto one another are
+      bundled into a single box. Take one of layer 1's twenty cells and spin the
+      icosahedron: it lands on each of the other nineteen in turn. They are the same
+      cell in twenty places, so they get one box. Mathematically the bundle is an
+      <b>orbit</b> of the symmetry group; practically it is the smallest thing you
+      can add without breaking the symmetry.
+    </p>
+
+    <figure class="anatomy">
+      <div class="anatomy-row">
+        <span class="an-layer">5</span>
+        <span class="an-cell">0</span>
+        <span class="an-group"><span class="an-cell hdr">1</span><span class="an-sub">0</span><span class="an-sub">1</span></span>
+      </div>
+      <ul class="anatomy-key">
+        <li><b class="k1">5</b> the layer — the fifth shell out from the core</li>
+        <li><b class="k2">0</b> the first bundle of cells in that layer: 12 congruent
+          cells, one on each vertex direction</li>
+        <li><b class="k3">1</b> the second bundle: 120 cells — shaded, because it
+          splits</li>
+        <li><b class="k4">0 1</b> the two halves it splits into, 60 cells each. This is
+          a <b>chiral pair</b>: mirror images of one another. Take one and you get a
+          left-handed solid, take the other and you get its reflection.</li>
+      </ul>
+      <p class="anatomy-bars">
+        The coloured bar under each box encodes <em>how many congruent pieces</em> the
+        bundle contains — one hue per count. Boxes sharing a colour are the same kind
+        of thing, which lets you spot structure across the whole table at a glance.
+      </p>
+    </figure>
+
+    <p>
+      That splitting is not decoration. The program groups cells under the full
+      symmetry of the polyhedron (for the icosahedron, the group <b>I<sub>h</sub></b>,
+      120 operations including reflections) and then splits each bundle under the
+      symmetry you want the <em>stellation</em> to have (<b>I</b>, the 60 rotations
+      alone). A bundle that is unchanged by reflection stays whole. A bundle that
+      is not — a chiral one — falls into two mirror halves, and you may take just one.
+    </p>
+
+    <h3>Why the counts are what they are</h3>
+    <p>
+      Every number in the table is forced. A bundle's size is the order of the
+      symmetry group divided by how much symmetry a single cell has left — the
+      orbit–stabiliser theorem, doing all the work. Since I<sub>h</sub> has 120
+      operations:
+    </p>
+    <table class="shells">
+      <thead><tr><th>layer</th><th>Du Val</th><th>cells</th><th>what one cell keeps</th><th>so it sits…</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>a</td><td>1</td><td>all 120</td><td>at the centre</td></tr>
+        <tr><td>1</td><td>b</td><td>20</td><td>6 — a 3-fold axis and mirrors</td><td>one per face</td></tr>
+        <tr><td>2</td><td>c</td><td>30</td><td>4 — a 2-fold axis and mirrors</td><td>one per edge</td></tr>
+        <tr><td>3</td><td>d</td><td>60</td><td>2 — a single mirror</td><td>—</td></tr>
+        <tr><td>4</td><td>e</td><td>20 + 60</td><td>6, then 2</td><td>—</td></tr>
+        <tr><td>5</td><td>f</td><td>12 + 120</td><td>10 — a 5-fold axis and mirrors; then <b>1</b></td><td>one per vertex; and the odd one out</td></tr>
+        <tr><td>6</td><td>g</td><td>30 + 60</td><td>4, then 2</td><td>—</td></tr>
+        <tr><td>7</td><td>h</td><td>60</td><td>2</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Add them up: 472 cells outside the core, which is the count in the literature.
+      And notice the one anomaly — the 120-cell bundle in layer 5 is the only one
+      whose cells keep <em>no</em> symmetry at all. That is exactly why it is the only
+      bundle that splits. A cell with a mirror in its own stabiliser is its own
+      reflection; a cell with none has a distinct mirror twin somewhere else in the
+      bundle, and the bundle falls in half.
+    </p>
+    <p>
+      Du Val wrote the same thing with typography: where a shell held more than one
+      shape he added subscripts (e<sub>1</sub>, e<sub>2</sub>, f<sub>1</sub>…), and
+      where a shape came in two hands he set the right-handed one in roman and the
+      left-handed one in <i>italic</i>. Layer, bundle, sub-cell. The table you are
+      clicking is his notation with the italics turned into checkboxes.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 5 -->
+  <section id="support" data-short="Support">
+    <h2>5 · Cells have to rest on something</h2>
+    <p>
+      Select a cell from layer 5 on its own and you get twelve spikes hanging in
+      mid-air, touching nothing. It is a legitimate set of cells and a perfectly
+      useless solid.
+    </p>
+    <div class="fig" id="figSupport" data-parts="cells solid" data-cells="{0,5(0)}"></div>
+    <div class="try">
+      <span>Compare:</span>
+      <button data-target="figSupport" data-cells="{0,5(0)}" class="on">core + layer 5, cell 0 — floating</button>
+      <button data-target="figSupport" data-cells="{0,1,2,3,4(1)5(0)}">everything holding it up</button>
+    </div>
+    <p>
+      The second selection is the first plus every cell beneath it, all the way down
+      to the core. In the app you get it in one gesture: <kbd>shift</kbd>-click the
+      cell and the program follows the chain of contacts downward and takes the whole
+      supporting set.
+    </p>
+    <aside class="note-box">
+      <b>Miller's rules, and where 59 comes from.</b> When Coxeter, Du Val, Flather
+      and Petrie published <i>The Fifty-Nine Icosahedra</i> in 1938, the number 59 was
+      not a discovery about space — it was a consequence of a definition. The criteria
+      they adopted came from J. C. P. Miller: faces must lie in the twenty planes,
+      the figure must have the icosahedron's symmetry, each face must be a single
+      connected piece, and figures that merely touch along edges or that can be got
+      more simply are excluded. Change the rules and you change the number.
+      <br><br>
+      One clause matters here more than the rest. Miller's third rule asks the parts
+      in each face plane to have three-fold symmetry <em>with or without
+      reflection</em> — and that "with or without" is precisely the
+      I<sub>h</sub>-versus-I dial in the program's symmetry panel. Of the 59, 32 are
+      mirror-symmetric and 27 are chiral; count both hands of the chiral ones and you
+      have 86 physically distinct solids. Only 18 of the 59 are fully supported.
+    </aside>
+    <p>
+      The program does not enforce Miller's rules for you — it lets you build whatever
+      you like, including the floating spikes above. What it gives you is the
+      <em>support relation</em>, so that a supported solid is always one gesture away.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 6 -->
+  <section id="famous" data-short="Famous solids">
+    <h2>6 · Four famous solids, by hand</h2>
+    <p>
+      Now the payoff. Each of these is a well-known polyhedron, and each is a
+      handful of clicks in the table.
+    </p>
+
+    <div class="fig" id="figFamous" data-parts="cells solid diagram" data-cells="{0,1}" data-spin="true"></div>
+
+    <div class="gallery">
+      <button data-target="figFamous" data-cells="{0,1}" class="on">
+        <b>The first stellation</b>
+        <code>{0,1}</code>
+        <span>Core plus the twenty cells of layer 1 — a pyramid on every face. Its
+          sixty triangles fall into twenty coplanar triples, so it really has twenty
+          six-sided faces: the small triambic icosahedron. 32 vertices.</span>
+      </button>
+
+      <button data-target="figFamous" data-cells="{0,2}">
+        <b>Compound of five octahedra</b>
+        <code>{0,2}</code>
+        <span>Skip layer 1 and take layer 2's thirty cells. The thirty outer points
+          sit at exactly √3 times the face-plane distance — the circumradius of an
+          octahedron on those planes. Five octahedra, interpenetrating.</span>
+      </button>
+
+      <button data-target="figFamous" data-cells="{0,1,2,3,4(1)5(0)}">
+        <b>The great icosahedron</b>
+        <code>{0,1,2,3,4(1)5(0)}</code>
+        <span>One of the four Kepler–Poinsot star polyhedra, described by Poinsot in
+          1809. Twelve spikes reaching φ³ ≈ 4.236 times the core's circumradius.
+          This is the supported selection from the previous section.</span>
+      </button>
+
+      <button data-target="figFamous" data-cells="{0,1,2,3,4,5,6,7}">
+        <b>The final stellation</b>
+        <code>{0,1,2,3,4,5,6,7}</code>
+        <span>Every cell there is — the outermost stellation, sometimes called the
+          echidnahedron for its spines. 92 vertices, 180 triangles, and the largest
+          solid the twenty planes can bound.</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 7 -->
+  <section id="chiral" data-short="Handedness">
+    <h2>7 · The one that comes in two hands</h2>
+    <p>
+      Remember layer 5's second bundle, the one that split into halves marked
+      <code>0</code> and <code>1</code>. Take everything up to layer 4, then add just
+      <em>one</em> of those halves:
+    </p>
+    <div class="fig" id="figChiral" data-parts="cells solid" data-cells="{0,1,2,3,4,5(1[1])}" data-spin="true"></div>
+    <div class="try">
+      <span>The two hands:</span>
+      <button data-target="figChiral" data-cells="{0,1,2,3,4,5(1[0])}">left <code>5(1[0])</code></button>
+      <button data-target="figChiral" data-cells="{0,1,2,3,4,5(1[1])}" class="on">right <code>5(1[1])</code></button>
+      <button data-target="figChiral" data-cells="{0,1,2,3,4,5(1)}">both — mirror-symmetric again</button>
+    </div>
+    <p>
+      Left and right are genuinely different solids: no rotation carries one onto the
+      other, only a reflection. Take both halves and the result is mirror-symmetric
+      once more.
+    </p>
+    <p>
+      This is the reason the program asks for two symmetry groups rather than one.
+      Build under <b>I<sub>h</sub></b> and the halves are welded together and you can
+      never have just one. Build under <b>I</b> and the choice opens up.
+    </p>
+    <p>
+      The textbook case is a pair of solids Edmund Hess described in 1876. Five regular
+      tetrahedra can be inscribed in a dodecahedron, and the resulting <b>compound of
+      five tetrahedra</b> has only the 60 rotations — it is chiral, and there are two
+      of them, mirror images that no rotation can interchange. Put both together and
+      you get the <b>compound of ten tetrahedra</b>, which is mirror-symmetric again.
+      Both are stellations of the icosahedron. In cell language: the ten-tetrahedron
+      compound is a whole bundle, and each five-tetrahedron compound is one of its two
+      halves. Choosing a sub-cell instead of its parent is <em>literally</em> the
+      difference between building one and building the other.
+    </p>
+    <aside class="note-box">
+      <b>This is what the sample files are.</b> The repository ships four
+      <code>.stel</code> files from the original program. <code>sample_02.stel</code>
+      contains exactly <code>{0,1,2,3,4,5(1[1])}</code> — the right-hand selection
+      above. It is also precisely what you get from a single <kbd>shift</kbd>-click on
+      that one half-bundle, because its supporting set is everything below it.
+    </aside>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 8 -->
+  <section id="practice" data-short="Try it">
+    <h2>8 · Your turn</h2>
+    <p>
+      Here is a table with nothing selected and no rails. Some things to try:
+    </p>
+    <ul class="todo">
+      <li>Click <b>0</b> in row 0 to put the icosahedron back.</li>
+      <li>Click a box far down the table, then <kbd>shift</kbd>-click the same box —
+        watch the difference between a floating shell and a supported solid.</li>
+      <li><kbd>⌥</kbd>-click (or right-click) a cell in a low layer and see everything
+        resting on it disappear with it.</li>
+      <li>Click a row <em>number</em> to take a whole layer.</li>
+      <li>Hover any box: the readout names the cell, how many congruent pieces it has,
+        and its volume.</li>
+    </ul>
+    <div class="fig fig-tall" id="figFree" data-parts="cells solid diagram" data-cells="{0}"></div>
+    <p class="fig-caption">
+      The string underneath is the same notation the program saves in its files.
+      <code>{0,1,2}</code> means layers 0, 1 and 2 entire; <code>5(1[1])</code> means
+      layer 5, bundle 1, half 1.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────────── 9 -->
+  <section id="reading" data-short="Further reading">
+    <h2>9 · Where this comes from</h2>
+    <p>
+      Almost nothing in the Cells table is new. The shells are Du Val's, the
+      selection rules are Miller's, the diagram is Brückner's, and the solids are
+      mostly Hess's and Poinsot's. What the program adds is that you can click them.
+    </p>
+    <ul class="refs">
+      <li>
+        H. S. M. Coxeter, P. Du Val, H. T. Flather and J. F. Petrie,
+        <i>The Fifty-Nine Icosahedra</i>, University of Toronto Press, <b>1938</b>.
+        Second edition Springer-Verlag 1982; third edition Tarquin 1999, with new
+        material and photographs by Kate and David Crennell. Flather made the card
+        models, Petrie drew the figures, Du Val devised the shell notation, and the
+        selection criteria are J. C. P. Miller's.
+        <span class="r-note">The source of the shells a–h, the sub-cell handedness
+        convention, and the number 59.</span>
+      </li>
+      <li>
+        Max Brückner, <i>Vielecke und Vielflache: Theorie und Geschichte</i>,
+        Teubner, <b>1900</b>.
+        <span class="r-note">Where stellation diagrams of this kind enter the
+        literature.</span>
+      </li>
+      <li>
+        Edmund Hess, <b>1876</b> — the compounds of five octahedra, five tetrahedra
+        and ten tetrahedra.
+        <span class="r-note">Three of the solids in section 6, and the chirality in
+        section 7.</span>
+      </li>
+      <li>
+        Louis Poinsot, <b>1809</b> — the great icosahedron and great stellated
+        dodecahedron, completing the four Kepler–Poinsot star polyhedra begun by
+        Kepler in 1619.
+      </li>
+      <li>
+        Magnus Wenninger, <i>Polyhedron Models</i>, Cambridge University Press.
+        <span class="r-note">Tabulates the icosahedron's cell shapes and counts —
+        20, 30, 60, 20, 60, 120, 12, 30, 60, 60, which is 472 cells outside the core.
+        The program computes the same multiset independently.</span>
+      </li>
+      <li>
+        <a href="https://mathworld.wolfram.com/IcosahedronStellations.html" target="_blank" rel="noopener">MathWorld, <i>Icosahedron Stellations</i></a>
+        <span class="r-note">Of the 59: 32 reflexible, 27 chiral, 18 fully
+        supported.</span>
+      </li>
+      <li>
+        <a href="https://www.steelpillow.com/polyhedra/icosa/stelfacet/StelFacet.html" target="_blank" rel="noopener">Guy Inchbald, <i>Stellating the Icosahedron and Faceting the Dodecahedron</i></a>
+        <span class="r-note">A modern reading of Miller's rules and Du Val's
+        notation, and of what the rules leave out.</span>
+      </li>
+      <li>
+        <a href="http://bulatov.org/polyhedra/stellation_applet/" target="_blank" rel="noopener">Vladimir Bulatov, <i>Stellation applet</i></a>, 1998–2001.
+        <span class="r-note">The program this one is a port of, and the origin of the
+        Cells window.</span>
+      </li>
+    </ul>
+    <p class="colophon">
+      The program is a JavaScript port of the Stellation applet written by
+      <a href="http://bulatov.org/polyhedra/stellation_applet/" target="_blank" rel="noopener">Vladimir Bulatov</a>
+      between 1998 and 2001. The geometry here is a direct port of his algorithm,
+      checked against the original Java: the same facet counts, the same cell
+      structure, the same volumes to six decimal places. Source and notes are on
+      <a href="https://github.com/yaroslavvb/stellation" target="_blank" rel="noopener">GitHub</a>.
+    </p>
+  </section>
+
+</main>
+
+<script type="module" src="js/walkthrough.js"></script>
+</body>
+</html>

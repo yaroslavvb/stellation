@@ -70,6 +70,7 @@ header h1 {
   white-space: nowrap;
 }
 header h1::before { content: "✦"; color: var(--accent); margin-right: 6px; }
+header a.ghost { text-decoration: none; display: inline-block; }
 .spacer { flex: 1; }
 .dim { color: var(--dim); }
 
