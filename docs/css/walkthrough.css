@@ -350,3 +350,13 @@ i.swatch {
   vertical-align: middle;
 }
 .anatomy-key .k5 { letter-spacing: -1px; color: var(--dim); }
+.gallery em {
+  align-self: flex-start;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--accent-2);
+}
+.gallery button { gap: 3px; }
+.gallery b { margin-bottom: 2px; }
+.gallery span { margin-top: 3px; }
