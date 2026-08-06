@@ -943,15 +943,40 @@ export function createDiagram(stel, planeIndex, selectedOrbits, vertexUp = 0) {
       selected: selected.has(f),
       poly: f.v.map(project),
     })),
-    extent: (() => {
-      let m = 0;
-      for (const f of facets) for (const id of f.v) {
-        const [x, y] = project(id);
-        m = Math.max(m, Math.abs(x), Math.abs(y));
-      }
-      return m;
-    })(),
+    extent: diagramExtent(facets, project),
   };
+}
+
+/**
+ * How wide to draw the stellation diagram.
+ *
+ * Fitting to the outermost facet is right for the classic solids, where the
+ * biggest facet is only a few times the typical one. But two nearly parallel
+ * planes meet enormously far away, so a deep arrangement grows a handful of
+ * facets hundreds of times the size of the rest — on the great snub
+ * icosidodecahedron the largest is 400x the median — and fitting to those
+ * squeezes every cell you might actually want to click into a single dot.
+ *
+ * So: fit to the outermost facet normally, and only fall back to a percentile
+ * when the tail is genuinely extreme. That leaves every well-behaved diagram
+ * exactly as it was, and rescues the pathological ones.
+ */
+export function diagramExtent(facets, project) {
+  const radii = facets.map(f => {
+    let r = 0;
+    for (const id of f.v) {
+      const [x, y] = project(id);
+      r = Math.max(r, Math.hypot(x, y));
+    }
+    return r;
+  }).sort((a, b) => a - b);
+
+  if (!radii.length) return 1;
+  const max = radii[radii.length - 1];
+  const at = p => radii[Math.min(radii.length - 1, Math.floor(p * radii.length))];
+  const p90 = at(0.90);
+  if (p90 > 0 && max > p90 * 6) return at(0.95) * 1.2;   // runaway tail: crop it
+  return max;
 }
 
 /** rotation matrix taking unit vector `from` onto unit vector `to` */

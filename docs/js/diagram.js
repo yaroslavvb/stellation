@@ -19,29 +19,78 @@ export class DiagramView {
     this.pan = { x: 0, y: 0 };
     this.showAll = true;
 
+    // Drag pans, a click without meaningful movement selects. Without the
+    // distinction you cannot pan at all without toggling whatever is underneath.
+    let down = null, moved = 0;
+
+    // capture can throw for a pointer the browser is not tracking; it is an
+    // optimisation for dragging outside the canvas, never a precondition
+    const capture = (e, on) => {
+      try { on ? canvas.setPointerCapture?.(e.pointerId) : canvas.releasePointerCapture?.(e.pointerId); }
+      catch { /* nothing to capture */ }
+    };
+
+    canvas.addEventListener('pointerdown', (e) => {
+      down = { x: e.clientX, y: e.clientY, pan: { ...this.pan } };
+      moved = 0;
+      capture(e, true);
+    });
+
     canvas.addEventListener('pointermove', (e) => {
+      if (down) {
+        const dx = e.clientX - down.x, dy = e.clientY - down.y;
+        moved = Math.max(moved, Math.hypot(dx, dy));
+        if (moved > 3) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          this.pan = { x: down.pan.x + dx * dpr, y: down.pan.y + dy * dpr };
+          canvas.style.cursor = 'grabbing';
+          this.draw();
+        }
+        return;
+      }
       const i = this.hitTest(e);
       if (i !== this.hover) {
         this.hover = i;
-        this.canvas.style.cursor = i >= 0 ? 'pointer' : 'default';
+        this.canvas.style.cursor = i >= 0 ? 'pointer' : 'grab';
         this.draw();
         this.onHover?.(i >= 0 ? this.data.facets[i] : null);
       }
     });
-    canvas.addEventListener('pointerleave', () => {
-      if (this.hover !== -1) { this.hover = -1; this.draw(); this.onHover?.(null); }
-    });
-    canvas.addEventListener('click', (e) => {
+
+    const release = (e) => {
+      if (!down) return;
+      const wasDrag = moved > 3;
+      down = null;
+      capture(e, false);
+      canvas.style.cursor = 'grab';
+      if (wasDrag) return;
       const i = this.hitTest(e);
       if (i >= 0) {
         this.onToggle?.(this.data.facets[i],
           { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey });
       }
+    };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', () => { down = null; });
+
+    canvas.addEventListener('pointerleave', () => {
+      if (this.hover !== -1) { this.hover = -1; this.draw(); this.onHover?.(null); }
     });
+
+    canvas.addEventListener('dblclick', () => this.resetView());
+
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const f = Math.exp(-e.deltaY * 0.0015);
-      this.zoom = Math.min(40, Math.max(0.4, this.zoom * f));
+      // zoom about the pointer, so you can dive into a corner of the diagram
+      const f = Math.min(4, Math.max(0.25, Math.exp(-e.deltaY * 0.0015)));
+      const before = this.zoom;
+      this.zoom = Math.min(400, Math.max(0.04, this.zoom * f));   // far enough out to see the cropped tail
+      const k = this.zoom / before;
+      const fr = this.canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const px = (e.clientX - fr.left) * dpr, py = (e.clientY - fr.top) * dpr;
+      const cx = this.canvas.width / 2 + this.pan.x, cy = this.canvas.height / 2 + this.pan.y;
+      this.pan = { x: this.pan.x + (cx - px) * (k - 1), y: this.pan.y + (cy - py) * (k - 1) };
       this.draw();
     }, { passive: false });
 
@@ -49,8 +98,15 @@ export class DiagramView {
   }
 
   setData(data) {
+    const changedPlane = this.data?.planeIndex !== data?.planeIndex;
     this.data = data;
     this.hover = -1;
+    if (changedPlane) this.resetView(); else this.draw();
+  }
+
+  resetView() {
+    this.zoom = 1;
+    this.pan = { x: 0, y: 0 };
     this.draw();
   }
 

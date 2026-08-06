@@ -384,8 +384,10 @@ async function build(cellsString) {
     }
 
     await refresh();
+    const slow = info.ms > 5000 && !state.depthAuto;
     setStatus(`${info.planes} planes · ${info.facets.toLocaleString()} facets · ` +
-              `${info.layers} layers · ${info.ms} ms`, false);
+              `${info.layers} layers · ${(info.ms / 1000).toFixed(info.ms > 5000 ? 1 : 3)} s` +
+              (slow ? ' — lower the depth for a quicker rebuild' : ''), false);
   } catch (err) {
     setStatus('failed: ' + err.message, false);
     startWorker();

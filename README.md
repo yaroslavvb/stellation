@@ -172,6 +172,19 @@ at "every layer", complete and gapless, in under a second. Across all 121 catalo
 entries the median build is 270 ms, 103 have no truncated layers at all, and the
 worst case is 4.5 s instead of 30. The slider overrides it.
 
+### Reading the diagram
+
+The diagram is fitted to its outermost facet, which is right for the classic
+solids where the biggest facet is only a few times the typical one. But two
+nearly parallel planes meet enormously far away, so a deep arrangement grows a
+handful of facets hundreds of times the size of the rest — on the great snub
+dodecicosidodecahedron the largest is **400× the median** — and fitting to those
+squeezes every cell you might want to click into a single dot. So the fit falls
+back to a percentile when, and only when, the tail is that extreme; every
+well-behaved diagram is framed exactly as before.
+
+Drag to pan, scroll to zoom about the pointer, double-click to reset.
+
 ### The algorithm
 
 The heart of it, and the reason the port is small:
