@@ -6,6 +6,7 @@
 import { Renderer3D } from './render3d.js';
 import { DiagramView } from './diagram.js';
 import { CellsPanel } from './cells.js';
+import { labelKeys } from './platform.js';
 import { toOFF, toOBJ, toSTL, writeStel, facePlanes, suggestDepth } from './core.js';
 import { writePreset, readDocument, newDocumentName } from './preset.js';
 
@@ -98,9 +99,7 @@ async function boot() {
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
 
-  // macOS spells this key "option"; everywhere else it is "alt"
-  const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-  $$('.kSub').forEach(k => { k.textContent = mac ? '\u2325 option' : 'alt'; });
+  labelKeys();          // name the carve modifier for this platform
 
   wireControls();
   startWorker();

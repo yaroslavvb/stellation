@@ -13,7 +13,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, '..', '..');
 const DATA = join(here, '..', 'data');
-const SAMPLES = join(here, '..', 'samples');
+const SAMPLES = join(ROOT, 'stellation', 'samples');
 
 const geometry = JSON.parse(readFileSync(join(DATA, 'geometry.json'), 'utf8'));
 const symmetry = JSON.parse(readFileSync(join(DATA, 'symmetry.json'), 'utf8'));

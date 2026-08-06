@@ -24,6 +24,7 @@
   <span class="crumb">Cells walkthrough</span>
   <div class="spacer"></div>
   <a class="ghost" href="historical.html">History</a>
+  <a class="ghost" href="bruckner.html">Brückner 1900</a>
   <a class="ghost" href="index.html">Open the app →</a>
   <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
 </header>
@@ -38,8 +39,8 @@
   <p class="standfirst">
     The <b>Cells</b> table is the control that actually builds a stellation. It looks
     like a wall of numbers. It is really a map of the shells of space around a
-    polyhedron — and once you can read one row of it, you can build the great
-    icosahedron by hand in about four clicks.
+    polyhedron — and once one row of it can be read, the great icosahedron is two
+    clicks away.
   </p>
   <p class="byline">
     Every figure below is live and clickable. They run the same code as the app.
@@ -69,11 +70,13 @@
   <section id="planes" data-short="One face">
     <h2>2 · Twenty planes, seen from one face</h2>
     <p>
-      An icosahedron has twenty faces, so twenty planes. Stand on one of them and
-      look straight down: the other nineteen cross your plane in a set of lines, and
-      those lines cut it into regions. This picture is the
+      An icosahedron has twenty faces, and so twenty planes. Viewed perpendicular to
+      one of them, the other nineteen cross it in a set of lines that divide it into
+      regions. This figure is the
       <b>stellation diagram</b>, and it has been the working drawing of the subject
-      since Max Brückner's <i>Vielecke und Vielflache</i> of 1900.
+      since the 1870s. Edmund Hess was using such diagrams by 1876; Max Brückner
+      systematised the icosahedron's in <i>Vielecke und Vielflache</i> (1900), crediting
+      the method to Hess, and every later treatment descends from those two.
     </p>
     <div class="fig fig-wide" id="figDiagram" data-parts="diagram" data-cells="{0}" data-locked="true"></div>
     <p>
@@ -82,7 +85,7 @@
       is characteristic of the icosahedron; every solid has its own signature diagram.
     </p>
     <aside class="note-box">
-      <b>A distinction worth getting right early.</b> The regions you see here are
+      <b>Regions and cells are not the same thing.</b> The regions here are
       two-dimensional: they are pieces of <em>one plane</em>. The things you select
       to build a solid are three-dimensional <b>cells</b> — the little volumes the
       full set of planes encloses. A cell is bounded above and below by regions like
@@ -95,10 +98,10 @@
   <section id="cells" data-short="Cells & layers">
     <h2>3 · Cells, and the shells they sit in</h2>
     <p>
-      The twenty planes cut the space around the icosahedron into 67 bounded cells.
-      They are not scattered at random: they fall into concentric <b>shells</b>, and
-      the program numbers those shells <b>layers</b>, counting outward from the solid
-      itself.
+      The twenty planes cut the space around the icosahedron into <b>473 bounded
+      cells</b>, of only twelve distinct shapes. They are not scattered at random: they
+      fall into concentric <b>shells</b>, and the program numbers those shells
+      <b>layers</b>, counting outward from the solid itself.
     </p>
     <p>
       Layer 0 is the icosahedron. Layer 1 is the first shell of cells resting on its
@@ -132,17 +135,16 @@
   <section id="row" data-short="Reading a row">
     <h2>4 · How to read one row</h2>
     <p>
-      Here is the whole grammar of the table. A row is a layer. Along it sit the
-      cells of that layer — but not one box per cell, which would be unusable:
-      layer 3 alone has sixty cells.
+      The table has a compact grammar. A row is a layer, and along it sit the cells of
+      that layer — though not one box per cell, which would be unusable: layer 3 alone
+      contains sixty.
     </p>
     <p>
-      Instead, cells that the solid's symmetry can carry onto one another are
-      bundled into a single box. Take one of layer 1's twenty cells and spin the
-      icosahedron: it lands on each of the other nineteen in turn. They are the same
-      cell in twenty places, so they get one box. Mathematically the bundle is an
-      <b>orbit</b> of the symmetry group; practically it is the smallest thing you
-      can add without breaking the symmetry.
+      Cells that the solid's symmetry carries onto one another are instead bundled into
+      a single box. Rotating the icosahedron carries any one of layer 1's twenty cells
+      onto each of the other nineteen in turn; they are one cell occupying twenty
+      positions, and receive one box. The bundle is an <b>orbit</b> of the symmetry
+      group, and is the smallest addition that preserves the symmetry.
     </p>
 
     <figure class="anatomy">
@@ -167,40 +169,39 @@
 
     <h3>What the coloured bars mean</h3>
     <p>
-      The bar under a box is not decoration and it is not a selection state. It says
-      <b>how many congruent cells the box stands for</b> — one hue per count. For the
-      icosahedron only six counts occur in the whole table:
+      The bar beneath each box encodes neither selection state nor layer. It records
+      <b>how many congruent cells the box represents</b>, one hue per count. Six counts
+      occur in the icosahedron's table:
     </p>
     <div id="barLegend" class="legend big"></div>
     <p>
-      So every box with the same colour holds the same number of pieces, and that
-      number is not arbitrary: it is 120 divided by how much symmetry a single cell
-      keeps, as the table below shows. Scanning a column of colour down the table is
-      scanning for cells of the same <em>kind</em> — all the vertex-centred ones, all
-      the edge-centred ones — which is precisely the structure you need to see when
-      you are hunting for a particular solid.
+      Boxes sharing a colour therefore contain the same number of pieces, and that
+      number is determined: it is 120 divided by the symmetry a single cell retains, as
+      the table below sets out. Following a colour down the table identifies cells of
+      the same <em>kind</em> — the vertex-centred ones, the edge-centred ones — which is
+      the structure needed when searching for a particular solid.
     </p>
     <p>
-      The one to watch for is the rarest: <span id="barRare"></span>, which occurs
-      exactly once, in layer 5. That is the bundle with no symmetry of its own, and
-      the only one that splits into two hands.
+      Of particular note is the rarest, <span id="barRare"></span>, which occurs once,
+      in layer 5. It is the only bundle whose cells retain no symmetry of their own,
+      and the only one that separates into two hands.
     </p>
 
     <p>
-      That splitting is not decoration. The program groups cells under the full
-      symmetry of the polyhedron (for the icosahedron, the group <b>I<sub>h</sub></b>,
-      120 operations including reflections) and then splits each bundle under the
-      symmetry you want the <em>stellation</em> to have (<b>I</b>, the 60 rotations
-      alone). A bundle that is unchanged by reflection stays whole. A bundle that
-      is not — a chiral one — falls into two mirror halves, and you may take just one.
+      The split arises from a deliberate two-stage construction. Cells are first
+      grouped under the full symmetry of the polyhedron — for the icosahedron the group
+      <b>I<sub>h</sub></b>, of order 120, which includes reflections. Each bundle is
+      then subdivided under the symmetry required of the <em>stellation</em>, normally
+      <b>I</b>, the 60 rotations alone. A bundle preserved by reflection is unaffected;
+      a chiral bundle separates into two mirror halves, either of which may be taken
+      independently.
     </p>
 
     <h3>Why the counts are what they are</h3>
     <p>
-      Every number in the table is forced. A bundle's size is the order of the
-      symmetry group divided by how much symmetry a single cell has left — the
-      orbit–stabiliser theorem, doing all the work. Since I<sub>h</sub> has 120
-      operations:
+      Every number in the table is determined. A bundle's size is the order of the
+      symmetry group divided by the symmetry a single cell retains — the
+      orbit–stabiliser theorem. Since I<sub>h</sub> has order 120:
     </p>
     <table class="shells">
       <thead><tr><th>layer</th><th>Du Val</th><th>cells</th><th>what one cell keeps</th><th>so it sits…</th></tr></thead>
@@ -216,50 +217,48 @@
       </tbody>
     </table>
     <p>
-      Add them up: 472 cells outside the core, which is the count in the literature.
-      And notice the one anomaly — the 120-cell bundle in layer 5 is the only one
-      whose cells keep <em>no</em> symmetry at all. That is exactly why it is the only
-      bundle that splits. A cell with a mirror in its own stabiliser is its own
-      reflection; a cell with none has a distinct mirror twin somewhere else in the
-      bundle, and the bundle falls in half.
+      These sum to 472 cells outside the core, the count given in the literature. One
+      bundle is anomalous: the 120-cell bundle in layer 5 is the only one whose cells
+      retain <em>no</em> symmetry, which is precisely why it is the only one to split.
+      A cell whose stabiliser contains a mirror is its own reflection; a cell whose
+      stabiliser is trivial has a distinct mirror twin elsewhere in the bundle, and the
+      bundle divides in half.
     </p>
     <p>
-      Du Val wrote the same thing with typography: where a shell held more than one
-      shape he added subscripts (e<sub>1</sub>, e<sub>2</sub>, f<sub>1</sub>…), and
-      where a shape came in two hands he set the right-handed one in roman and the
-      left-handed one in <i>italic</i>. Layer, bundle, sub-cell. The table you are
-      clicking is his notation with the italics turned into checkboxes.
+      Du Val expressed the same structure typographically: subscripts
+      (e<sub>1</sub>, e<sub>2</sub>, f<sub>1</sub>…) where a shell held more than one
+      shape, and roman against <i>italic</i> for the right- and left-handed forms of a
+      chiral one. Layer, bundle, sub-cell. The table reproduces his notation with the
+      italics replaced by checkboxes.
     </p>
   </section>
 
   <!-- ─────────────────────────────────────────── 5 -->
   <section id="support" data-short="Support">
-    <h2>5 · Cells have to rest on something</h2>
+    <h2>5 · Support</h2>
     <p>
-      Select a cell from layer 5 on its own and you get twelve spikes hanging in
-      mid-air, touching nothing. It is a legitimate set of cells and a perfectly
-      useless solid.
+      A cell selected from layer 5 alone yields twelve spikes suspended in mid-air,
+      touching nothing. It is a legitimate set of cells, but not a usable solid.
     </p>
     <div class="fig" id="figSupport" data-parts="cells solid" data-cells="{0,5(0)}"></div>
     <div class="try">
       <span>Compare:</span>
       <button data-target="figSupport" data-cells="{0,5(0)}" class="on">core + layer 5, cell 0 — floating</button>
-      <button data-target="figSupport" data-cells="{0,1,2,3,4(1)5(0)}">everything holding it up</button>
-      <button data-target="figSupport" data-cells="{0,2}">and a subtler failure: <code>{0,2}</code></button>
+      <button data-target="figSupport" data-cells="{0,1,2,3,4(1)5(0)}">with its supporting set</button>
+      <button data-target="figSupport" data-cells="{0,2}">a subtler failure: <code>{0,2}</code></button>
     </div>
     <p>
-      The second selection is the first plus every cell beneath it, all the way down
-      to the core. In the app you get it in one gesture: <kbd>shift</kbd>-click the
-      cell and the program follows the chain of contacts downward and takes the whole
-      supporting set.
+      The second selection adds every cell beneath the first, down to the core. In the
+      application this is a single gesture: <kbd>shift</kbd>-click follows the chain of
+      contacts downward and takes the entire supporting set.
     </p>
     <p>
-      The third button is the trap. <code>{0,2}</code> — core plus shell c, skipping
-      shell b — looks <em>exactly</em> like the compound of five octahedra from
-      outside, because the missing shell is buried. It is hollow. The real compound
-      is <code>{0,1,2}</code>, and the only way to tell them apart is to ask whether
-      every cell is resting on something. This is the sort of mistake the support
-      relation exists to prevent, and it is easy to make by eye.
+      The third selection illustrates a subtler failure. <code>{0,2}</code> — core plus
+      shell c, omitting shell b — is externally indistinguishable from the compound of
+      five octahedra, because the missing shell is buried. It is nonetheless hollow.
+      The compound is <code>{0,1,2}</code>, and the two can be distinguished only by
+      asking whether every cell rests on something. The support relation exists to
+      catch precisely this; visual inspection does not.
     </p>
     <aside class="note-box">
       <b>Miller's rules, and where 59 comes from.</b> When Coxeter, Du Val, Flather
@@ -292,10 +291,10 @@
 
   <!-- ─────────────────────────────────────────── 6 -->
   <section id="famous" data-short="Famous solids">
-    <h2>6 · Four famous solids, by hand</h2>
+    <h2>6 · Six solids, constructed by hand</h2>
     <p>
-      Now the payoff. Each of these is a well-known polyhedron, and each is a
-      handful of clicks in the table.
+      Each of the following is a well-known polyhedron, and each is a few clicks in the
+      table.
     </p>
 
     <div class="fig" id="figFamous" data-parts="cells solid diagram" data-cells="{0,1}" data-spin="true"></div>
@@ -312,10 +311,10 @@
       <button data-target="figFamous" data-cells="{0,1,2}">
         <b>Compound of five octahedra</b>
         <code>{0,1,2}</code><em>Du Val C</em>
-        <span>Everything out to shell c. Its thirty outer vertices sit at φ² times the
-          core's circumradius — exactly where an octahedron's would, on these planes.
-          Five octahedra, interpenetrating. Usually credited to Hess, 1876, though
-          Cauchy appears to have had it in 1812.</span>
+        <span>Everything out to shell c. Its thirty outer vertices lie on the
+          icosahedron's 2-fold axes, at 1.376 times the core's circumradius — the six
+          vertices of each of five interpenetrating octahedra. Usually credited to Hess
+          in 1876, though Inchbald reads Cauchy as having had it in 1812.</span>
       </button>
 
       <button data-target="figFamous" data-cells="{0,1,2,3,4,5(1[1])}">
@@ -363,11 +362,11 @@
 
   <!-- ─────────────────────────────────────────── 7 -->
   <section id="chiral" data-short="Handedness">
-    <h2>7 · The one that comes in two hands</h2>
+    <h2>7 · Chirality</h2>
     <p>
-      Remember layer 5's second bundle, the one that split into halves marked
-      <code>0</code> and <code>1</code>. Take everything up to layer 4, then add just
-      <em>one</em> of those halves:
+      Layer 5's second bundle divides into the halves marked <code>0</code> and
+      <code>1</code>. Taking everything out to layer 4 and adding <em>one</em> of those
+      halves gives:
     </p>
     <div class="fig" id="figChiral" data-parts="cells solid" data-cells="{0,1,2,3,4,5(1[1])}" data-spin="true"></div>
     <div class="try">
@@ -377,18 +376,17 @@
       <button data-target="figChiral" data-cells="{0,1,2,3,4,5(1)}">both — mirror-symmetric again</button>
     </div>
     <p>
-      Left and right are genuinely different solids: no rotation carries one onto the
-      other, only a reflection. Take both halves and the result is mirror-symmetric
-      once more.
+      The two are genuinely distinct solids: no rotation carries one onto the other,
+      only a reflection. Taking both halves restores mirror symmetry.
     </p>
     <p>
-      This is the reason the program asks for two symmetry groups rather than one.
-      Build under <b>I<sub>h</sub></b> and the halves are welded together and you can
-      never have just one. Build under <b>I</b> and the choice opens up.
+      This is why the program requires two symmetry groups rather than one. Under
+      <b>I<sub>h</sub></b> the halves are inseparable; under <b>I</b> they may be
+      chosen independently.
     </p>
     <p>
       The textbook case is a pair of solids usually credited to Edmund Hess in 1876,
-      though Cauchy seems to have known them in 1812. Five regular tetrahedra can be
+      though Inchbald reads Cauchy as having had them in 1812. Five regular tetrahedra can be
       inscribed in a dodecahedron, and the resulting <b>compound of five
       tetrahedra</b> has only the 60 rotations — it is chiral, and there are two
       of them, mirror images that no rotation can interchange. Put both together and
@@ -401,36 +399,36 @@
       building one and building the other.
     </p>
     <aside class="note-box">
-      <b>You have been looking at a famous solid.</b> The selection in this figure,
+      <b>The figure above is a well-known solid.</b> The selection shown,
       <code>{0,1,2,3,4,5(1[1])}</code>, is Du Val's <b>Ef₁</b> — the
       <b>compound of five tetrahedra</b>, one of the five regular compounds, and one
       of only two chiral stellations of the icosahedron that are fully supported.
       Both counts agree: 1+20+30+60+20+60 cells out to shell e, plus 60 for one hand
       of f₁, is 251, which is the figure in the literature.
       <br><br>
-      And it is what the original program shipped as an example.
+      It is also what the original program shipped as an example:
       <code>sample_02.stel</code>, one of four <code>.stel</code> files in the
-      repository, contains exactly this string. It is also precisely what a single
-      <kbd>shift</kbd>-click on that one half-bundle produces, because its supporting
-      set is everything below it.
+      repository, contains exactly this string — and it is what a single
+      <kbd>shift</kbd>-click on that half-bundle produces, its supporting set being
+      everything beneath it.
     </aside>
   </section>
 
   <!-- ─────────────────────────────────────────── 8 -->
   <section id="practice" data-short="Try it">
-    <h2>8 · Your turn</h2>
+    <h2>8 · Exercises</h2>
     <p>
-      Here is a table with nothing selected and no rails. Some things to try:
+      The table below begins empty and is unconstrained.
     </p>
     <ul class="todo">
-      <li>Click <b>0</b> in row 0 to put the icosahedron back.</li>
-      <li>Click a box far down the table, then <kbd>shift</kbd>-click the same box —
-        watch the difference between a floating shell and a supported solid.</li>
-      <li><kbd>⌥</kbd>-click (or right-click) a cell in a low layer and see everything
-        resting on it disappear with it.</li>
-      <li>Click a row <em>number</em> to take a whole layer.</li>
-      <li>Hover any box: the readout names the cell, how many congruent pieces it has,
-        and its volume.</li>
+      <li>Click <b>0</b> in row 0 to restore the icosahedron.</li>
+      <li>Click a box far down the table, then <kbd>shift</kbd>-click the same box, and
+        compare the floating shell with the supported solid.</li>
+      <li><kbd class="kSub">alt</kbd>-click, or right-click, a cell in a low layer to remove it
+        together with everything resting on it.</li>
+      <li>Click a row <em>number</em> to select an entire layer.</li>
+      <li>Hover over any box: the readout gives the cell's identifier, its number of
+        congruent pieces, and its volume.</li>
     </ul>
     <div class="fig fig-tall" id="figFree" data-parts="cells solid diagram" data-cells="{0}"></div>
     <p class="fig-caption">
@@ -444,16 +442,17 @@
   <section id="reading" data-short="Further reading">
     <h2>9 · Where this comes from</h2>
     <p>
-      Almost nothing in the Cells table is new. The shells are Du Val's, the
-      selection rules are Miller's, the diagram is Brückner's, and the solids are
-      mostly Hess's and Poinsot's. What the program adds is that you can click them.
+      Little in the Cells table is new. The shells are Du Val's, the selection rules
+      Miller's, the diagram Hess's by way of Brückner, and the solids largely Hess's and
+      Poinsot's. The program's contribution is that they can be manipulated directly.
     </p>
     <aside class="note-box">
-      <b>Why a table at all?</b> Most stellation software asks you to pick cells
-      <em>geometrically</em> — click a region of the stellation diagram, or a face of
-      the solid. That is intuitive, but it answers "which cell is behind this facet?"
-      only indirectly, and one click can cascade into many cells. A table instead
-      shows you the whole state space at once, at the cost of abstraction.
+      <b>The case for a table.</b> Most stellation software selects cells
+      <em>geometrically</em>: by clicking a region of the stellation diagram, or a face
+      of the solid. That is intuitive, but it answers the question "which cell lies
+      behind this facet?" only indirectly, and a single click may cascade into many
+      cells. A table presents the whole state space at once, at the cost of
+      abstraction.
       <br><br>
       Of the stellation programs written since 1980, a survey turns up essentially
       only Bulatov's that offers a layers × cells × sub-cells grid. The nearest
@@ -461,11 +460,10 @@
       as a graph rather than a grid — and its author cautions in his own manual that
       it is usually not an intuitive way to build stellations.
       <br><br>
-      What makes the grid pay for itself here is the third column: the sub-cell
-      split, which only appears once you let the stellation have less symmetry than
-      the polyhedron. Take that away and the table really is just a list. With it,
-      the table is the only place the handedness of a solid is something you can
-      point at.
+      What justifies the grid here is its third column: the sub-cell split, which
+      arises only when the stellation is permitted less symmetry than the polyhedron.
+      Without it the table is a list; with it, the table is the only representation in
+      which a solid's handedness is directly addressable.
     </aside>
     <ul class="refs">
       <li>
@@ -481,14 +479,17 @@
       <li>
         Max Brückner, <i>Vielecke und Vielflache: Theorie und Geschichte</i>,
         Teubner, <b>1900</b>.
-        <span class="r-note">Where stellation diagrams of this kind enter the
-        literature.</span>
+        <span class="r-note">Where the icosahedron's stellation diagram is worked out
+        in print — §153, "the complete figure of the planes of the icosahedron" — and
+        the source of the photographic plates that carried these solids into the
+        twentieth century.</span>
       </li>
       <li>
-        Edmund Hess, <b>1876</b> — the compounds of five octahedra, five tetrahedra
-        and ten tetrahedra.
+        Edmund Hess, <b>1876</b> — the earliest documented use of stellation diagrams,
+        and the compounds of five octahedra, five tetrahedra and ten tetrahedra.
         <span class="r-note">Three of the solids in section 6, and the chirality in
-        section 7.</span>
+        section 7. The 1876 date rests on secondary sources; Inchbald's timeline puts
+        the relevant work in 1883 and credits the compounds to Cauchy.</span>
       </li>
       <li>
         Louis Poinsot, <b>1809</b> — the great icosahedron and great stellated

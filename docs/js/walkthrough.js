@@ -14,6 +14,7 @@ import {
 import { Renderer3D, layerColor } from './render3d.js';
 import { DiagramView } from './diagram.js';
 import { CellsPanel } from './cells.js';
+import { labelKeys } from './platform.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -319,6 +320,7 @@ async function boot() {
     el.style.background = `rgb(${c})`;
   });
 
+  labelKeys();          // name the carve modifier for this platform
   $('#loading')?.remove();
 
   // progress rail

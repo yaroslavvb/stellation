@@ -1,17 +1,21 @@
 /*
- * The historical page — live figures for a chronological tour.
+ * Brückner 1900, interactive edition.
  *
- * Unlike the walkthrough, which lives on the icosahedron alone, this page moves
- * between solids: the octahedron for Kepler's stella octangula, the dodecahedron
- * for the three star polyhedra, the rhombic dodecahedron for Escher's, and so
- * on. Each arrangement is built once, on demand, the first time a figure that
- * needs it scrolls into view — building all of them up front would cost a second
- * or so for solids most readers will never reach.
+ * Three things have to line up on this page: the scanned plate, the printed
+ * pages that discuss it, and the same solid built live by the stellation
+ * engine. The first two come from the Internet Archive scan of the University
+ * of Toronto copy; the third is the same code the app runs.
+ *
+ * Page addressing. The Archive's reader indexes *images*, not printed pages,
+ * so every reference here is a 0-based image index ("leaf"). The map from
+ * printed page to leaf was taken from the scan's own scandata.xml and the
+ * plate leaves were confirmed by eye against the plate captions, so these
+ * numbers are checked rather than guessed. See PLATES and PAGES below.
  */
 
 import {
   buildStellation, extractMesh, createDiagram, selectedSubCells,
-  parseCells, formatCells, selKey, subCellForFacet, facePlanes, suggestDepth,
+  parseCells, formatCells, subCellForFacet, facePlanes, suggestDepth,
 } from './core.js';
 import { Renderer3D } from './render3d.js';
 import { DiagramView } from './diagram.js';
@@ -21,8 +25,42 @@ import { labelKeys } from './platform.js';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
+const IA = 'vieleckeundvielf00bruoft';
+const img = (leaf, size = 'medium') =>
+  `https://archive.org/download/${IA}/page/n${leaf}_${size}.jpg`;
+const readerSrc = leaf =>
+  `https://archive.org/embed/${IA}?ui=embed#page/n${leaf}/mode/2up`;
+
+/* Printed page → leaf, for the pages this page links to. */
+const PAGES = {
+  131: 144, 169: 182, 183: 196, 184: 197, 188: 201, 191: 204, 193: 206,
+  200: 213, 201: 214, 206: 219, 207: 220, 208: 221, 209: 222, 210: 223,
+  211: 224, 217: 230,
+};
+
+/* The twelve plates. `leaf` is the sheet carrying the plate caption; `sheets`
+   lists every sheet the plate runs across, with the model numbers on each. */
+const PLATES = [
+  { n: 'I',    kind: 'litho', leaf: 243, sheets: [243], note: 'Polygons: construction figures.' },
+  { n: 'II',   kind: 'litho', leaf: 245, sheets: [244, 245],
+    note: 'Carries Fig. 17, the complete figure of the planes of the icosahedron — the stellation diagram this program draws. Fig. 16 is the dodecahedron’s.' },
+  { n: 'III',  kind: 'litho', leaf: 247, sheets: [246, 247], note: 'Nets and spherical nets.' },
+  { n: 'IV',   kind: 'litho', leaf: 249, sheets: [248, 249], note: 'Nets and spherical nets.' },
+  { n: 'V',    kind: 'litho', leaf: 251, sheets: [250, 251], note: 'Nets and spherical nets.' },
+  { n: 'VI',   kind: 'litho', leaf: 253, sheets: [252, 253], note: 'Nets and spherical nets.' },
+  { n: 'VII',  kind: 'litho', leaf: 255, sheets: [254, 255], note: 'Face figures of the polyhedra of higher kind.' },
+  { n: 'VIII', kind: 'photo', leaf: 256, sheets: [256, 257], note: 'Models 1–20 on the first sheet. No. 3 is two cubes on a common 3-fold axis; no. 12 the compound of three octahedra — both in Escher’s <i>Stars</i>.' },
+  { n: 'IX',   kind: 'photo', leaf: 258, sheets: [258, 259], note: 'The compound plate: nos. 3, 6 and 11 on the first sheet, nos. 20 and 23 on the second. Escher cited this plate twice by number.' },
+  { n: 'X',    kind: 'photo', leaf: 260, sheets: [260, 263], note: 'Models 1–21, then 22–33. No. 13 is the first stellation of the rhombic dodecahedron — Escher’s solid.' },
+  { n: 'XI',   kind: 'photo', leaf: 265, sheets: [264, 265], note: 'Models 1–12, then 13–24. No. 14 is the final stellation of the icosahedron; no. 24 the great icosahedron.' },
+  { n: 'XII',  kind: 'photo', leaf: 267, sheets: [266, 267], note: 'One-sided polyhedra and the last of the higher-kind forms.' },
+];
+
+// ------------------------------------------------------------------ engine
+
 let geometry = null, symmetry = null, catalog = null;
-const built = new Map();          // file -> {stel, outline}
+const built = new Map();
+const SUBGROUP = { Ih: 'I', Oh: 'O', Td: 'T', Th: 'T' };
 
 function toPoly(g) {
   const vertices = [];
@@ -34,9 +72,6 @@ function itemFor(file) {
   for (const cat of catalog) for (const it of cat.items) if (it.file === file) return it;
   return null;
 }
-
-/** the rotation-only subgroup, which is what lets a chiral cell split */
-const SUBGROUP = { Ih: 'I', Oh: 'O', Td: 'T', Th: 'T' };
 
 function build(file, symName) {
   if (built.has(file)) return built.get(file);
@@ -64,33 +99,29 @@ function build(file, symName) {
   return rec;
 }
 
-// ---------------------------------------------------------------- figure
+// ------------------------------------------------------------------ figure
 
 /*
- * <div class="hfig" data-poly="u10" data-cells="{0,1}" data-parts="cells solid"
- *      data-goal="{0,1}" data-goal-name="the stella octangula">
+ * <div class="bfig" data-poly="u27" data-cells="{0,1,2}" data-parts="cells solid">
  *
- * With data-goal, the figure becomes a puzzle: the reader has to reach that
- * selection themselves, and the figure says so when they do.
+ * Built the first time it comes near the viewport: the rhombic triacontahedron
+ * alone is thirteen shells deep and most readers never scroll to it.
  */
-class HFigure {
+class BFigure {
   constructor(el) {
     this.el = el;
     this.file = el.dataset.poly;
     this.parts = (el.dataset.parts || 'cells solid').split(/\s+/);
-    this.goal = el.dataset.goal || null;
-    this.goalName = el.dataset.goalName || 'it';
     this.started = false;
   }
 
-  /** built lazily — see the note at the top of the file */
   start() {
     if (this.started) return;
     this.started = true;
     const rec = build(this.file, this.el.dataset.sym);
     this.stel = rec.stel;
     this.outline = rec.outline;
-    this.selected = parseCells(this.stel, this.el.dataset.cells ?? (this.goal ? '{0}' : '{0}'));
+    this.selected = parseCells(this.stel, this.el.dataset.cells ?? '{0}');
     this.render();
     this.refresh();
   }
@@ -98,21 +129,6 @@ class HFigure {
   render() {
     const el = this.el;
     el.innerHTML = '';
-
-    if (this.goal) {
-      const banner = document.createElement('div');
-      banner.className = 'goal';
-      banner.innerHTML =
-        `<span class="goal-tag">Build it</span>` +
-        `<span class="goal-text">Make <b>${this.goalName}</b> from the ${itemFor(this.file)?.name ?? this.file}.</span>` +
-        `<button class="goal-hint">hint</button>` +
-        `<button class="goal-solve">show me</button>`;
-      el.appendChild(banner);
-      this.banner = banner;
-      banner.querySelector('.goal-hint').onclick = () => this.hint();
-      banner.querySelector('.goal-solve').onclick = () => { this.setCells(this.goal); };
-    }
-
     const grid = document.createElement('div');
     grid.className = 'fig-grid parts-' + this.parts.length;
     el.appendChild(grid);
@@ -132,7 +148,7 @@ class HFigure {
     }
 
     if (this.parts.includes('solid')) {
-      const box = pane(grid, 'The solid');
+      const box = pane(grid, 'The model, rebuilt');
       const wrap = document.createElement('div');
       wrap.className = 'fig-view';
       const cv = document.createElement('canvas');
@@ -147,7 +163,7 @@ class HFigure {
     }
 
     if (this.parts.includes('diagram')) {
-      const box = pane(grid, 'The face plane');
+      const box = pane(grid, 'The complete figure');
       const wrap = document.createElement('div');
       wrap.className = 'fig-view';
       const cv = document.createElement('canvas');
@@ -183,22 +199,6 @@ class HFigure {
     this.refresh();
   }
 
-  /** nudge without solving: name the next layer that is still missing */
-  hint() {
-    const goalSet = parseCells(this.stel, this.goal);
-    for (const k of goalSet) if (!this.selected.has(k)) {
-      const [l, c] = k.split('.');
-      this.info.textContent = `try layer ${l}, cell ${c}`;
-      return;
-    }
-    for (const k of this.selected) if (!goalSet.has(k)) {
-      const [l, c] = k.split('.');
-      this.info.textContent = `layer ${l}, cell ${c} should not be there`;
-      return;
-    }
-    this.info.textContent = 'that is already it';
-  }
-
   refresh() {
     const subs = selectedSubCells(this.stel, this.selected);
     const mesh = extractMesh(subs, this.stel.pool);
@@ -217,20 +217,11 @@ class HFigure {
       });
     }
 
-    const str = formatCells(this.stel, this.selected);
-    this.readout.textContent = str;
+    this.readout.textContent = formatCells(this.stel, this.selected);
     const vol = subs.reduce((a, s) => a + s.volume, 0);
     this.stats.innerHTML = mesh.faces.length
       ? `<b>${mesh.vertices.length}</b> v · <b>${mesh.faces.length}</b> f · vol <b>${vol.toFixed(3)}</b>`
       : 'nothing selected';
-
-    if (this.goal) {
-      const won = str === this.goal;
-      this.banner.classList.toggle('won', won);
-      this.banner.querySelector('.goal-text').innerHTML = won
-        ? `<b>That's it — ${this.goalName}.</b>`
-        : `Make <b>${this.goalName}</b> from the ${itemFor(this.file)?.name ?? this.file}.`;
-    }
   }
 }
 
@@ -244,7 +235,54 @@ function pane(parent, title) {
   return box;
 }
 
-// ---------------------------------------------------------------- boot
+// ------------------------------------------------------------------ reader
+
+/* One embedded Archive reader, driven by every "read the page" button. Loading
+   the iframe is deferred until first use — it is a heavy third-party page. */
+const reader = {
+  open(leaf, label) {
+    const box = $('#reader');
+    const frame = $('#readerFrame');
+    if (frame.dataset.leaf !== String(leaf)) {
+      frame.innerHTML = `<iframe src="${readerSrc(leaf)}" allowfullscreen
+        title="Vielecke und Vielflache, Internet Archive scan"></iframe>`;
+      frame.dataset.leaf = String(leaf);
+    }
+    box.classList.add('open');
+    $('#readerWhere').textContent = label;
+    $('#readerToggle').textContent = 'hide';
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  close() {
+    $('#reader').classList.remove('open');
+    $('#readerToggle').textContent = 'show';
+  },
+};
+
+function openPage(printed) {
+  const leaf = PAGES[printed];
+  if (leaf == null) return;
+  reader.open(leaf, `p. ${printed}`);
+}
+
+// ------------------------------------------------------------------- boot
+
+function renderPlates() {
+  const box = $('#plates');
+  if (!box) return;
+  for (const p of PLATES) {
+    const el = document.createElement('button');
+    el.className = 'plate';
+    el.type = 'button';
+    el.innerHTML =
+      `<img loading="lazy" alt="Plate ${p.n}" src="${img(p.leaf, 'small')}">` +
+      `<span class="${p.kind === 'photo' ? 'tag-photo' : 'tag-litho'}">` +
+      `${p.kind === 'photo' ? 'collotype' : 'lithograph'}</span>` +
+      `<b>Tafel ${p.n}</b><span>${p.note}</span>`;
+    el.onclick = () => reader.open(p.sheets[0], `Tafel ${p.n}`);
+    box.appendChild(el);
+  }
+}
 
 async function boot() {
   [geometry, symmetry, catalog] = await Promise.all([
@@ -253,10 +291,10 @@ async function boot() {
     fetch('data/catalog.json').then(r => r.json()),
   ]);
 
-  const figs = new Map();
-  $$('.hfig').forEach(el => figs.set(el.id, new HFigure(el)));
+  renderPlates();
 
-  // build a figure the first time it comes near the viewport
+  const figs = new Map();
+  $$('.bfig').forEach(el => figs.set(el.id, new BFigure(el)));
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) if (e.isIntersecting) {
       figs.get(e.target.id)?.start();
@@ -265,6 +303,12 @@ async function boot() {
   }, { rootMargin: '300px 0px' });
   figs.forEach((f, id) => io.observe(document.getElementById(id)));
 
+  // fill in every plate thumbnail and page/plate button declared in the markup
+  $$('[data-leaf-img]').forEach(el => { el.src = img(+el.dataset.leafImg); });
+  $$('[data-page]').forEach(b => { b.onclick = () => openPage(+b.dataset.page); });
+  $$('[data-leaf]').forEach(b => {
+    b.onclick = () => reader.open(+b.dataset.leaf, b.dataset.leafLabel || 'the plate');
+  });
   $$('[data-target]').forEach(btn => {
     btn.onclick = () => {
       const f = figs.get(btn.dataset.target);
@@ -275,6 +319,32 @@ async function boot() {
       btn.classList.add('on');
     };
   });
+
+  $('#readerToggle').onclick = () => {
+    const box = $('#reader');
+    if (box.classList.contains('open')) reader.close();
+    else if ($('#readerFrame').dataset.leaf) reader.open(+$('#readerFrame').dataset.leaf, $('#readerWhere').textContent);
+    else reader.open(7, 'title page');
+  };
+  $('#readerGo').onclick = () => {
+    const v = parseInt($('#readerPage').value, 10);
+    if (Number.isFinite(v)) {
+      const leaf = PAGES[v] ?? (v >= 1 && v <= 227 ? v + 13 : null);
+      if (leaf != null) reader.open(leaf, `p. ${v}`);
+    }
+  };
+  $('#readerPage').onkeydown = e => { if (e.key === 'Enter') $('#readerGo').click(); };
+
+  // click any plate image to see it full size
+  const lb = $('#lightbox');
+  document.addEventListener('click', e => {
+    const im = e.target.closest('.entry-plate img, .compare img');
+    if (!im) return;
+    lb.querySelector('img').src = im.dataset.full || im.src.replace('_medium', '');
+    lb.classList.add('on');
+  });
+  lb.onclick = () => lb.classList.remove('on');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
 
   const applyTheme = (pref) => {
     const dark = pref === 'dark' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -295,14 +365,13 @@ async function boot() {
   };
   applyTheme(localStorage.getItem('theme') || 'auto');
 
-  // the timeline rail
   const rail = $('#rail');
   const secs = $$('section[id]');
   if (rail) {
     secs.forEach(s => {
       const a = document.createElement('a');
       a.href = '#' + s.id;
-      a.innerHTML = `<em>${s.dataset.year || ''}</em>${s.dataset.short || s.id}`;
+      a.textContent = s.dataset.short || s.id;
       rail.appendChild(a);
     });
     const obs = new IntersectionObserver(es => {
@@ -314,22 +383,9 @@ async function boot() {
     secs.forEach(s => obs.observe(s));
   }
 
-  // click any period photograph to see it full size
-  const lb = $('#lightbox');
-  if (lb) {
-    document.addEventListener('click', e => {
-      const im = e.target.closest('.hist-photo img');
-      if (!im) return;
-      lb.querySelector('img').src = im.src;
-      lb.classList.add('on');
-    });
-    lb.onclick = () => lb.classList.remove('on');
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
-  }
-
-  labelKeys();          // name the carve modifier for this platform
+  labelKeys();
   $('#loading')?.remove();
-  window.historical = { figs, built, build };
+  window.bruckner = { figs, built, build, reader, PLATES, PAGES };
 }
 
 boot();

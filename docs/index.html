@@ -35,6 +35,7 @@
 
   <a class="ghost" href="walkthrough.html" title="How the Cells table works">Walkthrough</a>
   <a class="ghost" href="historical.html" title="A chronological tour">History</a>
+  <a class="ghost" href="bruckner.html" title="Brückner's 1900 plates, interactive">Brückner 1900</a>
   <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
   <button id="help" class="ghost">?</button>
 </header>
@@ -82,17 +83,15 @@
       <div id="cellsLegend" class="legend" title="Each bar colour marks one particular number of congruent pieces"></div>
       <div id="cellInfo" class="info mono"></div>
       <p class="note">
-        Each row is a shell of cells, numbered outward from the core. A box is a set
-        of cells the symmetry carries onto one another; a shaded group is one that
-        splits into mirror halves. The bar under a box says how many congruent
-        pieces it holds — see the key above.
-        <a href="walkthrough.html">Full walkthrough →</a>
+        Rows are shells outward from the core; each box is one symmetry-related set of
+        cells. <a href="walkthrough.html">What the boxes and bars mean →</a>
       </p>
-      <p class="note">
-        Click a cell to toggle it. <kbd>shift</kbd>-click also pulls in everything
-        holding it up; <kbd class="kSub">alt</kbd>-click — or a right-click — takes it
-        and whatever rests on it away. Click a row number for the whole layer.
-      </p>
+      <ul class="note keys">
+        <li><kbd>click</kbd> toggle</li>
+        <li><kbd>shift</kbd> add with support</li>
+        <li><kbd class="kSub">alt</kbd> or right-click remove with dependents</li>
+        <li><kbd>row №</kbd> whole layer</li>
+      </ul>
       <input id="cellsString" class="mono" spellcheck="false"
              title="cell-selection string, same syntax as the original .stel files">
     </div>

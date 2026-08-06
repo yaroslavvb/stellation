@@ -479,3 +479,14 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(2px); 
 .legend-item i { width: 11px; height: 3px; border-radius: 2px; display: inline-block; }
 .note a { color: var(--accent-2); text-decoration: none; }
 .note a:hover { text-decoration: underline; }
+
+/* the Cells shortcut key — one line per gesture, compact */
+.note.keys { list-style: none; margin: 5px 0 3px; padding: 0; }
+.note.keys li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 1.5px 0;
+  white-space: nowrap;
+}
+.note.keys kbd { flex: none; }
