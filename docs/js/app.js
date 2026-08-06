@@ -3,20 +3,18 @@
  * cells, choose cells, get a stellated solid.
  */
 
-import { Renderer3D, layerColor } from './render3d.js';
+import { Renderer3D } from './render3d.js';
 import { DiagramView } from './diagram.js';
+import { CellsPanel } from './cells.js';
 import { toOFF, toOBJ, toSTL, writeStel } from './core.js';
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 
 const state = {
-  catalog: null,
-  symmetry: null,
-  geometry: null,
-  current: null,        // {file, name, symmetry, category}
-  polySym: 'Ih',
-  stellSym: 'I',
+  catalog: null, symmetry: null, geometry: null,
+  current: null,
+  polySym: 'Ih', stellSym: 'I',
   depth: 12,
   outline: null,
   selected: new Set(),
@@ -26,8 +24,7 @@ const state = {
 
 // ------------------------------------------------------------------ worker
 
-let worker = null;
-let msgId = 0;
+let worker = null, msgId = 0;
 const pending = new Map();
 
 function startWorker() {
@@ -57,7 +54,7 @@ function call(type, payload, onProgress) {
 
 // ------------------------------------------------------------------ boot
 
-let renderer, diagram;
+let renderer, diagram, cells;
 
 async function boot() {
   const [catalog, symmetry, geometry] = await Promise.all([
@@ -65,13 +62,14 @@ async function boot() {
     fetch('data/symmetry.json').then(r => r.json()),
     fetch('data/geometry.json').then(r => r.json()),
   ]);
-  state.catalog = catalog;
-  state.symmetry = symmetry;
-  state.geometry = geometry;
+  Object.assign(state, { catalog, symmetry, geometry });
 
   try {
     renderer = new Renderer3D($('#view3d'));
+    renderer.autoRotate = false;             // still by default; spin is opt-in
     renderer.start();
+    renderer.onPick = onPick3D;
+    renderer.onPickHover = onHover3D;
   } catch (err) {
     $('#view3d').replaceWith(Object.assign(document.createElement('div'), {
       className: 'nogl', textContent: '3D view needs WebGL2, which this browser did not provide.',
@@ -79,24 +77,27 @@ async function boot() {
   }
 
   diagram = new DiagramView($('#diagram'), {
-    onToggle: (facet) => {
-      if (!facet.ref) return;
-      const key = facet.ref.join('.');
-      state.selected.has(key) ? state.selected.delete(key) : state.selected.add(key);
-      refresh();
-    },
+    onToggle: (facet, mod) => applyToFacet(facet, mod),
     onHover: (facet) => {
-      $('#hover').textContent = facet
+      $('#hover2d').textContent = facet
         ? `layer ${facet.layer}${facet.ref ? ` · cell ${facet.ref[1]}${facet.ref[2] ? '[' + facet.ref[2] + ']' : ''}` : ''}`
         : '';
     },
   });
 
+  cells = new CellsPanel($('#cells'), {
+    onChange: () => refresh(),
+    onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
+  });
+
   buildCatalog();
   wireControls();
   startWorker();
+  applyTheme(localStorage.getItem('theme') || 'auto');   // now that the views exist
 
-  // deep link: #u27/Ih/I/{0,1}
+  // handy from the console, and what the browser tests drive
+  window.stellation = { state, cells, diagram, renderer, call, select, refresh, applyToCell };
+
   const hash = decodeURIComponent(location.hash.slice(1));
   const m = hash.match(/^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/(\{.*\}))?$/);
   if (m && geometry[m[1]]) {
@@ -113,7 +114,69 @@ function findItem(file) {
   return null;
 }
 
-// ------------------------------------------------------------------ catalog UI
+// ------------------------------------------------------------------ picking
+
+/**
+ * A click on a diagram region or on a face of the solid.
+ *   plain  toggle this cell
+ *   shift  add it and everything supporting it — the result always holds together
+ *   ctrl   remove it and everything resting on it, for the same reason
+ * `outward` is set when the gesture means "grow here": on the solid, shift-click
+ * adds the cell sitting on the far side of the face you clicked.
+ */
+function applyToCell(key, mod) {
+  if (!key) return;
+  const sel = state.selected;
+  if (mod.shift) {
+    for (const k of cells.supportKeys(key)) sel.add(k);
+  } else if (mod.ctrl) {
+    for (const k of dependentKeys(key)) sel.delete(k);
+  } else {
+    sel.has(key) ? sel.delete(key) : sel.add(key);
+  }
+  refresh();
+}
+
+/** everything resting on `key`, transitively — mirror of CellsPanel.supportKeys */
+function dependentKeys(key) {
+  const out = new Set([key]);
+  const stack = [key];
+  while (stack.length) {
+    const k = stack.pop();
+    for (const t of (cells.byKey.get(k)?.sub.top || [])) {
+      if (!out.has(t)) { out.add(t); stack.push(t); }
+    }
+  }
+  return out;
+}
+
+function applyToFacet(facet, mod) {
+  if (!facet?.ref) return;
+  applyToCell(facet.ref.join('.'), mod);
+}
+
+function onPick3D(hit, mod) {
+  const mesh = state.mesh;
+  if (!mesh) return;
+  // shift grows outward from this face; ctrl carves the cell just inside it
+  const key = mod.shift ? mesh.faceOutside[hit.face] : mesh.faceInside[hit.face];
+  if (!key) {
+    setStatus(mod.shift ? 'nothing further out on that face — raise the depth' : 'no cell inside that face', false);
+    return;
+  }
+  applyToCell(key, mod);
+}
+
+function onHover3D(hit, mod) {
+  const mesh = state.mesh;
+  if (!hit || !mesh) { $('#hover3d').textContent = ''; return; }
+  const key = mod?.shift ? mesh.faceOutside[hit.face] : mesh.faceInside[hit.face];
+  $('#hover3d').textContent = key
+    ? `${mod?.shift ? 'grow' : 'carve'} ${key}`
+    : (mod?.shift ? 'nothing further out' : '');
+}
+
+// ------------------------------------------------------------------ catalog
 
 function buildCatalog() {
   const host = $('#catalog');
@@ -136,14 +199,10 @@ function buildCatalog() {
       b.innerHTML =
         `<img src="img/poly/${item.file}_tmb.gif" alt="" loading="lazy" width="48" height="48">` +
         `<span>${item.name}</span>`;
-      b.onclick = () => select({ ...item, category: cat.category });
+      b.onclick = () => { $('#catalogDialog').close(); select({ ...item, category: cat.category }); };
       grid.appendChild(b);
     }
     section.appendChild(grid);
-    // the exotic categories start collapsed; the classics are what people want
-    if (cat.category.includes('nonconvex') || cat.category.includes('duals to')) {
-      section.classList.add('collapsed');
-    }
     host.appendChild(section);
   }
 }
@@ -157,8 +216,8 @@ async function select(item, opts = {}) {
   state.stellSym = opts.stellSym || defaultStellSym(state.polySym);
 
   $$('.poly').forEach(b => b.classList.toggle('active', b.dataset.file === item.file));
-  $('#title').textContent = item.name;
-  $('#subtitle').textContent = `${item.file} · ${item.category || ''}`;
+  $('#pickName').textContent = item.name;
+  $('#pickThumb').src = `img/poly/${item.file}_tmb.gif`;
 
   syncSymmetrySelects();
   await build(opts.cells);
@@ -177,9 +236,8 @@ function syncSymmetrySelects() {
     .filter(n => state.symmetry[n].order > 0)
     .sort((a, b) => state.symmetry[b].order - state.symmetry[a].order || a.localeCompare(b));
   for (const [id, val] of [['#polySym', state.polySym], ['#stellSym', state.stellSym]]) {
-    const sel = $(id);
-    sel.innerHTML = names.map(n =>
-      `<option value="${n}"${n === val ? ' selected' : ''}>${n} (order ${state.symmetry[n].order})</option>`
+    $(id).innerHTML = names.map(n =>
+      `<option value="${n}"${n === val ? ' selected' : ''}>${n} (${state.symmetry[n].order})</option>`
     ).join('');
   }
 }
@@ -197,32 +255,27 @@ async function build(cellsString) {
 
   try {
     const info = await call('build', {
-      geometry: g,
-      matrices: polyM,
-      subMatrices: subM,
-      maxIntersection: state.depth,
-      maxLayer: 1000,
+      geometry: g, matrices: polyM, subMatrices: subM,
+      maxIntersection: state.depth, maxLayer: 1000,
     }, ({ done, total }) => setStatus(`intersecting plane ${done} of ${total}…`, true, done / total));
 
     state.outline = info.outline;
-    state.info = info;
+    cells.setOutline(info.outline);
 
     if (cellsString) {
       const { selected } = await call('parseCells', { cells: cellsString });
       state.selected = new Set(selected);
     } else {
-      // start on the core cell: the original polyhedron itself
       const { keys } = await call('layerKeys', { n: 1 });
       state.selected = new Set(keys);
     }
 
-    renderLayers();
     await refresh();
     setStatus(`${info.planes} planes · ${info.facets.toLocaleString()} facets · ` +
-              `${info.layers} layers · built in ${info.ms} ms`, false);
+              `${info.layers} layers · ${info.ms} ms`, false);
   } catch (err) {
     setStatus('failed: ' + err.message, false);
-    startWorker();   // a crashed worker cannot be reused
+    startWorker();
   } finally {
     state.building = false;
   }
@@ -233,83 +286,27 @@ async function refresh() {
   const selected = [...state.selected];
   const { mesh, diagram: dia } = await call('both', { selected, planeIndex: state.planeIndex });
 
+  state.mesh = mesh;
   renderer?.setMesh(mesh, mesh.faceLayers);
   diagram.setData(dia);
-  state.mesh = mesh;
+  cells.setSelected(state.selected);
 
   $('#stats').innerHTML =
-    `<b>${mesh.stats.vertices}</b> vertices · <b>${mesh.stats.faces}</b> faces · ` +
-    `<b>${mesh.stats.cells}</b> cells · volume <b>${mesh.stats.volume.toFixed(4)}</b>`;
+    `<b>${mesh.stats.vertices}</b> v · <b>${mesh.stats.faces}</b> f · ` +
+    `<b>${mesh.stats.cells}</b> cells · vol <b>${mesh.stats.volume.toFixed(4)}</b>`;
 
-  const { cells } = await call('formatCells', { selected });
-  state.cellsString = cells;
-  $('#cellsString').value = cells;
-  location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/${cells}`;
-
-  $$('#layers input').forEach(cb => {
-    cb.checked = state.selected.has(cb.dataset.key);
-  });
-  $$('#layers .layer').forEach(row => {
-    const boxes = [...row.querySelectorAll('input')];
-    const on = boxes.filter(b => b.checked).length;
-    row.classList.toggle('partial', on > 0 && on < boxes.length);
-    row.classList.toggle('full', on === boxes.length && on > 0);
-  });
-}
-
-// ------------------------------------------------------------------ layer list
-
-function renderLayers() {
-  const host = $('#layers');
-  host.innerHTML = '';
-  state.outline.forEach((layer, l) => {
-    const row = document.createElement('div');
-    row.className = 'layer';
-    const c = layerColor(l).map(v => Math.round(v * 255));
-
-    const head = document.createElement('div');
-    head.className = 'layer-head';
-    head.innerHTML = `<i style="background:rgb(${c})"></i><b>layer ${l}</b>` +
-                     `<em>${layer.cells.length} cell${layer.cells.length === 1 ? '' : 's'}</em>`;
-    head.onclick = () => {
-      const boxes = [...row.querySelectorAll('input')];
-      const turnOn = boxes.some(b => !b.checked);
-      boxes.forEach(b => {
-        turnOn ? state.selected.add(b.dataset.key) : state.selected.delete(b.dataset.key);
-      });
-      refresh();
-    };
-    row.appendChild(head);
-
-    const cells = document.createElement('div');
-    cells.className = 'cells';
-    layer.cells.forEach((cell) => {
-      cell.subCells.forEach((sub) => {
-        const key = `${l}.${cell.index}.${sub.index}`;
-        const label = document.createElement('label');
-        label.className = 'cell';
-        const chiral = cell.subCells.length > 1;
-        label.title = `${sub.primitives} congruent pieces · ${cell.facets} facets each · volume ${sub.volume.toFixed(5)}` +
-                      (chiral ? `\nchiral half ${sub.index + 1} of ${cell.subCells.length}` : '');
-        label.innerHTML =
-          `<input type="checkbox" data-key="${key}">` +
-          `<span>${cell.index}${chiral ? `<sup>${sub.index ? 'R' : 'L'}</sup>` : ''}</span>` +
-          `<em>×${sub.primitives}</em>`;
-        label.querySelector('input').onchange = (e) => {
-          e.target.checked ? state.selected.add(key) : state.selected.delete(key);
-          refresh();
-        };
-        cells.appendChild(label);
-      });
-    });
-    row.appendChild(cells);
-    host.appendChild(row);
-  });
+  const { cells: str } = await call('formatCells', { selected });
+  state.cellsString = str;
+  $('#cellsString').value = str;
+  location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/${str}`;
 }
 
 // ------------------------------------------------------------------ controls
 
 function wireControls() {
+  $('#pickPoly').onclick = () => $('#catalogDialog').showModal();
+  $('#catalogClose').onclick = () => $('#catalogDialog').close();
+
   $('#polySym').onchange = (e) => { state.polySym = e.target.value; build(); };
   $('#stellSym').onchange = (e) => { state.stellSym = e.target.value; build(); };
   $('#depth').oninput = (e) => {
@@ -317,7 +314,6 @@ function wireControls() {
     $('#depthLabel').textContent = state.depth;
   };
   $('#depth').onchange = () => build();
-
   $('#planeIndex').onchange = (e) => { state.planeIndex = Number(e.target.value) || 0; refresh(); };
 
   $('#selectCore').onclick = async () => {
@@ -354,10 +350,8 @@ function wireControls() {
   $('#exportObj').onclick = () => download(`${name()}.obj`, toOBJ(state.mesh));
   $('#exportStl').onclick = () => download(`${name()}.stl`, toSTL(state.mesh, name()));
   $('#exportStel').onclick = () => download(`${name()}.stel`, writeStel({
-    polyhedron: state.current.name,
-    polySymmetry: state.polySym,
-    stellSymmetry: state.stellSym,
-    cells: state.cellsString,
+    polyhedron: state.current.name, polySymmetry: state.polySym,
+    stellSymmetry: state.stellSym, cells: state.cellsString,
   }));
   $('#exportSvg').onclick = () => download(`${name()}-diagram.svg`, diagram.toSVG(), 'image/svg+xml');
   $('#exportPng').onclick = () => {
@@ -370,34 +364,61 @@ function wireControls() {
   $('#loadStel').onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const text = await file.text();
-    await loadStelText(text);
+    await loadStelText(await file.text());
     e.target.value = '';
   };
 
   $$('.sample').forEach(b => {
-    b.onclick = async () => {
-      const text = await fetch(`samples/${b.dataset.file}`).then(r => r.text());
-      await loadStelText(text);
-    };
+    b.onclick = async () => loadStelText(await fetch(`samples/${b.dataset.file}`).then(r => r.text()));
   });
 
   $('#help').onclick = () => $('#helpDialog').showModal();
   $('#helpClose').onclick = () => $('#helpDialog').close();
 
+  $('#themeBtn').onclick = cycleTheme;
+
   $('#search').oninput = (e) => {
     const q = e.target.value.trim().toLowerCase();
-    $$('.poly').forEach(b => {
-      const hit = !q || b.title.toLowerCase().includes(q);
-      b.style.display = hit ? '' : 'none';
-    });
+    $$('.poly').forEach(b => { b.style.display = (!q || b.title.toLowerCase().includes(q)) ? '' : 'none'; });
     $$('.cat').forEach(sec => {
       const any = [...sec.querySelectorAll('.poly')].some(b => b.style.display !== 'none');
       sec.style.display = any ? '' : 'none';
-      if (q && any) sec.classList.remove('collapsed');
     });
   };
+
+  $('#catalogDialog').addEventListener('close', () => { $('#search').value = ''; $('#search').oninput({ target: $('#search') }); });
 }
+
+// ------------------------------------------------------------------ theme
+
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  const cur = document.documentElement.dataset.themePref || 'auto';
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+}
+
+function applyTheme(pref) {
+  const dark = pref === 'dark' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.dataset.themePref = pref;
+  $('#themeBtn').textContent = pref === 'auto' ? '◐' : pref === 'dark' ? '●' : '○';
+  $('#themeBtn').title = `Theme: ${pref}`;
+  if (renderer) {
+    renderer.background = dark ? [0.055, 0.06, 0.078] : [0.965, 0.97, 0.977];
+    renderer.draw();
+  }
+  cells?.draw();
+  diagram?.draw();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if ((document.documentElement.dataset.themePref || 'auto') === 'auto') applyTheme('auto');
+});
+
+// ------------------------------------------------------------------ misc
+
+const name = () => `${state.current.file}-${state.polySym}-${state.stellSym}`;
 
 async function loadStelText(text) {
   const { parseStel } = await import('./core.js');
@@ -411,8 +432,6 @@ async function loadStelText(text) {
   if (!item) { setStatus(`the file names "${spec.polyhedron}", which is not in the catalog`, false); return; }
   await select(item, { polySym: spec.polySymmetry, stellSym: spec.stellSymmetry, cells: spec.cells });
 }
-
-const name = () => `${state.current.file}-${state.polySym}-${state.stellSym}`;
 
 function download(filename, text, mime = 'text/plain') {
   const blob = new Blob([text], { type: mime });
@@ -431,4 +450,5 @@ function setStatus(text, busy, frac) {
   bar.style.setProperty('--frac', frac == null ? 0 : frac);
 }
 
+applyTheme(localStorage.getItem('theme') || 'auto');
 boot();

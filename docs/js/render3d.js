@@ -142,6 +142,8 @@ export class Renderer3D {
   setMesh(mesh, faceLayers) {
     const gl = this.gl;
     const pos = [], norm = [], col = [], lines = [];
+    this.pickTris = [];      // {a,b,c, face} in model space, for ray picking
+    this.mesh = mesh;
 
     // normalise scale so every solid frames the same way
     let maxR = 1e-9;
@@ -163,11 +165,18 @@ export class Renderer3D {
       nx /= nl; ny /= nl; nz /= nl;
 
       for (let i = 1; i < p.length - 1; i++) {
-        for (const v of [p[0], p[i], p[i + 1]]) {
+        const tri = [p[0], p[i], p[i + 1]];
+        for (const v of tri) {
           pos.push(v.x * s, v.y * s, v.z * s);
           norm.push(nx, ny, nz);
           col.push(c[0], c[1], c[2]);
         }
+        this.pickTris.push({
+          a: [tri[0].x * s, tri[0].y * s, tri[0].z * s],
+          b: [tri[1].x * s, tri[1].y * s, tri[1].z * s],
+          c: [tri[2].x * s, tri[2].y * s, tri[2].z * s],
+          face: fi,
+        });
       }
       for (let i = 0; i < p.length; i++) {
         const a = p[i], b = p[(i + 1) % p.length];
@@ -205,16 +214,9 @@ export class Renderer3D {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     if (!this.count) return;
 
-    // The model is normalised to radius 1, so the camera must sit far enough back
-    // that a unit sphere fits the NARROWER of the two field-of-view angles —
-    // otherwise a tall thin canvas clips the solid left and right.
-    const fovy = Math.PI / 4.5;
-    const aspect = W / H;
-    const fovx = 2 * Math.atan(Math.tan(fovy / 2) * aspect);
-    const fit = 1.13 / Math.sin(Math.min(fovy, fovx) / 2);
-
-    const proj = perspective(fovy, aspect, 0.05, 100);
-    const view = mat4mul(translation(0, 0, -fit * this.distance), quatToMat4(this.rotation));
+    const cam = this._camera(W, H);
+    const proj = perspective(cam.fovy, cam.aspect, 0.05, 100);
+    const view = mat4mul(translation(0, 0, -cam.dist), quatToMat4(this.rotation));
 
     gl.useProgram(this.prog);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uProj'), false, proj);
@@ -222,15 +224,102 @@ export class Renderer3D {
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, this.count);
 
-    if (this.showEdges && this.lineCount) {
+    const drawLines = (vao, count, rgba, width) => {
       gl.useProgram(this.lineProg);
       gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uProj'), false, proj);
       gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uView'), false, view);
-      gl.uniform4f(gl.getUniformLocation(this.lineProg, 'uColor'), 0.06, 0.05, 0.09, 0.85);
-      gl.bindVertexArray(this.lineVao);
-      gl.drawArrays(gl.LINES, 0, this.lineCount);
+      gl.uniform4f(gl.getUniformLocation(this.lineProg, 'uColor'), ...rgba);
+      gl.lineWidth(width);
+      gl.bindVertexArray(vao);
+      gl.drawArrays(gl.LINES, 0, count);
+    };
+
+    if (this.showEdges && this.lineCount) {
+      drawLines(this.lineVao, this.lineCount, [0.06, 0.05, 0.09, 0.85], 1);
+    }
+    if (this.hlCount) {
+      gl.disable(gl.DEPTH_TEST);
+      drawLines(this.hlVao, this.hlCount, [1.0, 0.95, 0.35, 1.0], 3);
+      gl.enable(gl.DEPTH_TEST);
     }
     gl.bindVertexArray(null);
+  }
+
+  /**
+   * The model is normalised to radius 1, so the camera must sit far enough back
+   * that a unit sphere fits the NARROWER of the two field-of-view angles —
+   * otherwise a tall thin canvas clips the solid left and right.
+   */
+  _camera(W, H) {
+    const fovy = Math.PI / 4.5;
+    const aspect = W / H;
+    const fovx = 2 * Math.atan(Math.tan(fovy / 2) * aspect);
+    const fit = 1.13 / Math.sin(Math.min(fovy, fovx) / 2);
+    return { fovy, aspect, fit, dist: fit * this.distance };
+  }
+
+  // ---------------------------------------------------------------- picking
+
+  /**
+   * Which face of the solid is under the pointer.
+   *
+   * The camera sits at the origin of view space looking down -Z, so the ray
+   * through a pixel is trivial there; we push it back into model space with the
+   * inverse of the view transform (a rotation, so its transpose) and hit-test
+   * the triangles directly. A few thousand triangles is nothing per click, and
+   * this keeps picking exact rather than reading back pixel ids.
+   */
+  pick(e) {
+    if (!this.pickTris?.length) return null;
+    const r = this.canvas.getBoundingClientRect();
+    const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+    const ny = 1 - ((e.clientY - r.top) / r.height) * 2;
+
+    const cam = this._camera(this.canvas.width, this.canvas.height);
+    const t = Math.tan(cam.fovy / 2);
+    const dirView = [nx * cam.aspect * t, ny * t, -1];
+
+    const R = quatToMat4(this.rotation);
+    const origin = rotT(R, [0, 0, cam.dist]);
+    const dir = rotT(R, dirView);
+
+    let best = null;
+    for (const tri of this.pickTris) {
+      const hit = rayTriangle(origin, dir, tri.a, tri.b, tri.c);
+      if (hit !== null && (best === null || hit < best.t)) best = { t: hit, face: tri.face };
+    }
+    return best;
+  }
+
+  /** outline one face in the accent colour, or clear with -1 */
+  setHighlight(faceIndex) {
+    if (this._hl === faceIndex) return;
+    this._hl = faceIndex;
+    const gl = this.gl;
+    const pts = [];
+    if (faceIndex >= 0 && this.mesh) {
+      let maxR = 1e-9;
+      for (const v of this.mesh.vertices) maxR = Math.max(maxR, Math.hypot(v.x, v.y, v.z));
+      const s = 1 / maxR;
+      const face = this.mesh.faces[faceIndex];
+      if (face) {
+        for (let i = 0; i < face.length; i++) {
+          const a = this.mesh.vertices[face[i]], b = this.mesh.vertices[face[(i + 1) % face.length]];
+          // nudge outward a touch so the outline is not buried in the surface
+          pts.push(a.x * s * 1.004, a.y * s * 1.004, a.z * s * 1.004,
+                   b.x * s * 1.004, b.y * s * 1.004, b.z * s * 1.004);
+        }
+      }
+    }
+    if (!this.hlVao) { this.hlVao = gl.createVertexArray(); this.hlBuf = gl.createBuffer(); }
+    gl.bindVertexArray(this.hlVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.hlBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pts), gl.DYNAMIC_DRAW);
+    const loc = gl.getAttribLocation(this.lineProg, 'aPos');
+    if (loc >= 0) { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0); }
+    gl.bindVertexArray(null);
+    this.hlCount = pts.length / 3;
+    this.draw();
   }
 
   start() {
@@ -252,13 +341,27 @@ export class Renderer3D {
   _installControls() {
     const c = this.canvas;
     let px = 0, py = 0;
+
+    // Shift or ctrl/cmd means "I am pointing at a cell", not "turn the model" —
+    // that is what keeps picking and orbiting out of each other's way.
+    const picking = (e) => e.shiftKey || e.ctrlKey || e.metaKey;
+
     const down = (e) => {
+      if (picking(e)) return;
       this.dragging = true;
       const p = point(e, c); px = p.x; py = p.y;
       c.setPointerCapture?.(e.pointerId);
     };
     const move = (e) => {
-      if (!this.dragging) return;
+      if (!this.dragging) {
+        if (this.onPickHover) {
+          const hit = picking(e) ? this.pick(e) : null;
+          c.style.cursor = hit ? 'crosshair' : 'grab';
+          this.setHighlight(hit ? hit.face : -1);
+          this.onPickHover(hit, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
+        }
+        return;
+      }
       const p = point(e, c);
       const dx = (p.x - px), dy = (p.y - py);
       px = p.x; py = p.y;
@@ -268,10 +371,21 @@ export class Renderer3D {
       this.draw();
     };
     const up = (e) => { this.dragging = false; c.releasePointerCapture?.(e.pointerId); };
+
     c.addEventListener('pointerdown', down);
     c.addEventListener('pointermove', move);
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
+    c.addEventListener('pointerleave', () => { this.setHighlight(-1); this.onPickHover?.(null); });
+
+    c.addEventListener('click', (e) => {
+      if (!picking(e) || !this.onPick) return;
+      const hit = this.pick(e);
+      if (hit) this.onPick(hit, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey });
+    });
+
+    c.addEventListener('contextmenu', (e) => e.preventDefault());
+
     c.addEventListener('wheel', (e) => {
       e.preventDefault();
       this.distance = Math.min(4, Math.max(0.35, this.distance * Math.exp(e.deltaY * 0.0012)));
@@ -337,6 +451,33 @@ function quatMul(a, b) {
     a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
     a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
   ];
+}
+
+/** apply the transpose (= inverse, for a rotation) of a column-major mat4's 3x3 part */
+function rotT(m, v) {
+  return [
+    m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+    m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
+    m[8] * v[0] + m[9] * v[1] + m[10] * v[2],
+  ];
+}
+
+/** Möller–Trumbore; returns the ray parameter of the hit, or null. Two-sided. */
+function rayTriangle(o, d, a, b, c) {
+  const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const p = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
+  const det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2];
+  if (Math.abs(det) < 1e-12) return null;
+  const inv = 1 / det;
+  const t0 = [o[0] - a[0], o[1] - a[1], o[2] - a[2]];
+  const u = (t0[0] * p[0] + t0[1] * p[1] + t0[2] * p[2]) * inv;
+  if (u < -1e-6 || u > 1 + 1e-6) return null;
+  const q = [t0[1] * e1[2] - t0[2] * e1[1], t0[2] * e1[0] - t0[0] * e1[2], t0[0] * e1[1] - t0[1] * e1[0]];
+  const v = (d[0] * q[0] + d[1] * q[1] + d[2] * q[2]) * inv;
+  if (v < -1e-6 || u + v > 1 + 1e-6) return null;
+  const t = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) * inv;
+  return t > 1e-6 ? t : null;
 }
 
 function quatToMat4(q) {

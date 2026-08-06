@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,122 +7,120 @@
 <meta name="description" content="Interactive stellations of the uniform polyhedra. A JavaScript port of Vladimir Bulatov's Stellation applet.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <link rel="stylesheet" href="css/style.css">
+<script>
+  // set the theme before first paint so there is no flash
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' ||
+      (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
 </head>
 <body>
 
 <header>
   <h1>Stellation</h1>
-  <p class="tag">extend a polyhedron's faces until they meet again</p>
+
+  <button id="pickPoly" class="picker" title="Choose a polyhedron">
+    <img id="pickThumb" src="img/poly/u27_tmb.gif" alt="" width="26" height="26">
+    <span id="pickName">icosahedron</span>
+    <b>▾</b>
+  </button>
+
+  <span id="stats" class="dim"></span>
+
   <div class="spacer"></div>
-  <button id="help" class="ghost">What is this?</button>
+
+  <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
+  <button id="help" class="ghost">?</button>
 </header>
 
 <main>
 
-  <!-- ------------------------------------------------ left: the catalog -->
-  <aside class="panel left">
-    <div class="panel-head">
-      <h2>Polyhedra</h2>
-      <input id="search" type="search" placeholder="search 121 solids…" autocomplete="off">
-    </div>
-    <div id="catalog" class="scroll"></div>
-  </aside>
-
-  <!-- ------------------------------------------------ centre: the solid -->
+  <!-- ------------------------------------------------ the two views -->
   <section class="stage">
-    <div class="stage-head">
-      <div>
-        <h2 id="title">…</h2>
-        <p id="subtitle" class="dim"></p>
-      </div>
-      <div id="stats" class="dim"></div>
-    </div>
-
     <div class="views">
       <div class="view">
         <canvas id="view3d"></canvas>
-        <div class="view-label">the solid · drag to turn, scroll to zoom</div>
+        <div class="view-label">
+          <span>drag to turn · <kbd>shift</kbd>-click to grow · <kbd>ctrl</kbd>-click to carve</span>
+          <span id="hover3d" class="hover"></span>
+        </div>
       </div>
       <div class="view">
         <canvas id="diagram"></canvas>
         <div class="view-label">
-          the stellation diagram · click a region to add or remove that cell
-          <span id="hover" class="hover"></span>
+          <span>stellation diagram · click a region</span>
+          <span id="hover2d" class="hover"></span>
         </div>
       </div>
     </div>
-
     <div class="statusbar">
       <div id="progress"></div>
       <span id="status">loading…</span>
     </div>
   </section>
 
-  <!-- ------------------------------------------------ right: controls -->
+  <!-- ------------------------------------------------ controls -->
   <aside class="panel right">
 
-    <div class="group">
-      <h2>Cells</h2>
-      <div class="row buttons">
-        <button id="selectCore">core only</button>
-        <button id="growLayer">+ layer</button>
-        <button id="selectAll">all</button>
-        <button id="selectNone">none</button>
+    <div class="group cells-group">
+      <div class="group-head">
+        <h2>Cells</h2>
+        <div class="row buttons tight">
+          <button id="selectCore" title="Just the original polyhedron">core</button>
+          <button id="growLayer" title="Add the next shell outward">+ layer</button>
+          <button id="selectAll">all</button>
+          <button id="selectNone">clear</button>
+        </div>
       </div>
-      <div id="layers" class="scroll layers"></div>
+      <div class="cells-wrap"><canvas id="cells"></canvas></div>
+      <div id="cellInfo" class="info mono"></div>
+      <p class="note">
+        Click a cell to toggle it. <kbd>shift</kbd>-click also pulls in everything
+        holding it up; <kbd>ctrl</kbd>-click takes it and whatever rests on it away.
+        Click a row number for the whole layer.
+      </p>
+      <input id="cellsString" class="mono" spellcheck="false"
+             title="cell-selection string, same syntax as the original .stel files">
     </div>
 
-    <div class="group">
-      <h2>Symmetry</h2>
+    <details class="group" id="symGroup">
+      <summary><h2>Symmetry &amp; depth</h2></summary>
       <label class="field">
-        <span>of the polyhedron</span>
+        <span>polyhedron</span>
         <select id="polySym"></select>
       </label>
       <label class="field">
-        <span>of the stellation</span>
+        <span>stellation</span>
         <select id="stellSym"></select>
       </label>
-      <p class="note">
-        Cells are grouped into orbits of the first group, then split by the second.
-        Choosing the rotation-only subgroup (I inside I<sub>h</sub>) lets a chiral
-        cell contribute just one of its two mirror halves.
-      </p>
       <label class="field">
-        <span>plane depth <b id="depthLabel">12</b></span>
+        <span>depth <b id="depthLabel">12</b></span>
         <input id="depth" type="range" min="2" max="40" value="12">
       </label>
-      <p class="note">How many half-spaces deep to carve. Raise it to reach further
-        stellations; dense solids get slow past about 15.</p>
       <label class="field">
-        <span>diagram on face</span>
+        <span>diagram face</span>
         <input id="planeIndex" type="number" min="0" value="0">
       </label>
-    </div>
+      <p class="note">
+        Cells are grouped into orbits of the first group, then split by the second —
+        that split is what lets a chiral cell offer just one of its two hands.
+        Depth is how many half-spaces deep to carve.
+      </p>
+    </details>
 
-    <div class="group">
-      <h2>View</h2>
-      <label class="check"><input id="autoRotate" type="checkbox" checked> spin</label>
+    <details class="group">
+      <summary><h2>View</h2></summary>
+      <label class="check"><input id="autoRotate" type="checkbox"> spin</label>
       <label class="check"><input id="showEdges" type="checkbox" checked> edges</label>
       <label class="check"><input id="showAllFacets" type="checkbox" checked> all diagram cells</label>
-    </div>
+    </details>
 
-    <div class="group">
-      <h2>Selection</h2>
-      <input id="cellsString" class="mono" spellcheck="false" title="the cell-selection string, same syntax as the original .stel files">
-      <div class="row buttons">
-        <button class="sample" data-file="sample_01.stel">sample 1</button>
-        <button class="sample" data-file="sample_02.stel">sample 2</button>
-        <button class="sample" data-file="sample_03.stel">sample 3</button>
-        <button class="sample" data-file="sample_04.stel">sample 4</button>
-      </div>
-      <label class="filebtn">
-        open a .stel file…
-        <input id="loadStel" type="file" accept=".stel,.txt">
-      </label>
-    </div>
-
-    <div class="group">
-      <h2>Export</h2>
+    <details class="group">
+      <summary><h2>Files &amp; export</h2></summary>
       <div class="row buttons">
         <button id="exportStl">STL</button>
         <button id="exportObj">OBJ</button>
@@ -133,10 +131,29 @@
         <button id="exportSvg">diagram SVG</button>
         <button id="exportPng">view PNG</button>
       </div>
-    </div>
+      <div class="row buttons">
+        <button class="sample" data-file="sample_01.stel">sample 1</button>
+        <button class="sample" data-file="sample_02.stel">2</button>
+        <button class="sample" data-file="sample_03.stel">3</button>
+        <button class="sample" data-file="sample_04.stel">4</button>
+      </div>
+      <label class="filebtn">
+        open a .stel file…
+        <input id="loadStel" type="file" accept=".stel,.txt">
+      </label>
+    </details>
 
   </aside>
 </main>
+
+<!-- ------------------------------------------------ catalog drawer -->
+<dialog id="catalogDialog">
+  <div class="cat-head">
+    <input id="search" type="search" placeholder="search 121 solids…" autocomplete="off">
+    <button id="catalogClose" class="ghost">close</button>
+  </div>
+  <div id="catalog" class="scroll"></div>
+</dialog>
 
 <dialog id="helpDialog">
   <h2>Stellation, in one minute</h2>
@@ -147,32 +164,33 @@
   </p>
   <p>
     In three dimensions you extend a polyhedron's face <em>planes</em> instead. The
-    planes slice space into small bounded regions — <b>cells</b>. Every choice of
-    cells that respects the solid's symmetry is a stellation of it. The icosahedron
-    famously has 59 of them.
+    planes slice space into small bounded regions — <b>cells</b> — arranged in
+    shells, or <b>layers</b>, around the core. Any choice of cells that respects the
+    solid's symmetry is a stellation of it. The icosahedron famously has 59.
   </p>
   <h3>How to use this</h3>
   <ul>
-    <li>Pick a solid on the left. The centre shows it, and to its right is the
-      <b>stellation diagram</b>: one face plane with every other face plane's trace
-      drawn across it.</li>
-    <li>Each little region in that diagram is a cell. <b>Click one</b> to add or
-      remove it, and the solid updates.</li>
-    <li>Cells come in <b>layers</b>, numbered outward from the core. The buttons
-      <em>core only</em> and <em>+ layer</em> walk out one shell at a time — layer 0
-      alone is the original polyhedron, layer 0+1 is its first stellation.</li>
-    <li>A cell marked <sup>L</sup>/<sup>R</sup> is <b>chiral</b>: it comes as a
-      mirror pair, and you may take one hand.</li>
-    <li>Export the result as STL for printing, or save the selection as a
-      <code>.stel</code> file in the original program's format.</li>
+    <li>Choose a solid from the picker at the top.</li>
+    <li>The <b>Cells</b> table on the right has one row per layer, numbered outward
+      from the core. Each box is a symmetric set of cells; a shaded box with smaller
+      boxes beside it is a cell that splits into <b>sub-cells</b>, such as a chiral
+      pair. Bar colours group cells by how many congruent pieces they contain.</li>
+    <li><b>Click</b> toggles. <kbd>shift</kbd>-click also selects everything
+      supporting that cell, so the result always holds together.
+      <kbd>ctrl</kbd>-click removes it and whatever rests on it.</li>
+    <li>The same works on the <b>diagram</b>, and on the <b>solid</b> itself —
+      <kbd>shift</kbd>-click a face to grow outward there, <kbd>ctrl</kbd>-click to
+      carve it away.</li>
+    <li><em>core</em> and <em>+ layer</em> walk out one shell at a time: layer 0
+      alone is the original polyhedron, 0+1 is its first stellation.</li>
   </ul>
   <h3>Where this comes from</h3>
   <p>
-    This is a JavaScript port of the Stellation applet written by
+    A JavaScript port of the Stellation applet written by
     <a href="http://bulatov.org/polyhedra/stellation_applet/" target="_blank" rel="noopener">Vladimir Bulatov</a>
-    in 1998–2001. The geometry here is a direct port of his algorithm, checked
-    against the original Java: the same facet counts, the same cell structure, the
-    same volumes to six decimal places.
+    in 1998–2001. The geometry is a direct port of his algorithm, checked against the
+    original Java: the same facet counts, the same cell structure, the same volumes to
+    six decimal places.
   </p>
   <button id="helpClose">close</button>
 </dialog>

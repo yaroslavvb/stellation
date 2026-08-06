@@ -21,8 +21,13 @@ function toPoly(g) {
   return { vertices, faces: g.f };
 }
 
-/** serialisable summary of the cell tree, for the UI list */
+/**
+ * Serialisable summary of the cell tree for the UI, including each sub-cell's
+ * `bottom` links so the Cells panel can work out supporting sets on its own
+ * rather than asking the worker on every shift-click.
+ */
 function outline() {
+  const key = s => `${s.layer}.${s.cellIndex}.${s.index}`;
   return stel.cellLayers.map((layer, l) => ({
     layer: l,
     cells: layer.map((o, c) => ({
@@ -35,20 +40,28 @@ function outline() {
         index: s.index,
         primitives: s.cells.length,
         volume: s.volume,
+        bottom: [...(s.bottom || [])].map(key),
+        top: [...(s.top || [])].map(key),
       })),
     })),
   }));
 }
 
-/** the mesh for a selection, plus a layer index per face for colouring */
+/**
+ * The mesh for a selection, plus per face: the stellation layer (for colour) and
+ * the sub-cells on either side of it. Those two references are what turns a
+ * click on the solid into "grow here" or "carve this away".
+ */
 function meshFor(selected) {
   const subs = selectedSubCells(stel, selected);
   const mesh = extractMesh(subs, stel.pool);
-  const faceLayers = mesh.facetRefs.map(f => f.layer);
+  const key = s => s && `${s.layer}.${s.cellIndex}.${s.index}`;
   return {
     vertices: mesh.vertices,
     faces: mesh.faces,
-    faceLayers,
+    faceLayers: mesh.facetRefs.map(f => f.layer),
+    faceInside: mesh.facetRefs.map(f => key(f.cellBelow?.owner) || null),
+    faceOutside: mesh.facetRefs.map(f => key(f.cellAbove?.owner) || null),
     stats: {
       vertices: mesh.vertices.length,
       faces: mesh.faces.length,

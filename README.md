@@ -83,23 +83,52 @@ Then open <http://localhost:8731>.
 ### What it does
 
 - Browse **121 polyhedra** in five categories, with the original thumbnails.
+- A **Cells table** modelled on the Java window: one row per layer, numbered outward
+  from the core, with a box per symmetric cell. A cell that splits into sub-cells (a
+  chiral pair, say) is a shaded header followed by its sub-cell boxes. The coloured
+  bars are the original's idea — one hue per *number of congruent pieces*, so cells
+  of the same kind read alike across the whole table.
 - See the **stellation diagram**: one face plane with every other face plane's trace
-  drawn across it. Click a region to add or remove that cell.
+  drawn across it.
 - See the **solid** in WebGL, coloured by layer so the shell structure is readable.
-- Walk outward one layer at a time, or pick individual cells — including single halves
-  of a **chiral** pair.
 - Load and save `.stel` files in the original program's format, and export **STL**,
   **OBJ**, **OFF**, diagram **SVG**, and **PNG**.
+- Light and dark themes, following the system by default.
 - Every state is in the URL: `#u27/Ih/I/{0,1,2}`.
+
+### Choosing cells
+
+The same three gestures work in the **Cells table**, on the **diagram**, and on the
+**solid itself**:
+
+| gesture | effect |
+|---|---|
+| click | toggle that cell (on the solid, plain drag orbits instead) |
+| <kbd>shift</kbd>-click | add it *and everything supporting it* |
+| <kbd>ctrl</kbd>/<kbd>cmd</kbd>-click | remove it *and everything resting on it* |
+
+Both modified forms keep the selection **fully supported**, so what you get is always
+a solid that holds together. The supporting set comes from the cell connectivity
+graph — a port of `Stellation.makeConnectivityGraph` and `Selection.getSupportCells`,
+built at the sub-cell level rather than the whole-cell level the original indexes by.
+
+This is not a loose analogy to the original's behaviour: shift-clicking the chiral
+cell `5(1[1])` of the icosahedron produces exactly `{0,1,2,3,4,5(1[1])}` — which is,
+byte for byte, the selection stored in `samples/sample_02.stel`.
+
+On the solid, <kbd>shift</kbd> grows outward from the face you point at and
+<kbd>ctrl</kbd> carves away the cell just inside it; picking is done by ray-casting
+the pointer against the mesh, so it is exact.
 
 ### How it is organised
 
 | file | what it holds |
 |---|---|
-| `docs/js/core.js` | the port: plane arrangement, layers, cells, symmetry orbits, mesh extraction, `.stel` parsing |
+| `docs/js/core.js` | the port: plane arrangement, layers, cells, symmetry orbits, connectivity graph, mesh extraction, `.stel` parsing |
 | `docs/js/worker.js` | runs the build off the main thread with progress |
-| `docs/js/render3d.js` | a small dependency-free WebGL2 renderer |
+| `docs/js/render3d.js` | a small dependency-free WebGL2 renderer, with ray-cast picking |
 | `docs/js/diagram.js` | the interactive 2D stellation diagram |
+| `docs/js/cells.js` | the Cells table, a close port of the Java `Selection` canvas |
 | `docs/js/app.js` | the UI |
 | `docs/data/symmetry.json` | all 85 symmetry groups, **dumped from the Java** rather than re-derived |
 | `docs/data/catalog.json` | the `PolyNames` catalog |

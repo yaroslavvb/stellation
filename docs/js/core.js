@@ -639,6 +639,8 @@ export function buildStellation(poly, matrices, opts = {}) {
     cellLayers.push(orbits);
   }
 
+  makeConnectivityGraph(cellLayers);
+
   return { pool, planes, arrangement, layers, cellLayers,
            maxRadius: maxOf(pool.pts, len) };
 }
@@ -646,6 +648,73 @@ export function buildStellation(poly, matrices, opts = {}) {
 /** the sub-cell a diagram facet belongs to: the cell it caps, else the one below it */
 export function subCellForFacet(facet) {
   return facet.cellBelow?.owner || facet.cellAbove?.owner || null;
+}
+
+/** the two cells a facet separates: the one it caps, and the one it floors */
+export function cellsAcrossFacet(facet) {
+  return { below: facet.cellBelow?.owner || null, above: facet.cellAbove?.owner || null };
+}
+
+// ---------------------------------------------------------------- connectivity
+
+/**
+ * Link each sub-cell to the ones directly beneath and above it.
+ *
+ * A stellation only holds together if every cell rests on cells that are
+ * themselves present — Vladimir's UI calls that a cell's "supporting" set, and
+ * shift-clicking pulls the whole set in at once. Port of
+ * Stellation.makeConnectivityGraph, but built at the SUB-cell level: selection
+ * happens per sub-cell, and the original's graph is indexed by whole-cell index
+ * even where the UI looks up sub-cells, which only agrees when nothing is chiral.
+ *
+ * A facet that caps cell X (X is below it) and floors cell Y (Y is above it) is
+ * exactly the contact between them, so the shared facet objects give the graph
+ * directly — no geometric search needed.
+ */
+export function makeConnectivityGraph(cellLayers) {
+  for (const layer of cellLayers)
+    for (const orbit of layer)
+      for (const s of orbit.subCells) { s.top = new Set(); s.bottom = new Set(); }
+
+  for (const layer of cellLayers) {
+    for (const orbit of layer) {
+      for (const s of orbit.subCells) {
+        for (const c of s.cells) {
+          for (const f of c.top) {
+            const above = f.cellAbove?.owner;
+            if (above && above !== s) { s.top.add(above); above.bottom.add(s); }
+          }
+        }
+      }
+    }
+  }
+  return cellLayers;
+}
+
+/**
+ * Every sub-cell that must be present for `sub` to be supported: itself, what it
+ * rests on, what that rests on, and so on down to the core.
+ * Port of Selection.getSupportCells.
+ */
+export function supportSet(sub) {
+  const out = new Set([sub]);
+  const stack = [sub];
+  while (stack.length) {
+    const s = stack.pop();
+    for (const b of (s.bottom || [])) if (!out.has(b)) { out.add(b); stack.push(b); }
+  }
+  return out;
+}
+
+/** Everything resting on `sub`, transitively — what would be left unsupported if it went away. */
+export function dependentSet(sub) {
+  const out = new Set([sub]);
+  const stack = [sub];
+  while (stack.length) {
+    const s = stack.pop();
+    for (const t of (s.top || [])) if (!out.has(t)) { out.add(t); stack.push(t); }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- selection

@@ -33,7 +33,10 @@ export class DiagramView {
     });
     canvas.addEventListener('click', (e) => {
       const i = this.hitTest(e);
-      if (i >= 0) this.onToggle?.(this.data.facets[i]);
+      if (i >= 0) {
+        this.onToggle?.(this.data.facets[i],
+          { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey });
+      }
     });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
