@@ -144,7 +144,7 @@ class Figure {
         planeIndex: 0, extent: d.extent,
         facets: d.facets.map(f => {
           const sc = subCellForFacet(f.facet);
-          return { poly: f.poly, layer: f.layer, selected: f.selected,
+          return { poly: f.poly, layer: f.layer, selected: f.selected, facing: f.facing,
                    ref: sc ? [sc.layer, sc.cellIndex, sc.index] : null };
         }),
       });

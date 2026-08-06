@@ -215,7 +215,10 @@ export class CellsPanel {
     let y = PAD - this.scroll;
     const x0 = PAD - this.scrollX;
 
-    for (const layer of this.outline) {
+    // Bottom-up: the core is the ground floor and each shell is built on top of
+    // the one below, which is how the solid actually grows and how the support
+    // relation reads. Row numbers are unchanged — only the order is reversed.
+    for (const layer of [...this.outline].reverse()) {
       let x = x0;
       cb({ kind: 'layer', layer, x, y, w: LAYER_W, h: BOX_H });
       x += LAYER_W + GAP_X * 2;

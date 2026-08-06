@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What changed — Stellation</title>
+<meta name="description" content="The round of fixes from the 6 August review, and what is still open.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/walkthrough.css">
+<link rel="stylesheet" href="css/controls.css">
+<script>
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' || (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
+<style>
+  .done, .open { list-style: none; padding: 0; margin: 18px 0; }
+  .done li, .open li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+  .done li::before { content: "✓"; color: #3fbf7f; font-weight: 700; }
+  .open li::before { content: "○"; color: var(--dim); }
+  .done b, .open b { color: var(--text); }
+  .done .src, .open .src {
+    display: block;
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--dim);
+    font-family: var(--mono);
+  }
+  .grp { margin-top: 30px; }
+  .grp h3 { margin-bottom: 2px; font-size: 15px; }
+  .grp p.lead { margin: 0; font-size: 13px; color: var(--dim); }
+</style>
+</head>
+<body class="doc">
+
+<header class="doc-head">
+  <a class="brand" href="index.html">✦ Stellation</a>
+  <span class="crumb">What changed</span>
+  <div class="spacer"></div>
+  <a class="ghost" href="controls.html">Controls</a>
+  <a class="ghost" href="walkthrough.html">Walkthrough</a>
+  <a class="ghost" href="index.html">Open the app →</a>
+  <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
+</header>
+
+<main class="doc-body narrow">
+
+  <h1>What changed</h1>
+  <p class="standfirst">
+    From the review of 6 August 2026. Every item below traces to a point raised in
+    that session; the timestamp after each one is where it was raised.
+  </p>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>Controls</h3>
+    <p class="lead">The largest group, and the one that changes how the app feels.</p>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>Shift always adds; ctrl always removes.</b> Neither toggles any more.
+      Shift-clicking an already-selected cell used to undo the previous shift-click,
+      so the same gesture sometimes added and sometimes removed depending on what you
+      had just done. The two are now plain inverses.
+      <span class="src">09:16, 09:17 — "Shift, клик. Это она, по-моему, убрала теперь."</span>
+    </div></li>
+    <li><div>
+      <b>A bare click no longer edits in the 3-D view or the diagram.</b> It turns the
+      solid and pans the diagram respectively; only the Cells table spends a plain
+      click on toggling. Previously a click meant one thing in one pane and something
+      else in another.
+      <span class="src">09:29, 09:54 — "здесь клик и здесь клик — это разные вещи"</span>
+    </div></li>
+    <li><div>
+      <b>Right-click does nothing.</b> It used to carve. On macOS ctrl-click <em>is</em>
+      the system right-click, so the two are told apart by whether the ctrl key was
+      actually held — a real right-click is ignored, a ctrl-click removes.
+      <span class="src">09:27 — "правая вообще ничего не должна делать"</span>
+    </div></li>
+    <li><div>
+      <b>One vocabulary on both platforms.</b> The remove key is now called
+      <kbd>ctrl</kbd> everywhere, because ctrl-click now works on macOS too. Option-click
+      still works there as an alternative.
+      <span class="src">09:26 — Windows and macOS side by side</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>The Cells table</h3>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>Turned the right way up.</b> The core is now the bottom row and each shell sits
+      on the one below it, so the table grows the way the solid does — from the inside
+      out. Row numbers are unchanged.
+      <span class="src">09:20, 09:55 — "перевернуть вообще вверх ногами… строится снизу вверх, изнутри наружу"</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>The diagram</h3>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>Inward-facing surfaces are drawn pale and dashed.</b> The diagram shows the
+      <em>surface</em> of the solid, not its volume, and a filled region invited the
+      reading that there is material behind it — when an inward-facing face means the
+      opposite, that there is a cavity. Solid fill now means outward, pale means
+      inward.
+      <span class="src">09:33–09:41 — the volume-versus-surface discussion; "сделать нижнюю поверхность бледно-бледно"</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>Symmetry</h3>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>Only genuine subgroups are offered.</b> The dropdowns listed all 85 groups
+      regardless of the solid; for the icosahedron they now list the 13 that are
+      actually subgroups of I<sub>h</sub>, and the stellation symmetry is restricted to
+      subgroups of whatever the polyhedron symmetry is set to. Membership is decided by
+      testing the matrices, not from a hand-written table.
+      <span class="src">09:44 — "перечислена только подгруппы симметрии икосаэдра"</span>
+    </div></li>
+    <li><div>
+      <b>That also fixes the "everything is broken" case.</b> The all-zeros table came
+      from choosing T (order 12) as the polyhedron symmetry with I (order 60) as the
+      stellation symmetry — not a lowering at all, so every group had exactly one
+      sub-cell. That pairing can no longer be selected. The sub-cell splitting itself
+      was correct: under I<sub>h</sub> → T an icosahedron's layers split 3/5/10, and
+      under I<sub>h</sub> → E into all 120.
+      <span class="src">09:47 — "вообще всё сломано"</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>Layout and view</h3>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>The panes can be dragged.</b> Both dividers resize, and the positions are
+      remembered — a deep arrangement can run a row of the Cells table far wider than
+      the default column.
+      <span class="src">09:49 — "сделал вот эти вот панели раздвигаемые"</span>
+    </div></li>
+    <li><div>
+      <b>The solid no longer resizes itself as you build.</b> The scale was recomputed
+      on every change, so adding a shell shrank everything already on screen. It is now
+      fixed when the arrangement is built, with a <b>fit</b> button to rescale on
+      demand.
+      <span class="src">09:15 — "остается такого же размера, но добавляется кнопочка fit"</span>
+    </div></li>
+    <li><div>
+      <b>Edge weight now defaults to 1.</b>
+      <span class="src">09:13 — "Make the default of the edge weight one instead of edge weight three"</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>Documentation</h3>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>A short <a href="controls.html">Controls &amp; views</a> page</b> — the two
+      gestures, the three views and what each pane is for, on one screen. The Cells
+      panel now links there instead of to the walkthrough, under a shorter label.
+      <span class="src">09:56 — "отдельную страницу с более сжатым описанием контролов"</span>
+    </div></li>
+    <li><div>
+      <b>This page.</b>
+      <span class="src">"Create a list of things that were done."</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
+    <h3>Investigated, not changed</h3>
+    <p class="lead">Deliberately left alone, with the findings written down.</p>
+  </div>
+  <ul class="open">
+    <li><div>
+      <b>Planes through the origin.</b> Described in the session as a fundamental
+      defect: a plane stored as a single point cannot represent one that passes through
+      the centre, which is why twenty hemipolyhedra and their duals are commented out
+      of the catalogue — the reason is written in the source, in the author's hand.
+      <br><br>
+      Investigated rather than fixed, on the instruction not to start it yet. The short
+      version: the JavaScript port <em>already</em> stores four numbers, so the
+      representation is not the blocker — one guard line is. Removing it does let all
+      ten hemipolyhedra build, u80 included, in under a third of a second. But the
+      guard turns out to be doing a second, unrelated job, and a prototype that removed
+      it naively destroyed seven working solids. The discriminator that separates the
+      two cases cleanly is face planarity, which differs between them by sixteen orders
+      of magnitude. Written up with both prototypes, the measurements and an acceptance
+      test in <code>notes/design/plane-representation.md</code>.
+      <span class="src">09:50–09:54 — "фундаментальный дефект… лучше пока не запускать"</span>
+    </div></li>
+    <li><div>
+      <b>Clicking a region that has cells on both sides.</b> On the diagram a plane has
+      a cell above and a cell below, and there was a proposal to reach them separately
+      — shift for one, ctrl for the other. Left as it is for now: shift and ctrl are
+      spent on add and remove, which is the more valuable pair, and the session
+      concluded "counterintuitive but ok, can leave as is".
+      <span class="src">09:25, 09:33</span>
+    </div></li>
+    <li><div>
+      <b>3-D rotation in the original Java applet.</b> Noted as a separate to-do
+      against the original program, not this port.
+      <span class="src">09:49</span>
+    </div></li>
+  </ul>
+
+  <p class="colophon">
+    Source and notes on
+    <a href="https://github.com/yaroslavvb/stellation" target="_blank" rel="noopener">GitHub</a>.
+    See <a href="controls.html">Controls &amp; views</a> for how the app works now.
+  </p>
+
+</main>
+
+<script type="module">
+  import { labelKeys } from './js/platform.js';
+  labelKeys();
+  const btn = document.querySelector('#themeBtn');
+  const apply = (pref) => {
+    const dark = pref === 'dark' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = pref;
+    btn.textContent = pref === 'auto' ? '◐' : pref === 'dark' ? '●' : '○';
+  };
+  btn.onclick = () => {
+    const order = ['auto', 'light', 'dark'];
+    const cur = document.documentElement.dataset.themePref || 'auto';
+    const next = order[(order.indexOf(cur) + 1) % order.length];
+    localStorage.setItem('theme', next);
+    apply(next);
+  };
+  apply(localStorage.getItem('theme') || 'auto');
+</script>
+</body>
+</html>

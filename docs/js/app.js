@@ -95,7 +95,7 @@ async function boot() {
   });
 
   cells = new CellsPanel($('#cells'), {
-    onChange: () => { last3D = null; refresh(); },
+    onChange: () => refresh(),
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
 
@@ -137,7 +137,6 @@ function findItem(file) {
  */
 function applyToCell(key, mod) {
   if (!key) return;
-  last3D = null;                       // any other edit invalidates the 3D undo
   const sel = state.selected;
   if (mod.shift) {
     for (const k of cells.supportKeys(key)) sel.add(k);
@@ -177,20 +176,17 @@ function applyToFacet(facet, mod) {
 }
 
 /*
- * Clicking the solid, and clicking it again to change your mind.
+ * Clicking a cell means the same thing in all three views.
  *
- * The catch that makes this not a plain toggle: the surface moves. Grow at a
- * face and the cell you just added becomes the new surface there, so a second
- * click in the same spot is pointing at a *different* face and would happily
- * grow again, forever.
+ *   shift  add this cell and everything holding it up
+ *   ctrl   remove this cell and everything resting on it
  *
- * The tell is that the cell you last toggled is now on the other side of the
- * face under the cursor — inside it if you grew, outside it if you carved. When
- * that holds, the click is the same click, so undo it instead. We revert the
- * exact set that changed, not just the one cell, because growing also pulls in
- * whatever was needed to support it.
+ * They are inverses, so "click again to change your mind" is shift then ctrl
+ * rather than a second click of the same kind. An earlier version made a
+ * repeated shift-click undo itself, which read as shift-click sometimes
+ * removing — the operation you asked for depended on what you had done last.
+ * Two explicit gestures are worth more than one clever one.
  */
-let last3D = null;   // { key, added, changed:Set }
 
 function onPick3D(hit, mod) {
   const mesh = state.mesh;
@@ -198,21 +194,12 @@ function onPick3D(hit, mod) {
   const inside = mesh.faceInside[hit.face];
   const outside = mesh.faceOutside[hit.face];
 
-  if (last3D && last3D.changed.size &&
-      (last3D.added ? inside === last3D.key : outside === last3D.key)) {
-    applyChange(last3D.changed, !last3D.added);
-    setStatus(`undid ${last3D.added ? 'growing' : 'carving'} at ${last3D.key}`, false);
-    last3D = null;
-    refresh();
-    return;
-  }
-
   if (mod.shift) {
     if (!outside) { setStatus('nothing further out on that face — raise the build depth', false); return; }
-    last3D = { key: outside, added: true, changed: applyChange(cells.supportKeys(outside), true) };
+    applyChange(cells.supportKeys(outside), true);
   } else if (mod.ctrl) {
     if (!inside) { setStatus('no cell inside that face', false); return; }
-    last3D = { key: inside, added: false, changed: applyChange(dependentKeys(inside), false) };
+    applyChange(dependentKeys(inside), false);
   } else {
     return;
   }
@@ -350,16 +337,116 @@ function defaultStellSym(poly) {
   return map[poly] || poly;
 }
 
+/*
+ * Which symmetry groups may be offered.
+ *
+ * Not every group makes sense for every solid: asking for I (order 60) as the
+ * stellation symmetry of a T-symmetric arrangement is not a lower symmetry at
+ * all, and the result is meaningless. The Java applet lists, for a given solid,
+ * only the subgroups of its own point group, and this reproduces that — but by
+ * testing actual matrix containment rather than by carrying a hand-written
+ * subgroup lattice, so it stays correct for the oriented variants (the "(O)"
+ * groups are cubic-frame copies and belong to the octahedral families only).
+ *
+ * Cached: 85 groups against 5 parents is a few hundred thousand comparisons,
+ * worth doing once rather than on every rebuild.
+ */
+const subgroupCache = new Map();
+
+function matrixKey(m) {
+  // quantised so that 0.9999999 and 1.0 are the same rotation
+  let k = '';
+  for (const v of m) k += (Math.round(v * 1e4) / 1e4 + 0) + ',';
+  return k;
+}
+
+function subgroupsOf(parent) {
+  if (subgroupCache.has(parent)) return subgroupCache.get(parent);
+  const P = state.symmetry[parent];
+  const names = Object.keys(state.symmetry).filter(n => state.symmetry[n].order > 0);
+  let out;
+  if (!P?.matrices?.length) {
+    out = names;
+  } else {
+    const inParent = new Set(P.matrices.map(matrixKey));
+    out = names.filter(n => {
+      const G = state.symmetry[n];
+      if (G.order > P.order) return false;
+      return (G.matrices || []).every(m => inParent.has(matrixKey(m)));
+    });
+  }
+  out.sort((a, b) => state.symmetry[b].order - state.symmetry[a].order || a.localeCompare(b));
+  subgroupCache.set(parent, out);
+  return out;
+}
+
+function fillSelect(id, names, value) {
+  $(id).innerHTML = names.map(n =>
+    `<option value="${n}"${n === value ? ' selected' : ''}>${n} (${state.symmetry[n].order})</option>`
+  ).join('');
+}
+
 function syncSymmetrySelects() {
-  // Symmetry.getMatrices returns nothing for a handful of names in the original
-  // (C8..C12 and friends were never filled in) — offering them would only break.
-  const names = Object.keys(state.symmetry)
-    .filter(n => state.symmetry[n].order > 0)
-    .sort((a, b) => state.symmetry[b].order - state.symmetry[a].order || a.localeCompare(b));
-  for (const [id, val] of [['#polySym', state.polySym], ['#stellSym', state.stellSym]]) {
-    $(id).innerHTML = names.map(n =>
-      `<option value="${n}"${n === val ? ' selected' : ''}>${n} (${state.symmetry[n].order})</option>`
-    ).join('');
+  // the solid's own point group bounds the polyhedron symmetry; that in turn
+  // bounds the stellation symmetry, which must be a subgroup of it
+  const own = state.current?.symmetry || 'Ih';
+  const polyNames = subgroupsOf(own);
+  if (!polyNames.includes(state.polySym)) state.polySym = polyNames[0] || own;
+  fillSelect('#polySym', polyNames, state.polySym);
+
+  const stellNames = subgroupsOf(state.polySym);
+  if (!stellNames.includes(state.stellSym)) state.stellSym = state.polySym;
+  fillSelect('#stellSym', stellNames, state.stellSym);
+}
+
+/*
+ * Draggable splitters.
+ *
+ * The three panes are fixed fractions of the window, which is fine until a
+ * deep arrangement makes the Cells table wider than its column — with C3
+ * symmetry a row can run to twenty sub-cells. Rather than guess a width that
+ * suits every solid, let the panes be resized, and remember where they were put.
+ */
+function installSplitters() {
+  const root = document.documentElement;
+  for (const [id, apply] of [
+    ['#splitPanel', (e) => {
+      const w = Math.min(720, Math.max(240, window.innerWidth - e.clientX));
+      root.style.setProperty('--panel-w', w + 'px');
+      localStorage.setItem('panelW', w);
+    }],
+    ['#splitViews', (e) => {
+      const box = $('.views').getBoundingClientRect();
+      const frac = Math.min(0.85, Math.max(0.15, (e.clientX - box.left) / box.width));
+      root.style.setProperty('--views-a', frac + 'fr');
+      root.style.setProperty('--views-b', (1 - frac) + 'fr');
+      localStorage.setItem('viewsFrac', frac);
+    }],
+  ]) {
+    const el = $(id);
+    if (!el) continue;
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      el.classList.add('dragging');
+      // capture throws for a pointer the browser is not tracking; it is an
+      // optimisation for dragging past the splitter, never a precondition
+      try { el.setPointerCapture?.(e.pointerId); } catch { /* nothing to capture */ }
+      const move = (ev) => { apply(ev); renderer?.resize(); diagram?.draw(); cells?.draw(); };
+      const up = () => {
+        el.classList.remove('dragging');
+        el.removeEventListener('pointermove', move);
+        el.removeEventListener('pointerup', up);
+      };
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerup', up);
+    });
+  }
+  const w = Number(localStorage.getItem('panelW'));
+  if (w >= 240) root.style.setProperty('--panel-w', w + 'px');
+  const f = Number(localStorage.getItem('viewsFrac'));
+  if (f > 0.1 && f < 0.9) {
+    root.style.setProperty('--views-a', f + 'fr');
+    root.style.setProperty('--views-b', (1 - f) + 'fr');
   }
 }
 
@@ -368,10 +455,10 @@ function syncSymmetrySelects() {
 async function build(cellsString) {
   if (state.building) return;
   state.building = true;
-  last3D = null;
   setStatus('building the plane arrangement…', true);
 
   const g = state.geometry[state.current.file];
+  renderer?.resetScale();      // a new arrangement re-frames; edits within one do not
   const polyM = state.symmetry[state.polySym]?.matrices || state.symmetry.E.matrices;
   const subM = state.symmetry[state.stellSym]?.matrices || null;
 
@@ -447,26 +534,29 @@ function wireControls() {
   };
   $('#catalogClose').onclick = () => $('#catalogDialog').close();
 
-  $('#polySym').onchange = (e) => { state.polySym = e.target.value; build(); };
+  $('#polySym').onchange = (e) => {
+    state.polySym = e.target.value;
+    const allowed = subgroupsOf(state.polySym);
+    if (!allowed.includes(state.stellSym)) state.stellSym = state.polySym;
+    syncSymmetrySelects();
+    build();
+  };
   $('#stellSym').onchange = (e) => { state.stellSym = e.target.value; build(); };
   $('#depth').oninput = (e) => setDepth(Number(e.target.value), false);
   $('#depth').onchange = () => build();
   $('#planeIndex').onchange = (e) => { state.planeIndex = Number(e.target.value) || 0; refresh(); };
 
   $('#selectCore').onclick = async () => {
-    last3D = null;
-    const { keys } = await call('layerKeys', { n: 1 });
+      const { keys } = await call('layerKeys', { n: 1 });
     state.selected = new Set(keys); refresh();
   };
-  $('#selectNone').onclick = () => { last3D = null; state.selected.clear(); refresh(); };
+  $('#selectNone').onclick = () => { state.selected.clear(); refresh(); };
   $('#selectAll').onclick = async () => {
-    last3D = null;
-    const { keys } = await call('layerKeys', { n: state.outline.length });
+      const { keys } = await call('layerKeys', { n: state.outline.length });
     state.selected = new Set(keys); refresh();
   };
   $('#growLayer').onclick = async () => {
-    last3D = null;
-    let n = 0;
+      let n = 0;
     state.outline.forEach((layer, l) => {
       if (layer.cells.some(c => c.subCells.some(s => state.selected.has(`${l}.${c.index}.${s.index}`)))) n = l + 1;
     });
@@ -476,6 +566,10 @@ function wireControls() {
 
   $('#autoRotate').onchange = (e) => { if (renderer) renderer.autoRotate = e.target.checked; };
   $('#showEdges').onchange = (e) => { if (renderer) { renderer.showEdges = e.target.checked; renderer.draw(); } };
+  $('#fitView').onclick = () => { renderer?.fit(); setStatus('rescaled to fit', false); };
+
+  installSplitters();
+
   $('#edgeWidth').oninput = (e) => {
     const w = Number(e.target.value);
     $('#edgeWidthLabel').textContent = w.toFixed(1);
@@ -487,8 +581,7 @@ function wireControls() {
   $('#cellsString').onchange = async (e) => {
     try {
       const { selected } = await call('parseCells', { cells: e.target.value });
-      last3D = null;
-      state.selected = new Set(selected);
+          state.selected = new Set(selected);
       refresh();
     } catch (err) { setStatus('could not read that cell string: ' + err.message, false); }
   };

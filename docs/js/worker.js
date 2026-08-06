@@ -84,6 +84,7 @@ function diagramFor(planeIndex, selected) {
         poly: f.poly,
         layer: f.layer,
         selected: f.selected,
+        facing: f.facing,          // 1 outward, 0 inward (lines a cavity)
         // which sub-cell a click here should toggle
         ref: sc ? [sc.layer, sc.cellIndex, sc.index] : null,
       };

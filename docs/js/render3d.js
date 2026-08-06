@@ -136,8 +136,9 @@ export class Renderer3D {
     this.lineVao = gl.createVertexArray();
     this.lineBufs = { a: gl.createBuffer(), b: gl.createBuffer(), side: gl.createBuffer(), end: gl.createBuffer() };
     this.lineCount = 0;
-    this.edgeWidth = 3.0;   // CSS pixels of total line width, scaled by dpr at draw
+    this.edgeWidth = 1.0;   // CSS pixels of total line width, scaled by dpr at draw
 
+    this.modelScale = 0;   // sticky; see setMesh() and fit()
     this.rotation = quatFromEuler(-0.42, 0.6, 0);
     this.distance = 1.0;   // relative zoom; the fit distance is computed per frame
     this.autoRotate = true;
@@ -150,6 +151,18 @@ export class Renderer3D {
     this.resize();
     new ResizeObserver(() => this.resize()).observe(canvas);
   }
+
+  /** rescale so the current selection fills the frame, and re-upload */
+  fit() {
+    if (!this.mesh) return;
+    this.modelScale = 0;
+    this.distance = 1.0;
+    this.setMesh(this.mesh, this.lastFaceLayers);
+    this.draw();
+  }
+
+  /** forget the scale so the next mesh sets it — used when the solid changes */
+  resetScale() { this.modelScale = 0; }
 
   resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -167,12 +180,23 @@ export class Renderer3D {
     const pos = [], norm = [], col = [], lines = [];
     this.pickTris = [];      // {a,b,c, face} in model space, for ray picking
     this.mesh = mesh;
+    this.lastFaceLayers = faceLayers;
     const seenEdges = new Set();
 
-    // normalise scale so every solid frames the same way
+    /*
+     * The model scale is sticky.
+     *
+     * Renormalising to the current mesh on every change means adding one shell
+     * shrinks everything already on screen, so the solid you are working on
+     * jumps about while you build it and the core never stays put. Instead the
+     * scale is fixed when the arrangement is built and left alone; `fit()`
+     * rescales on demand.
+     */
     let maxR = 1e-9;
     for (const v of mesh.vertices) maxR = Math.max(maxR, Math.hypot(v.x, v.y, v.z));
-    const s = 1 / maxR;
+    this.lastMaxR = maxR;
+    if (!this.modelScale) this.modelScale = 1 / maxR;
+    const s = this.modelScale;
 
     mesh.faces.forEach((face, fi) => {
       const c = layerColor(faceLayers ? faceLayers[fi] : 0);
@@ -407,8 +431,12 @@ export class Renderer3D {
     let px = 0, py = 0;
 
     // A modifier means "I am pointing at a cell", not "turn the model" — that is
-    // what keeps picking and orbiting out of each other's way. alt counts too,
-    // because on macOS ctrl-click is the secondary click and never reaches us.
+    // what keeps picking and orbiting out of each other's way. The same two
+    // gestures mean the same two things in all three views: shift adds a cell
+    // with everything holding it up, the carve modifier removes it with
+    // everything resting on it. On Windows and Linux that modifier is ctrl; on
+    // macOS ctrl-click is the OS secondary click and never arrives as a click,
+    // so option and cmd stand in for it there (and see the contextmenu handler).
     const picking = (e) => e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
     const mods = (e) => {
       const shift = e.shiftKey;
@@ -453,12 +481,19 @@ export class Renderer3D {
       if (hit) this.onPick(hit, mods(e));
     });
 
-    // ctrl-click on macOS arrives only as this; treat it, and a right-click, as carve
+    /*
+     * A plain right-click is meant to do nothing at all here. But on macOS a
+     * ctrl-click IS the secondary click: the OS swallows it and the page only
+     * ever sees `contextmenu`. Both requirements are satisfiable at once,
+     * because the two cases are distinguishable — a ctrl-click carries
+     * ctrlKey, a real right-click does not. So: swallow the menu either way,
+     * and only carve when the modifier was actually held.
+     */
     c.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      if (!this.onPick) return;
+      if (!this.onPick || !e.ctrlKey) return;
       const hit = this.pick(e);
-      if (hit) this.onPick(hit, { shift: e.shiftKey, ctrl: !e.shiftKey });
+      if (hit) this.onPick(hit, { shift: false, ctrl: true });
     });
 
     c.addEventListener('wheel', (e) => {

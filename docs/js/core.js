@@ -941,6 +941,10 @@ export function createDiagram(stel, planeIndex, selectedOrbits, vertexUp = 0) {
       facet: f,
       layer: f.layer,
       selected: selected.has(f),
+      // 1 = this face of the solid looks outward, 0 = it looks inward (it lines
+      // a cavity). The diagram shows the surface, not the volume, so the two
+      // need to be told apart: see the note in DiagramView.draw.
+      facing: selected.has(f) ? (kind.get(f) === 0 ? 0 : 1) : null,
       poly: f.v.map(project),
     })),
     extent: diagramExtent(facets, project),

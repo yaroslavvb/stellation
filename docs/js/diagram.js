@@ -34,7 +34,7 @@ export class DiagramView {
     };
 
     canvas.addEventListener('pointerdown', (e) => {
-      if (e.button === 2) return;           // secondary press carves, never pans
+      if (e.button === 2) return;           // secondary press is inert, never pans
       down = { x: e.clientX, y: e.clientY, pan: { ...this.pan } };
       moved = 0;
       capture(e, true);
@@ -61,35 +61,24 @@ export class DiagramView {
       }
     });
 
-    // The first click of a double-click has already toggled a cell by the time
-    // the second arrives, so a double-click would otherwise reset the view and
-    // leave the selection changed. Remember what the last plain click did and
-    // undo it — a plain toggle is its own inverse.
-    let recent = null;
-
+    /*
+     * A bare click does nothing here, exactly as in the 3D view — there it
+     * turns the model, here it pans the diagram, and in both a modifier is
+     * what says "I mean this cell". Before, a click in the 3D view orbited
+     * while the same click in the diagram toggled a cell, which is the sort of
+     * inconsistency you have to memorise rather than learn.
+     */
     const release = (e) => {
       if (!down) return;
       const wasDrag = moved > 3;
       down = null;
       capture(e, false);
       canvas.style.cursor = 'grab';
-      if (wasDrag) { recent = null; return; }
-      const i = this.hitTest(e);
-      if (i < 0) { recent = null; return; }
+      if (wasDrag) return;
       const m = mods(e);
-
-      if (recent && !m.shift && !m.ctrl &&
-          e.timeStamp - recent.t < 450 &&
-          Math.hypot(e.clientX - recent.x, e.clientY - recent.y) < 8) {
-        this.onToggle?.(recent.facet, { shift: false, ctrl: false, alt: false });
-        recent = null;
-        return;                             // the dblclick handler resets the view
-      }
-
-      const facet = this.data.facets[i];
-      recent = (m.shift || m.ctrl) ? null
-             : { t: e.timeStamp, x: e.clientX, y: e.clientY, facet };
-      this.onToggle?.(facet, m);
+      if (!m.shift && !m.ctrl) return;      // a bare click pans, nothing more
+      const i = this.hitTest(e);
+      if (i >= 0) this.onToggle?.(this.data.facets[i], m);
     };
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', () => { down = null; });
@@ -100,13 +89,14 @@ export class DiagramView {
 
     canvas.addEventListener('dblclick', () => this.resetView());
 
-    // macOS delivers ctrl-click as a contextmenu, never as a ctrl-click, so
-    // that event is the carve gesture here too — as is a plain right-click.
+    // A real right-click does nothing. macOS ctrl-click reaches the page only
+    // as this event, and is told apart by the modifier it carries.
     canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       down = null;
+      if (!e.ctrlKey) return;
       const i = this.hitTest(e);
-      if (i >= 0) this.onToggle?.(this.data.facets[i], { shift: e.shiftKey, ctrl: !e.shiftKey });
+      if (i >= 0) this.onToggle?.(this.data.facets[i], { shift: false, ctrl: true });
     });
 
     canvas.addEventListener('wheel', (e) => {
@@ -257,11 +247,24 @@ export class DiagramView {
       }
     }
 
-    // 2. selected facets, solid
+    /*
+     * 2. selected facets.
+     *
+     * The diagram shows the *surface* of the solid, not its volume, and a face
+     * can be on that surface in two ways: looking outward, or lining a cavity
+     * and looking inward. Drawing both the same invites the reading that a
+     * filled region means solid material there — which is backwards, since an
+     * inward-facing face means there is a hole behind it. Outward faces are
+     * drawn solid; inward ones are left very pale, so they read as "surface,
+     * but not the outside".
+     */
     for (const facet of facets) {
       if (!facet.selected) continue;
-      const c = layerColor(facet.layer);
-      ctx.fillStyle = `rgb(${c.map(v => Math.round(v * 255)).join(',')})`;
+      const c = layerColor(facet.layer).map(v => Math.round(v * 255));
+      const inward = facet.facing === 0;
+      ctx.fillStyle = inward
+        ? `rgba(${c.join(',')},${dark ? 0.20 : 0.16})`
+        : `rgb(${c.join(',')})`;
       this._path(ctx, facet.poly, f);
       ctx.fill();
     }
@@ -271,14 +274,19 @@ export class DiagramView {
     ctx.lineWidth = Math.max(0.6, f.dpr * 0.6);
     for (const facet of facets) { this._path(ctx, facet.poly, f); ctx.stroke(); }
 
-    // 4. selected outlines, heavier
-    ctx.strokeStyle = dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.75)';
+    // 4. selected outlines, heavier — dashed where the face looks inward
     ctx.lineWidth = Math.max(1, f.dpr * 1.1);
     for (const facet of facets) {
       if (!facet.selected) continue;
+      const inward = facet.facing === 0;
+      ctx.strokeStyle = inward
+        ? (dark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.32)')
+        : (dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.75)');
+      ctx.setLineDash(inward ? [4 * f.dpr, 3 * f.dpr] : []);
       this._path(ctx, facet.poly, f);
       ctx.stroke();
     }
+    ctx.setLineDash([]);
 
     // 5. hover highlight
     if (this.hover >= 0 && facets[this.hover]) {
