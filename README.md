@@ -98,7 +98,7 @@ Then open <http://localhost:8731>.
 - Export **STL**, **OBJ**, **OFF**, diagram **SVG**, **PNG**, and `.stel` for the
   Java program.
 - Light and dark themes, following the system by default.
-- Every state is in the URL, build depth included: `#u27/Ih/I/d12/{0,1,2}`.
+- Every state is in the URL, build depth included: `#u27/Ih/I/d20/{0,1,2}`.
 
 ### Choosing cells
 
@@ -150,6 +150,27 @@ the exact set that changed rather than just the one cell.
 The symmetry tables are exported from the original Java instead of being hand-ported.
 `Symmetry.java` is 2300 lines of hardcoded matrices; transcribing them by hand would
 have been the most likely place to introduce a silent error.
+
+### How deep to build
+
+Depth is the original's `maxintersection`: facets past that many half-spaces are
+discarded. Set it too low and outer layers come out *empty*, which reads as a bug —
+cells look disconnected because the shells that would join them were never built.
+Set it too high and the densest solids take half a minute.
+
+So it is chosen per polyhedron, from two things known before any work starts:
+
+- **How close a plane passes to the centre.** A plane near the origin is cut by every
+  other plane and shatters into thousands of facets. The duals of the hemi-polyhedra
+  do exactly this — their plane distances span 80:1, against 1.0 for every
+  well-behaved solid — and they are far and away the slowest to build.
+- **How many planes there are.** 120 planes is heavy even when they all sit at the
+  same distance.
+
+Everything convex — the Platonic and Archimedean solids and their duals — comes out
+at "every layer", complete and gapless, in under a second. Across all 121 catalogue
+entries the median build is 270 ms, 103 have no truncated layers at all, and the
+worst case is 4.5 s instead of 30. The slider overrides it.
 
 ### The algorithm
 

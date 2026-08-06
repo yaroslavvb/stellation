@@ -164,6 +164,40 @@ export function facePlanes(poly) {
   return out;
 }
 
+/**
+ * How deep to carve, by default, for a given set of face planes.
+ *
+ * Depth is the `maxintersection` cap of the original: facets past that many
+ * half-spaces are discarded. Too shallow and outer layers come out empty, which
+ * looks like a bug — cells appear disconnected because the shells that would
+ * join them were never built. Too deep and the densest solids take half a
+ * minute. So pick per polyhedron, from two things known before any work starts:
+ *
+ *  - **How close a plane passes to the centre.** A plane near the origin is cut
+ *    by every other plane and shatters into thousands of facets. The duals of
+ *    the hemi-polyhedra do this: their plane distances span 80:1, against 1.0
+ *    for every well-behaved solid, and they are far and away the slowest.
+ *  - **How many planes there are.** 120 planes is heavy even when they are all
+ *    the same distance out.
+ *
+ * Everything convex — the Platonic and Archimedean solids and their duals —
+ * lands on "no limit" and builds complete, with no empty layers, in under a
+ * second.
+ */
+export function suggestDepth(planes) {
+  if (!planes.length) return -1;
+  let min = Infinity, max = 0;
+  for (const p of planes) { if (p.d < min) min = p.d; if (p.d > max) max = p.d; }
+  const spread = min > 1e-9 ? max / min : Infinity;
+  const n = planes.length;
+
+  if (spread >= 3 && n >= 48) return 8;    // near-central planes, and many of them
+  if (n >= 84) return 12;
+  if (spread >= 3) return 16;
+  if (n >= 48) return 20;
+  return -1;                               // no limit: it is already cheap
+}
+
 // ---------------------------------------------------------------- arrangement
 
 /** A huge square lying in `plane` — Stellation.makeSeedFace(Plane, int) */

@@ -6,7 +6,7 @@
 import { Renderer3D } from './render3d.js';
 import { DiagramView } from './diagram.js';
 import { CellsPanel } from './cells.js';
-import { toOFF, toOBJ, toSTL, writeStel } from './core.js';
+import { toOFF, toOBJ, toSTL, writeStel, facePlanes, suggestDepth } from './core.js';
 import { writePreset, readDocument, newDocumentName } from './preset.js';
 
 const $ = sel => document.querySelector(sel);
@@ -16,7 +16,8 @@ const state = {
   catalog: null, symmetry: null, geometry: null,
   current: null,
   polySym: 'Ih', stellSym: 'I',
-  depth: 12,
+  depth: 20,
+  depthAuto: true,          // until the user moves the slider
   outline: null,
   selected: new Set(),
   planeIndex: 0,
@@ -101,9 +102,9 @@ async function boot() {
   const hash = decodeURIComponent(location.hash.slice(1));
   const m = hash.match(/^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/d(\d+))?(?:\/(\{.*\}))?$/);
   if (m && geometry[m[1]]) {
-    if (m[4]) { state.depth = Number(m[4]); $('#depth').value = state.depth; $('#depthLabel').textContent = state.depth; }
     await select(findItem(m[1]) || { file: m[1], name: m[1], symmetry: m[2] || 'Ih' },
-                 { polySym: m[2], stellSym: m[3], cells: m[5] });
+                 { polySym: m[2], stellSym: m[3], cells: m[5],
+                   depth: m[4] ? Number(m[4]) : undefined });
   } else {
     await select(findItem('u27'));
   }
@@ -270,7 +271,11 @@ function buildCatalog() {
       b.innerHTML = `<img src="img/poly/${item.file}_tmb.gif" alt="" width="46" height="46">`;
       b.onmouseenter = () => showFoot(item, cat.category);
       b.onfocus = () => showFoot(item, cat.category);
-      b.onclick = () => { $('#catalogDialog').close(); select({ ...item, category: cat.category }); };
+      b.onclick = () => {
+        $('#catalogDialog').close();
+        state.depthAuto = true;          // a new solid gets its own suggested depth
+        select({ ...item, category: cat.category });
+      };
       grid.appendChild(b);
     }
     section.appendChild(grid);
@@ -305,8 +310,29 @@ async function select(item, opts = {}) {
   $('#pickName').textContent = item.name;
   $('#pickThumb').src = `img/poly/${item.file}_tmb.gif`;
 
+  if (opts.depth != null) {
+    setDepth(opts.depth, false);           // an opened document or a link fixes it
+  } else if (state.depthAuto) {
+    setDepth(suggestDepth(facePlanes(toPoly(state.geometry[item.file]))), true);
+  }
+
   syncSymmetrySelects();
   await build(opts.cells);
+}
+
+const NO_LIMIT = 60;   // slider top = build every layer there is
+
+function toPoly(g) {
+  const vertices = [];
+  for (let i = 0; i < g.v.length; i += 3) vertices.push({ x: g.v[i], y: g.v[i + 1], z: g.v[i + 2] });
+  return { vertices, faces: g.f };
+}
+
+function setDepth(depth, auto) {
+  state.depth = depth < 0 ? NO_LIMIT : depth;
+  state.depthAuto = !!auto;
+  $('#depth').value = state.depth;
+  $('#depthLabel').textContent = state.depth >= NO_LIMIT ? 'every' : state.depth;
 }
 
 /** the rotation-only subgroup is the usual choice for building stellations */
@@ -343,7 +369,7 @@ async function build(cellsString) {
   try {
     const info = await call('build', {
       geometry: g, matrices: polyM, subMatrices: subM,
-      maxIntersection: state.depth, maxLayer: 1000,
+      maxIntersection: state.depth >= NO_LIMIT ? -1 : state.depth, maxLayer: 1000,
     }, ({ done, total }) => setStatus(`intersecting plane ${done} of ${total}…`, true, done / total));
 
     state.outline = info.outline;
@@ -402,10 +428,7 @@ function wireControls() {
 
   $('#polySym').onchange = (e) => { state.polySym = e.target.value; build(); };
   $('#stellSym').onchange = (e) => { state.stellSym = e.target.value; build(); };
-  $('#depth').oninput = (e) => {
-    state.depth = Number(e.target.value);
-    $('#depthLabel').textContent = state.depth;
-  };
+  $('#depth').oninput = (e) => setDepth(Number(e.target.value), false);
   $('#depth').onchange = () => build();
   $('#planeIndex').onchange = (e) => { state.planeIndex = Number(e.target.value) || 0; refresh(); };
 
@@ -572,11 +595,6 @@ async function openDocument(text, filename = '') {
     return;
   }
 
-  if (doc.planeDepth) {
-    state.depth = doc.planeDepth;
-    $('#depth').value = state.depth;
-    $('#depthLabel').textContent = state.depth;
-  }
   state.planeIndex = doc.diagramFace || 0;
   $('#planeIndex').value = state.planeIndex;
 
@@ -587,7 +605,7 @@ async function openDocument(text, filename = '') {
     }
   }
 
-  await select(item, { polySym: doc.polySymmetry, stellSym: doc.stellSymmetry, cells: doc.cells });
+  await select(item, { polySym: doc.polySymmetry, stellSym: doc.stellSymmetry, cells: doc.cells, depth: doc.planeDepth ?? undefined });
   setStatus(`opened ${doc.name || filename} (${doc.source === 'json' ? 'JSON' : '.stel'})`, false);
 }
 

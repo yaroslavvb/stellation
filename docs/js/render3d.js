@@ -50,15 +50,36 @@ void main() {
   fragColor = vec4(c + rim, 1.0);
 }`;
 
+/*
+ * Edges are drawn as screen-space quads, not GL_LINES.
+ *
+ * gl.lineWidth() is a lie on essentially every desktop GL implementation: the
+ * core profile only has to support a width of 1.0, and ANGLE clamps it there,
+ * so asking for thicker lines silently changes nothing. The fix is to expand
+ * each edge into a quad in clip space, offsetting the corners along the screen
+ * normal of the segment, which gives real, controllable thickness everywhere.
+ */
 const LINE_VERT = `#version 300 es
 precision highp float;
-in vec3 aPos;
+in vec3 aA;          // segment start, model space
+in vec3 aB;          // segment end
+in float aSide;      // -1 / +1, which side of the segment this corner sits on
+in float aEnd;       // 0 at A, 1 at B
 uniform mat4 uProj;
 uniform mat4 uView;
+uniform vec2 uViewport;
+uniform float uWidth;   // half-width, device pixels
 void main() {
-  vec4 p = uView * vec4(aPos, 1.0);
-  p.xyz *= 1.001;             // nudge toward the camera so edges are not z-fought
-  gl_Position = uProj * p;
+  vec4 ca = uProj * uView * vec4(aA, 1.0);
+  vec4 cb = uProj * uView * vec4(aB, 1.0);
+  vec2 sa = ca.xy / max(ca.w, 1e-6) * uViewport;
+  vec2 sb = cb.xy / max(cb.w, 1e-6) * uViewport;
+  vec2 dir = sb - sa;
+  dir = length(dir) < 1e-6 ? vec2(1.0, 0.0) : normalize(dir);
+  vec2 nrm = vec2(-dir.y, dir.x) * aSide * uWidth / uViewport;
+  vec4 c = mix(ca, cb, aEnd);
+  c.xy += nrm * c.w;
+  gl_Position = c;
 }`;
 
 const LINE_FRAG = `#version 300 es
@@ -113,14 +134,16 @@ export class Renderer3D {
     this.count = 0;
 
     this.lineVao = gl.createVertexArray();
-    this.lineBuf = gl.createBuffer();
+    this.lineBufs = { a: gl.createBuffer(), b: gl.createBuffer(), side: gl.createBuffer(), end: gl.createBuffer() };
     this.lineCount = 0;
+    this.edgeWidth = 2.2;   // CSS pixels of total line width, scaled by dpr at draw
 
     this.rotation = quatFromEuler(-0.42, 0.6, 0);
     this.distance = 1.0;   // relative zoom; the fit distance is computed per frame
     this.autoRotate = true;
     this.showEdges = true;
     this.background = [0.055, 0.06, 0.078];
+    this.edgeColor = [0.0, 0.0, 0.0, 1.0];
 
     this._installControls();
     this._raf = null;
@@ -144,6 +167,7 @@ export class Renderer3D {
     const pos = [], norm = [], col = [], lines = [];
     this.pickTris = [];      // {a,b,c, face} in model space, for ray picking
     this.mesh = mesh;
+    const seenEdges = new Set();
 
     // normalise scale so every solid frames the same way
     let maxR = 1e-9;
@@ -179,8 +203,12 @@ export class Renderer3D {
         });
       }
       for (let i = 0; i < p.length; i++) {
+        const ia = face[i], ib = face[(i + 1) % face.length];
+        const key = ia < ib ? `${ia}_${ib}` : `${ib}_${ia}`;
+        if (seenEdges.has(key)) continue;      // interior edges are shared by two faces
+        seenEdges.add(key);
         const a = p[i], b = p[(i + 1) % p.length];
-        lines.push(a.x * s, a.y * s, a.z * s, b.x * s, b.y * s, b.z * s);
+        lines.push([a.x * s, a.y * s, a.z * s], [b.x * s, b.y * s, b.z * s]);
       }
     });
 
@@ -197,11 +225,46 @@ export class Renderer3D {
     upload(this.vao, this.colBuf, 'aColor', col, 3, this.prog);
     this.count = pos.length / 3;
 
-    upload(this.lineVao, this.lineBuf, 'aPos', lines, 3, this.lineProg);
-    this.lineCount = lines.length / 3;
+    this.lineCount = this._uploadSegments(this.lineVao, this.lineBufs, lines);
 
     gl.bindVertexArray(null);
     this.draw();
+  }
+
+  /** expand [[x,y,z],[x,y,z], …] segment pairs into two triangles each */
+  _uploadSegments(vao, bufs, segs) {
+    const gl = this.gl;
+    const n = segs.length / 2;
+    const A = new Float32Array(n * 6 * 3);
+    const B = new Float32Array(n * 6 * 3);
+    const S = new Float32Array(n * 6);
+    const E = new Float32Array(n * 6);
+    //  corners:  (A,-1) (A,+1) (B,-1)   (B,-1) (A,+1) (B,+1)
+    const SIDE = [-1, 1, -1, -1, 1, 1];
+    const END  = [0, 0, 1, 1, 0, 1];
+    for (let i = 0; i < n; i++) {
+      const a = segs[i * 2], b = segs[i * 2 + 1];
+      for (let k = 0; k < 6; k++) {
+        const o = (i * 6 + k) * 3;
+        A[o] = a[0]; A[o + 1] = a[1]; A[o + 2] = a[2];
+        B[o] = b[0]; B[o + 1] = b[1]; B[o + 2] = b[2];
+        S[i * 6 + k] = SIDE[k];
+        E[i * 6 + k] = END[k];
+      }
+    }
+    gl.bindVertexArray(vao);
+    const bind = (buf, data, name, size) => {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      const l = gl.getAttribLocation(this.lineProg, name);
+      if (l >= 0) { gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, size, gl.FLOAT, false, 0, 0); }
+    };
+    bind(bufs.a, A, 'aA', 3);
+    bind(bufs.b, B, 'aB', 3);
+    bind(bufs.side, S, 'aSide', 1);
+    bind(bufs.end, E, 'aEnd', 1);
+    gl.bindVertexArray(null);
+    return n * 6;
   }
 
   draw() {
@@ -222,24 +285,29 @@ export class Renderer3D {
     gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uProj'), false, proj);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uView'), false, view);
     gl.bindVertexArray(this.vao);
+    gl.enable(gl.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(1.2, 1.2);      // sink the faces so edges sit cleanly on top
     gl.drawArrays(gl.TRIANGLES, 0, this.count);
+    gl.disable(gl.POLYGON_OFFSET_FILL);
 
-    const drawLines = (vao, count, rgba, width) => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const drawLines = (vao, count, rgba, cssWidth) => {
       gl.useProgram(this.lineProg);
       gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uProj'), false, proj);
       gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uView'), false, view);
       gl.uniform4f(gl.getUniformLocation(this.lineProg, 'uColor'), ...rgba);
-      gl.lineWidth(width);
+      gl.uniform2f(gl.getUniformLocation(this.lineProg, 'uViewport'), W, H);
+      gl.uniform1f(gl.getUniformLocation(this.lineProg, 'uWidth'), cssWidth * dpr);
       gl.bindVertexArray(vao);
-      gl.drawArrays(gl.LINES, 0, count);
+      gl.drawArrays(gl.TRIANGLES, 0, count);
     };
 
     if (this.showEdges && this.lineCount) {
-      drawLines(this.lineVao, this.lineCount, [0.05, 0.04, 0.07, 0.92], 2);
+      drawLines(this.lineVao, this.lineCount, this.edgeColor, this.edgeWidth);
     }
     if (this.hlCount) {
       gl.disable(gl.DEPTH_TEST);
-      drawLines(this.hlVao, this.hlCount, [1.0, 0.95, 0.35, 1.0], 3);
+      drawLines(this.hlVao, this.hlCount, [1.0, 0.93, 0.3, 1.0], 3.2);
       gl.enable(gl.DEPTH_TEST);
     }
     gl.bindVertexArray(null);
@@ -305,20 +373,16 @@ export class Renderer3D {
       if (face) {
         for (let i = 0; i < face.length; i++) {
           const a = this.mesh.vertices[face[i]], b = this.mesh.vertices[face[(i + 1) % face.length]];
-          // nudge outward a touch so the outline is not buried in the surface
-          pts.push(a.x * s * 1.004, a.y * s * 1.004, a.z * s * 1.004,
-                   b.x * s * 1.004, b.y * s * 1.004, b.z * s * 1.004);
+          pts.push([a.x * s, a.y * s, a.z * s], [b.x * s, b.y * s, b.z * s]);
         }
       }
     }
-    if (!this.hlVao) { this.hlVao = gl.createVertexArray(); this.hlBuf = gl.createBuffer(); }
-    gl.bindVertexArray(this.hlVao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.hlBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pts), gl.DYNAMIC_DRAW);
-    const loc = gl.getAttribLocation(this.lineProg, 'aPos');
-    if (loc >= 0) { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0); }
+    if (!this.hlVao) {
+      this.hlVao = gl.createVertexArray();
+      this.hlBufs = { a: gl.createBuffer(), b: gl.createBuffer(), side: gl.createBuffer(), end: gl.createBuffer() };
+    }
+    this.hlCount = this._uploadSegments(this.hlVao, this.hlBufs, pts);
     gl.bindVertexArray(null);
-    this.hlCount = pts.length / 3;
     this.draw();
   }
 
