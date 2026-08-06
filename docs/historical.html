@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A history of stellations — Stellation</title>
+<meta name="description" content="Six hundred years of star polyhedra, from a floor in Venice to quasicrystals — with live models you can build yourself.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/walkthrough.css">
+<link rel="stylesheet" href="css/historical.css">
+<script>
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' || (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
+</head>
+<body class="doc">
+
+<header class="doc-head">
+  <a class="brand" href="index.html">✦ Stellation</a>
+  <span class="crumb">A history</span>
+  <div class="spacer"></div>
+  <a class="ghost" href="walkthrough.html">Cells walkthrough</a>
+  <a class="ghost" href="index.html">Open the app →</a>
+  <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
+</header>
+
+<nav id="rail" aria-label="Timeline"></nav>
+
+<main class="doc-body">
+  <div id="loading" class="loading">loading…</div>
+
+  <h1>Six hundred years of stars</h1>
+  <p class="standfirst">
+    Stellation has been done by a Venetian mosaicist, an imperial astronomer whose
+    mother was tried as a witch, a Prussian schoolmaster with a room full of paper
+    models, and a Worcester teacher who fell out with Coxeter over prose style. Here
+    is the chronology, with the solids live so you can turn them — and, where it is
+    a fair fight, build them yourself.
+  </p>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="era">Before anyone called it mathematics</div>
+
+  <section id="uccello" data-year="c.1430" data-short="A floor in Venice">
+    <span class="when">c. 1430</span>
+    <h2>A floor in Venice</h2>
+    <p class="who">St Mark's Basilica · attributed to Paolo Uccello</p>
+    <p>
+      Set into the marble pavement of the Basilica di San Marco is a small panel
+      showing a spiky twelve-pointed solid drawn in perspective. It is a
+      <b>small stellated dodecahedron</b>, and it is roughly two centuries older than
+      the first mathematical description of one.
+    </p>
+    <p>
+      The attribution to Paolo Uccello is traditional rather than documented, and how
+      firm it is depends on whom you ask. What is not in doubt is that somebody in
+      quattrocento Venice worked out how the thing looked from an angle and rendered
+      it in stone, for a floor most people would walk over without looking down.
+    </p>
+    <div class="person">
+      <span class="person-mark">✎</span>
+      <div class="person-body">
+        <p>
+          Uccello was famously, ruinously obsessed with perspective. Vasari tells a
+          story of him working all night and brushing off his wife's calls to bed with
+          a remark about how sweet perspective was — a line repeated in every art
+          history survey since, and about as reliable as anything else in Vasari.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="leonardo" data-year="1509" data-short="Leonardo's elevations">
+    <span class="when">1509</span>
+    <h2>Leonardo draws the elevated solids</h2>
+    <p class="who">Luca Pacioli, <i>De divina proportione</i> · illustrations by Leonardo da Vinci</p>
+    <p>
+      Pacioli's treatise on proportion, written in the 1490s and printed in Venice in
+      1509, carries sixty solids drawn by Leonardo — including "elevated" forms with a
+      pyramid raised on every face. The <i>icosaedron elevatum</i> is very nearly the
+      first stellation of the icosahedron; the difference is the height of the
+      pyramids, and it matters, because a true stellation must put its faces in the
+      original's <em>planes</em> and Leonardo's elevations do not always do that.
+    </p>
+    <p>
+      Leonardo's drawings are also the first well-known use of the open, skeletal
+      <em>vacuum</em> style — solids drawn as struts, so you can see through them.
+      Whether the idea was his or Pacioli's is unsettled.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="era">The four stars</div>
+
+  <section id="kepler-1611" data-year="1611" data-short="Kepler's snowflake">
+    <span class="when">1611</span>
+    <h2>Kepler, on a snowflake, invents a name</h2>
+    <p class="who">Johannes Kepler, <i>Strena seu de nive sexangula</i></p>
+    <p>
+      Kepler's New Year's gift to a patron — a short book on why snowflakes have six
+      corners — contains along the way the <b>stella octangula</b>, the eight-pointed
+      star you get by extending an octahedron's faces until they close again. It is
+      the same figure as two tetrahedra interpenetrating, and its eight points are the
+      corners of a cube.
+    </p>
+    <p>
+      This is the whole subject in its simplest instance, and the octahedron is unusual
+      in having exactly <em>one</em> stellation. There is nothing to choose. Add the
+      only shell there is:
+    </p>
+    <div class="hfig" id="figOcta" data-poly="u10" data-sym="Oh" data-cells="{0}"
+         data-goal="{0,1}" data-goal-name="the stella octangula"></div>
+    <p class="fig-caption">
+      Two layers, one decision. Click the box in row 1 — or the row number.
+    </p>
+    <div class="link-out">
+      <span class="tag">An unexpected afterlife</span>
+      Kepler's little snowflake book asks why crystals should take on regular shapes
+      at all, and guesses that it has to do with how spheres pack. That guess — the
+      <b>Kepler conjecture</b> — went unproved until Thomas Hales announced a
+      computer-assisted proof in 1998, which took a decade to check and a further
+      formal-verification project, completed in 2014, to settle.
+    </div>
+  </section>
+
+  <section id="kepler-1619" data-year="1619" data-short="Harmonices Mundi">
+    <span class="when">1619</span>
+    <h2>Two stars in the <i>Harmony of the World</i></h2>
+    <p class="who">Johannes Kepler, <i>Harmonices Mundi</i>, Book II</p>
+    <p>
+      Eight years later Kepler describes two more: the <b>small stellated
+      dodecahedron</b> and the <b>great stellated dodecahedron</b>. Both come from the
+      dodecahedron, and the dodecahedron is a gift to a tutorial, because it has
+      exactly <em>three</em> stellations — and all three are famous.
+    </p>
+    <div class="hfig hfig-wide" id="figDodeca" data-poly="u28" data-sym="Ih" data-cells="{0}"></div>
+    <div class="try">
+      <span>The dodecahedron and everything it can become:</span>
+      <button data-target="figDodeca" data-cells="{0}" class="on">the dodecahedron</button>
+      <button data-target="figDodeca" data-cells="{0,1}">small stellated dodecahedron</button>
+      <button data-target="figDodeca" data-cells="{0,1,2}">great dodecahedron</button>
+      <button data-target="figDodeca" data-cells="{0,1,2,3}">great stellated dodecahedron</button>
+    </div>
+    <p>
+      Walking outward one shell at a time takes you through three of the four
+      Kepler–Poinsot star polyhedra in order. Kepler had the first and the third. The
+      middle one he missed.
+    </p>
+    <div class="person">
+      <span class="person-mark">☾</span>
+      <div class="person-body">
+        <p>
+          <b>What else Kepler was doing.</b> He finished <i>Harmonices Mundi</i> in
+          May 1618; the book contains his third law of planetary motion, which he
+          worked out in the same weeks. He had also spent much of 1615–1621 defending
+          his mother <b>Katharina</b>, who was accused of witchcraft in Leonberg,
+          imprisoned, and threatened with torture. She was released in 1621 and died
+          the following spring. Kepler wrote parts of his most serene book while
+          conducting her legal defence.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="poinsot" data-year="1809" data-short="Poinsot completes it">
+    <span class="when">1809</span>
+    <h2>Poinsot finds the other two</h2>
+    <p class="who">Louis Poinsot, <i>Mémoire sur les polygones et les polyèdres</i></p>
+    <p>
+      Two centuries after Kepler, Poinsot — a mechanician better remembered for rigid
+      body rotation — described the <b>great dodecahedron</b> and the
+      <b>great icosahedron</b>, apparently without knowing Kepler had been there for
+      the other two. The great icosahedron is the only one of the four that is a
+      stellation of the <em>icosahedron</em> rather than the dodecahedron. Its twelve
+      spikes reach φ³ ≈ 4.236 times the core's circumradius.
+    </p>
+    <div class="hfig" id="figGreatIco" data-poly="u27" data-sym="Ih" data-cells="{0}"
+         data-goal="{0,1,2,3,4,5,6}" data-goal-name="the great icosahedron"></div>
+    <p class="fig-caption">
+      Seven shells of the icosahedron's eight. Try the row numbers, one at a time.
+    </p>
+    <p>
+      In 1813 <b>Cauchy</b> proved that Kepler's two and Poinsot's two are the whole
+      list: there are exactly four regular star polyhedra and no more.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="era">The enumerators</div>
+
+  <section id="hess" data-year="1876" data-short="Hess's compounds">
+    <span class="when">1876</span>
+    <h2>Hess, and the compounds</h2>
+    <p class="who">Edmund Hess</p>
+    <p>
+      Hess described the interpenetrating compounds — five octahedra, five tetrahedra,
+      ten tetrahedra — that turn out to be stellations of the icosahedron. Some sources
+      argue Cauchy already had them in 1812; the credit is not settled, and the page
+      that tells you otherwise is oversimplifying.
+    </p>
+    <p>
+      The compound of five octahedra is a good one to build, because it is a trap. Its
+      thirty outer points sit exactly where an octahedron's would, so it is tempting to
+      take the shell that produces them and stop. That gives the right silhouette and a
+      hollow interior. The real compound needs the shell underneath as well.
+    </p>
+    <div class="hfig" id="figFiveOcta" data-poly="u27" data-sym="Ih" data-cells="{0}"
+         data-goal="{0,1,2}" data-goal-name="the compound of five octahedra"></div>
+  </section>
+
+  <section id="bruckner" data-year="1900" data-short="Brückner's models">
+    <span class="when">1900</span>
+    <h2>Brückner's room full of paper</h2>
+    <p class="who">Max Brückner, <i>Vielecke und Vielflache: Theorie und Geschichte</i> (Teubner, Leipzig)</p>
+    <p>
+      <b>Max Brückner</b> (1860–1934) was a German schoolmaster who built polyhedra out
+      of card. Not a few — hundreds. His 1900 book, <i>Polygons and Polyhedra: Theory
+      and History</i>, is the great survey of the subject at the turn of the century:
+      several hundred line engravings, and behind them ten plates of photographs
+      recording a collection of <b>146 paper models</b> he had made himself.
+    </p>
+    <p>
+      The photographs are the thing. Rows of small white solids arranged on shelves
+      like specimens, each casting its own shadow — an amateur's cabinet of curiosities
+      that happened to be the most complete catalogue of star polyhedra in existence.
+      Brückner pushed stellation past the four regular stars into the irregular forms
+      nobody had systematically listed. How much of it was new with him is still
+      argued: one tally credits him with ten stellations of the icosahedron including
+      the outermost one; another counts six as genuinely his.
+    </p>
+    <div class="hfig hfig-wide" id="figBruckner" data-poly="u27" data-sym="Ih" data-cells="{0,1,2,3,4,5,6,7}"
+         data-parts="cells solid diagram"></div>
+    <p class="fig-caption">
+      The outermost stellation of the icosahedron — among the figures Brückner
+      modelled and photographed. Later named the echidnahedron, after the spiny
+      anteater, in 1995.
+    </p>
+    <div class="person">
+      <span class="person-mark">✦</span>
+      <div class="person-body">
+        <p>
+          <b>Why this book matters more than its citations suggest.</b> Brückner's
+          plates are where the next generation got their picture of the subject. When
+          Coxeter's group came to enumerate the icosahedron's stellations in the 1930s,
+          Brückner is the state of the art they were extending. His book is also the
+          reason a great many people who never read a word of German know what these
+          solids look like: you can turn the pages and simply see them.
+        </p>
+        <p>
+          The whole thing has been scanned and is free to read. The models themselves
+          are a harder question — a schoolmaster's paper collection is not the sort of
+          thing that survives a century by default.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="wheeler" data-year="1924" data-short="Wheeler in Worcester">
+    <span class="when">1924</span>
+    <h2>A schoolteacher in Worcester</h2>
+    <p class="who">Albert Harry Wheeler (1873–1950), International Congress of Mathematicians, Toronto</p>
+    <p>
+      Wheeler taught school in Worcester, Massachusetts, and made models — hundreds of
+      them, like Brückner. In 1924 he stood up at the ICM in Toronto and described
+      something new: a <em>method</em>. Mark out regions on the stellation diagram, take
+      the cells that sit behind them, and you generate figures systematically instead of
+      finding them one at a time. He listed twenty forms, twenty-two counting
+      reflections, the outermost one among them.
+    </p>
+    <p>
+      That method is, in essence, what the program on this site does.
+    </p>
+    <div class="person">
+      <span class="person-mark">✂</span>
+      <div class="person-body">
+        <p>
+          <b>The falling-out.</b> Wheeler was to have been a co-author of
+          <i>The Fifty-Nine Icosahedra</i>. He withdrew, objecting to how Coxeter wrote
+          — complaining, in a line that has survived him, that Coxeter had a way of
+          taking a subject and tying it in knots. Coxeter took his name off the title
+          page and the book came out without him.
+        </p>
+        <p>
+          There is a second, quieter consequence. Wheeler chose to describe only the
+          <em>visible</em> regions of a face, and Miller's rules inherited the habit —
+          so the 1938 enumeration looks at outer surfaces and ignores what is going on
+          inside. Later critics think that decision cost the subject some solids.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="fiftynine" data-year="1938" data-short="The Fifty-Nine">
+    <span class="when">1938</span>
+    <h2>The Fifty-Nine Icosahedra</h2>
+    <p class="who">H. S. M. Coxeter, P. Du Val, H. T. Flather, J. F. Petrie · University of Toronto Press</p>
+    <p>
+      Twenty-six pages and twenty plates, and the definitive statement of the problem.
+      The division of labour is worth knowing, because each part of it survives in the
+      program:
+    </p>
+    <ul class="todo">
+      <li><b>Coxeter</b> did the enumeration, running it on a graph of which
+        region-sets adjoin which — the direct ancestor of the support relation that
+        <kbd>shift</kbd>-click uses.</li>
+      <li><b>Du Val</b> invented the cell notation: shells a–h, subscripts for the
+        different shapes within a shell, roman versus italic for the two hands of a
+        chiral one. That is the Cells table, three columns and all.</li>
+      <li><b>Flather</b> made the models — all fifty-nine, in card.</li>
+      <li><b>Petrie</b> drew the plates.</li>
+      <li><b>J. C. P. Miller</b> supplied the five rules that fix the number at 59, and
+        was not an author at all.</li>
+    </ul>
+    <div class="person">
+      <span class="person-mark">△</span>
+      <div class="person-body">
+        <p>
+          <b>Flather had started early.</b> He was making these models before he met
+          Coxeter in 1932, including ones that Miller's rules would later disqualify.
+          The models went to Cambridge, and photographs of them appear in the third
+          edition.
+        </p>
+        <p>
+          <b>Petrie</b> was the son of the Egyptologist Flinders Petrie, and had a
+          reputation for being able to see in four dimensions. Petrie polygons are named
+          after him.
+        </p>
+        <p>
+          <b>Du Val</b> went on to a second kind of fame entirely: the
+          <b>Du Val singularities</b> of algebraic geometry — the ADE surface
+          singularities — carry his name. The man who invented the notation for
+          shells of cells around an icosahedron also named a fundamental object in a
+          field with no obvious connection to it.
+        </p>
+      </div>
+    </div>
+    <p>
+      The book has been reissued twice: a Springer reprint in 1982, and a third edition
+      from Tarquin in 1999, reset and redrawn by <b>Kate and David Crennell</b>, who
+      added the 1–59 index numbering everyone now uses.
+    </p>
+    <div class="hfig" id="figFiftyNine" data-poly="u27" data-sym="Ih" data-cells="{0,1,2,3,4,5(1[1])}"
+         data-parts="cells solid"></div>
+    <p class="fig-caption">
+      Du Val's <b>Ef₁</b>, one hand of it: the compound of five tetrahedra. One of only
+      two chiral stellations that are fully supported, which is why it is such a
+      popular paper model.
+    </p>
+    <p>
+      For how to read this table in detail, see the
+      <a href="walkthrough.html">Cells walkthrough</a>.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="era">Afterlives</div>
+
+  <section id="escher" data-year="1948" data-short="Escher">
+    <span class="when">1948–1961</span>
+    <h2>Escher, working from the plates</h2>
+    <p class="who">M. C. Escher</p>
+    <p>
+      Escher put star polyhedra into his prints repeatedly: <i>Stars</i> (1948), with
+      chameleons inside a hollow frame; <i>Gravitation</i> (1952), where lizards live in
+      a small stellated dodecahedron; <i>Order and Chaos</i> (1950). He was not
+      inventing these shapes — he was working from the literature, and Brückner's
+      plates are among the things he had to hand.
+    </p>
+    <div class="hfig" id="figEscher" data-poly="d12" data-sym="Oh" data-cells="{0}"
+         data-goal="{0,1}" data-goal-name="Escher's solid"></div>
+    <p class="fig-caption">
+      The first stellation of the rhombic dodecahedron — the solid at the top of
+      Escher's <i>Waterfall</i> (1961), and now generally called Escher's solid.
+    </p>
+    <div class="link-out">
+      <span class="tag">Mathematician meets artist</span>
+      Coxeter and Escher corresponded. Coxeter sent him a diagram of a hyperbolic
+      tessellation; Escher, who could not follow the mathematics, took the picture and
+      produced the <i>Circle Limit</i> series from it. Escher said more than once that
+      he did not understand the theory — he just saw what the figure was doing.
+    </div>
+  </section>
+
+  <section id="wenninger" data-year="1971" data-short="Wenninger">
+    <span class="when">1971</span>
+    <h2>A monk with a knife and a lot of card</h2>
+    <p class="who">Magnus Wenninger, <i>Polyhedron Models</i></p>
+    <p>
+      Wenninger was a Benedictine monk who taught mathematics in the Bahamas and built
+      polyhedral models for decades. <i>Polyhedron Models</i> gave the nets and the
+      instructions, and put these objects within reach of anyone with card and
+      patience. The per-shell cell counts for the icosahedron that this program
+      computes — 20, 30, 60, 20, 60, 120, 12, 30, 60, 60 — are the numbers tabulated in
+      his book.
+    </p>
+  </section>
+
+  <section id="quasicrystals" data-year="1982" data-short="Quasicrystals">
+    <span class="when">1982</span>
+    <h2>Five-fold symmetry turns up in metal</h2>
+    <p class="who">Dan Shechtman</p>
+    <p>
+      Crystallography had a theorem: a crystal cannot have five-fold symmetry, because
+      pentagons do not tile the plane and icosahedra do not fill space. On 8 April 1982
+      Shechtman recorded a diffraction pattern from an aluminium–manganese alloy with
+      unmistakable ten-fold symmetry, wrote three question marks in his notebook, and
+      spent the next two years being told he was wrong.
+    </p>
+    <div class="link-out">
+      <span class="tag">The cost of being right</span>
+      Shechtman was asked to leave his research group. Linus Pauling — twice a Nobel
+      laureate — dismissed the work publicly and repeatedly. The paper finally appeared
+      in 1984. Shechtman received the Nobel Prize in Chemistry in 2011, alone.
+      The International Union of Crystallography had by then rewritten the definition
+      of a crystal to accommodate what he found.
+    </div>
+  </section>
+
+  <section id="biology" data-year="1962" data-short="Viruses & carbon">
+    <span class="when">1962 · 1985</span>
+    <h2>Icosahedra that build themselves</h2>
+    <p class="who">Caspar and Klug · Kroto, Curl and Smalley</p>
+    <p>
+      Donald Caspar and Aaron Klug worked out in 1962 why so many viruses are
+      icosahedral: it is the most economical way to build a closed shell from many
+      copies of one protein. Some capsids are visibly spiky — stellated, in effect —
+      because the protein subunits stand proud at the vertices.
+    </p>
+    <p>
+      In 1985 Kroto, Curl and Smalley found C₆₀: sixty carbon atoms at the vertices of
+      a truncated icosahedron, the shape of a football. They named it
+      buckminsterfullerene after the architect of the geodesic dome, and shared the
+      1996 Nobel Prize in Chemistry for it.
+    </p>
+  </section>
+
+  <section id="now" data-year="1998" data-short="This program">
+    <span class="when">1998–</span>
+    <h2>The program you are using</h2>
+    <p class="who">Vladimir Bulatov</p>
+    <p>
+      The Stellation applet was written between 1998 and 2001 — a Java applet, which is
+      to say software for a web that no longer exists. Its Cells window is Du Val's
+      notation made clickable, and as far as a survey of the field can tell, no other
+      stellation program has offered that particular table.
+    </p>
+    <p>
+      This site is a JavaScript port of it, checked against the original: the same
+      facet counts, the same cell structure, the same volumes to six decimal places.
+      The original Java still compiles and runs, too, which after twenty-five years is
+      its own small monument.
+    </p>
+    <div class="solids-strip">
+      <div class="solid-card"><img src="img/poly/u39_tmb.gif" alt=""><b>small stellated dodecahedron</b><span>Kepler, 1619</span></div>
+      <div class="solid-card"><img src="img/poly/u40_tmb.gif" alt=""><b>great dodecahedron</b><span>Poinsot, 1809</span></div>
+      <div class="solid-card"><img src="img/poly/u57_tmb.gif" alt=""><b>great stellated dodecahedron</b><span>Kepler, 1619</span></div>
+      <div class="solid-card"><img src="img/poly/u58_tmb.gif" alt=""><b>great icosahedron</b><span>Poinsot, 1809</span></div>
+    </div>
+    <p>
+      All four are in the app's catalogue, and all four are stellations you can build
+      from a Platonic solid in a handful of clicks.
+      <a href="index.html">Go and do that →</a>
+    </p>
+  </section>
+
+  <section id="sources" data-year="" data-short="Sources">
+    <h2>Sources and caveats</h2>
+    <p>
+      Dates and attributions here were checked against the literature, and where the
+      sources disagree the text says so rather than picking a winner. The research
+      notes behind this page — six on the mathematics, six on the history, each
+      fact-checked by a second pass — are in the repository under
+      <code>notes/</code>.
+    </p>
+    <details class="sources" open>
+      <summary>Principal sources</summary>
+      <ul>
+        <li>Max Brückner, <i>Vielecke und Vielflache: Theorie und Geschichte</i>,
+          Teubner, 1900 —
+          <a href="https://quod.lib.umich.edu/u/umhistmath/ABN8316.0001.001" target="_blank" rel="noopener">scanned in full at the University of Michigan</a>.
+          See also George Hart, "Max Brückner's Wunderkammer of Paper Polyhedra",
+          <i>Bridges</i> 2019, and the
+          <a href="https://publicdomainreview.org/collection/max-bruckner-s-collection-of-polyhedral-models-1900/" target="_blank" rel="noopener">Public Domain Review's gallery of the plates</a>.</li>
+        <li>H. S. M. Coxeter, P. Du Val, H. T. Flather, J. F. Petrie,
+          <i>The Fifty-Nine Icosahedra</i>, University of Toronto Press, 1938;
+          Springer 1982; Tarquin 1999 (Crennell).</li>
+        <li>A. H. Wheeler, "Certain forms of the icosahedron and a method for deriving
+          and designating higher polyhedra", <i>Proc. ICM Toronto</i>, 1924.</li>
+        <li>Magnus Wenninger, <i>Polyhedron Models</i>, Cambridge University Press, 1971.</li>
+        <li>Guy Inchbald,
+          <a href="https://www.steelpillow.com/polyhedra/StelFacet/history.html" target="_blank" rel="noopener">"Stellating and Facetting — a Brief History"</a>
+          and "In search of the lost icosahedra", <i>Mathematical Gazette</i> 86 (2002).</li>
+        <li>Siobhan Roberts, on Wheeler and Coxeter,
+          <i>Historia Mathematica</i> 23 (1996) 269–287; and her biography of Coxeter,
+          <i>King of Infinite Space</i> (2006).</li>
+      </ul>
+    </details>
+  </section>
+
+</main>
+
+<script type="module" src="js/historical.js"></script>
+</body>
+</html>
