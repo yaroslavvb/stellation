@@ -135,6 +135,8 @@ export function planeFromPoint(p) {
 export function facePlanes(poly) {
   const out = [];
   const seen = [];
+  let central = 0, degenerate = 0, duplicate = 0;
+
   for (const face of poly.faces) {
     // Newell's method — robust for non-planar-ish polygons
     let n = v3();
@@ -147,20 +149,66 @@ export function facePlanes(poly) {
         (a.x - b.x) * (a.y + b.y)
       ));
     }
-    n = normalize(n);
+    /*
+     * Newell's sum is a *signed* area, and a crossed polygon — a "bow tie", which
+     * several of the star faces in this catalog are — has two lobes wound
+     * opposite ways whose contributions cancel. The sum then collapses towards
+     * zero and normalising it yields a direction made of rounding error, so the
+     * face's plane came out wrong or was thrown away entirely.
+     *
+     * The plane itself is perfectly well defined: the vertices are coplanar
+     * whatever order they are joined in. So when the winding tells us nothing,
+     * ignore the winding and fit the plane to the points, taking the two spokes
+     * from vertex 0 whose cross product is largest — the best-conditioned triple
+     * available. Only a genuinely degenerate face (all points collinear) fails
+     * both tests, and that one is counted and skipped.
+     */
+    let len2 = dot(n, n);
+    if (len2 < 1e-18) {
+      let best = v3(), bestL = 0;
+      const v0 = poly.vertices[face[0]];
+      for (let i = 1; i < face.length; i++) {
+        const a = sub(poly.vertices[face[i]], v0);
+        for (let j = i + 1; j < face.length; j++) {
+          const b = sub(poly.vertices[face[j]], v0);
+          const x = cross(a, b);
+          const L = dot(x, x);
+          if (L > bestL) { bestL = L; best = x; }
+        }
+      }
+      if (bestL < 1e-18) { degenerate++; continue; }   // collinear: no plane at all
+      n = best; len2 = bestL;
+    }
+    n = mul(n, 1 / Math.sqrt(len2));
+
     let c = v3();
     for (const i of face) c = add(c, poly.vertices[i]);
     c = mul(c, 1 / face.length);
+    // the centroid is on the plane whatever order the vertices are joined in,
+    // so this is unaffected by the crossing above
     let d = dot(n, c);
     if (d < 0) { n = mul(n, -1); d = -d; }   // orient away from the origin
-    if (Math.abs(d) < 1e-9) continue;        // plane through the centre: skip
+    if (Math.abs(d) < 1e-9) { central++; continue; }   // through the centre: skip
 
     const dup = seen.some(p => Math.abs(p.d - d) < 1e-6 &&
                                Math.abs(dot(p.n, n) - 1) < 1e-9);
-    if (dup) continue;
+    if (dup) { duplicate++; continue; }
     seen.push({ n, d });
     out.push({ n, d, index: out.length });
   }
+
+  /*
+   * What was left out, and why.
+   *
+   * Dropping planes silently is the one thing this function must not do: a
+   * hemipolyhedron loses its central planes here and the stellation you get back
+   * is of a *different solid*, with no hint on screen that anything happened.
+   * These counts ride along on the array so the UI can say so.
+   */
+  out.total = poly.faces.length;
+  out.central = central;
+  out.degenerate = degenerate;
+  out.duplicate = duplicate;
   return out;
 }
 
@@ -677,6 +725,60 @@ export function buildStellation(poly, matrices, opts = {}) {
 
   return { pool, planes, arrangement, layers, cellLayers,
            maxRadius: maxOf(pool.pts, len) };
+}
+
+/**
+ * Which face planes give a genuinely different diagram.
+ *
+ * A diagram is drawn on one plane of the arrangement. Two planes that the
+ * symmetry group carries onto each other carry their cells along with them, so
+ * they give the same picture with the same regions selected — offering both is
+ * noise, and offering all 120 planes of a dual is worse than noise. Vladimir
+ * put it exactly: «нужно, чтобы она показывала неэквивалентные грани … если OH
+ * и OH, должно быть всего две» — the cuboctahedron has a square face and a
+ * triangular face and nothing else.
+ *
+ * The orbits are found geometrically rather than from a table: intern the point
+ * of each plane closest to the origin, push it through every matrix of the
+ * group, and see which plane it lands on. That is the same interning trick
+ * makeSymmetricCells uses, so it agrees with how the cells were grouped.
+ *
+ * Each representative is labelled by the innermost facet on its plane, which for
+ * a convex solid is the solid's own face there — so "4 sides" really does mean
+ * the square face of the cuboctahedron.
+ */
+export function diagramFaces(stel, matrices) {
+  const { planes, arrangement } = stel;
+  const pool = new VertexPool(1e-6);
+  const idOf = new Map();
+  planes.forEach((p, i) => {
+    const id = pool.intern(mul(p.n, p.d));
+    if (!idOf.has(id)) idOf.set(id, i);
+  });
+
+  const group = new Int32Array(planes.length).fill(-1);
+  const out = [];
+  for (let i = 0; i < planes.length; i++) {
+    if (group[i] >= 0) continue;
+    const g = out.length;
+    group[i] = g;
+    const p0 = mul(planes[i].n, planes[i].d);
+    for (const m of (matrices || [])) {
+      const j = idOf.get(pool.intern(matMul(m, p0)));
+      if (j != null && group[j] < 0) group[j] = g;
+    }
+    // the facet of this plane nearest the origin — the original polygon face
+    let core = null, rmin = Infinity;
+    for (const f of (arrangement[i] || [])) {
+      if (f.layer !== 0) continue;
+      const c = facetCenter(f, stel.pool);
+      const r = dot(c, c);
+      if (r < rmin) { rmin = r; core = f; }
+    }
+    out.push({ index: i, sides: core ? core.v.length : 0, count: 0 });
+  }
+  for (const g of group) if (g >= 0) out[g].count++;
+  return out;
 }
 
 /** the sub-cell a diagram facet belongs to: the cell it caps, else the one below it */

@@ -46,6 +46,7 @@ export function writePreset({
   name, polyhedron, file, polySymmetry, stellSymmetry,
   planeDepth, cells, diagramFace,
   showEdges = true, showAllFacets = true, spin = false,
+  view = null,
   exportLengthUnit = 0.01,
 }) {
   return JSON.stringify({
@@ -56,7 +57,15 @@ export function writePreset({
       symmetry: { polyhedron: polySymmetry, stellation: stellSymmetry },
       arrangement: { planeDepth },
       cells: { selection: cells },
+      /*
+       * `camera` is the orientation quaternion followed by the zoom distance —
+       * «ориентация и все остальное это могло бы быть частью JSON файла: то есть
+       * ориентация, zoom и еще что там». Saved so that reopening a document, or
+       * sending someone a link, shows the solid from the angle it was chosen at
+       * rather than from the default one.
+       */
       display: { diagramFace, showEdges, showAllFacets, spin },
+      camera: view ? { view } : undefined,
       export: { lengthUnit: exportLengthUnit },
     },
   }, null, 4) + '\n';
@@ -119,6 +128,7 @@ export function readPreset(doc) {
     showEdges: p.display?.showEdges ?? true,
     showAllFacets: p.display?.showAllFacets ?? true,
     spin: p.display?.spin ?? false,
+    view: Array.isArray(p.camera?.view) ? p.camera.view : null,
     exportLengthUnit: p.export?.lengthUnit ?? 0.01,
   };
 }

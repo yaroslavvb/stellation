@@ -1,209 +1,191 @@
-# Open questions after the 6 August afternoon review
+# Open questions after the 6 August reviews
 
-What was fixed is listed on `changes.html`. This is the other half: the things
-that are still confusing, the decisions I made where the instruction was
-ambiguous, and the questions I could not answer from the transcript.
+What was fixed is listed on `changes.html`, and itemised for checking in
+`notes/design/report-06aug-evening.md`. This is the other half: the things that
+are still confusing, the decisions I made where the instruction was ambiguous,
+and the questions I could not answer from the transcripts.
+
+Updated after the evening session at home. Items settled during that session are
+marked **settled**; the rest carry forward.
 
 ---
 
-## 1. "polyhedron" versus "stellation" symmetry — still unexplained
-
-Raised twice, and neither of you could say what the first one does:
+## 1. "polyhedron" versus "stellation" symmetry — **settled, in principle**
 
 > **12:03** — «А просто тут еще polyhedron confusion. Что это такое?»
-> «Это не знаю. Это симметрия полиэдрона, но это автоматически выбирается. Но
-> если я ее меняю, что происходит, я вообще не знаю, что произойдет.»
->
-> **12:19** — "still confused about the *polyhedron* sub-selection of the Symmetry"
+> **13:45** — «к полиэдрону приложено … к набору его этих самых плоскостей
+> применить все операции симметрии вот эти выбранные. А можно меньше.»
 
-**What the code actually does.** `buildStellation(poly, polyMatrices, {subMatrices})`
-uses them for two different jobs:
+Vladimir confirmed the reading in the previous note: the first group multiplies
+the face planes, the second groups the resulting cells into orbits. His own
+guess was right, and he said so.
 
-- **`polyhedron`** multiplies the face planes. Every plane of the solid is
-  copied under every matrix of this group, and the union is the arrangement that
-  gets cut up. For a solid already symmetric under that group this adds nothing
-  — an icosahedron under I_h gives back the same twenty planes. It matters only
-  when the group is *larger* than the solid's own symmetry, where it genuinely
-  invents new planes.
-- **`stellation`** groups the resulting cells into orbits. This is the one that
-  splits a cell into sub-cells when you lower it.
+**Still open:** the dropdown is restricted to subgroups of the solid's own point
+group, so it can never *add* planes, which is the one thing it exists for. The
+control remains inert by construction. The three options from the last note are
+unchanged, and I still have not chosen:
 
-Vladimir's guess at 12:03 was right: *«взял его набор плоскостей … применю к нему
-симметрию»*. His 12:18 test — apply icosahedral symmetry to a cube — is exactly
-the case where it should do something visible.
+1. hide it and pin it to the solid's own symmetry;
+2. widen it back to allow supergroups, label it "plane group", and constrain the
+   second dropdown to subgroups of whatever it is set to;
+3. rename both to "plane group" and "cell group".
 
-**Why it looks inert.** The dropdown is now restricted to subgroups of the
-solid's own point group (this was the fix for the T+I nonsense). A subgroup can
-never add planes, so within the offered choices the control does nothing except
-change how cells are grouped — which is the *other* dropdown's job. It is inert
-by construction.
-
-**Three options, none obviously right:**
-
-1. **Hide it.** Set it to the solid's own symmetry always and drop it from the
-   panel. Loses the ability to build an arrangement from a solid's planes under a
-   *larger* group — which is the one thing it is for.
-2. **Widen it back and label it honestly** — "multiply the face planes by this
-   group" — allowing supergroups again, and let the stellation dropdown be
-   restricted to subgroups of *that*. Restores the cube-under-icosahedral-symmetry
-   experiment. Risks returning the all-zeros confusion unless the second dropdown
-   is properly constrained.
-3. **Rename and reframe:** call it "plane group" and "cell group", so the two
-   jobs are named after what they do rather than both being "symmetry".
-
-I have not chosen. Option 2 with a corrected constraint is probably what the
-original intended, but it re-opens a bug you just had fixed, so it needs your
-call.
+Option 2 restores his 13:22 experiment — icosahedron under cubic symmetry, where
+two faces that were equivalent stop being equivalent — and the new diagram-face
+dropdown now shows that split correctly, so the pieces are in place. It needs a
+decision, not more code.
 
 ---
 
-## 2. shift and ctrl: what "compensate completely" means
+## 2. shift and ctrl: "compensate completely" — **settled**
 
-> **11:57** — «Shift и Control, они противоположны друг друга … они друг друга
-> компенсируют. Полностью … они обе должны действовать вниз к центру.»
-
-Implemented as: **both walk inward.** shift adds the clicked cell together with
-everything supporting it down to the core; ctrl removes exactly that same set.
-
-**The consequence to be aware of:** ctrl on a high cell removes the core too,
-because the core is part of that cell's supporting set. From an empty selection
-shift-then-ctrl returns exactly to empty — I verified that. But from a
-*non-empty* selection they do not cancel: if the core was already there before
-the shift, ctrl still takes it away.
-
-A true undo would need to remember what the last shift added. You explicitly
-rejected history-based behaviour this morning — that was the bug where a second
-shift-click sometimes removed — so I did not reintroduce it. If "compensate
-completely" was meant in the stronger sense, say so and it becomes an undo stack
-rather than a modifier.
+Both walk inward; ctrl on a cell removes exactly what shift on that cell would
+add. The asymmetry noted last time — ctrl on a high cell takes the core with it,
+because the core is in that cell's supporting set — is now survivable, because
+**undo exists**. That was the actual complaint at 14:00 («удалил центральную
+ячейку. Думаю: что случилось?»), and undo answers it better than changing what
+the modifier means.
 
 ---
 
-## 3. Cells are volumes, the diagram is a surface
+## 3. Cells are volumes, the diagram is a surface — **still the largest gap**
 
-This came up three times across two sessions and is still the largest source of
-confusion:
+> **13:47–13:50** — «этот viewer в одном случае показывает ячейки, а в другом
+> случае он должен показывать грани только»
+> Doc, 13:50 — "future design idea — 3D that shows faces instead of cells, add
+> toggle to 3D view"
 
-> **11:59** — «Ячейки — это объемы, а это поверхности … У тебя может быть две
-> ячейки рядом друг с другом, они обе включены, а поверхности между ними нет,
-> потому что они не контактируют. И это confusing.»
+Vladimir explained the mechanism precisely on the recording: the current renderer
+is specialised for convex cells, so it draws outward faces only, sorts them by
+distance and discards the rest. A face viewer would have to draw both sides of
+every face, and then a face lying in the plane through the origin has no "outer"
+side at all — the Möbius case he raised at 13:48.
 
-Done so far: inward-facing faces are drawn pale and dashed, and the pale was
-made stronger after «слишком слабо видно». The three views are described on
-`controls.html`.
+His sketch of what it would be for: select a single face plane, draw *that face*
+in three dimensions, and add cells to one side of it or the other. That is the
+missing bridge between the diagram and the solid, and it is the one change most
+likely to dissolve the volumes-versus-surfaces confusion for good.
 
-**Not done, and worth considering:** the 3-D view could have a mode that shows
-*faces* rather than *solid cells* — Vladimir's own suggestion at 12:16, «viewer
-специальный нужен, потому что этот viewer в одном случае показывает ячейки, а в
-другом случае он должен показывать грани только». That is a real second
-renderer, not a toggle, and I have not attempted it.
+**Not attempted.** It is a second renderer, not a toggle. Estimated a day.
 
 ---
 
-## 4. Zoom: changed, but not to the model described
+## 4. Zoom and perspective — **settled**
 
-> **11:53** — "zoom should not change perspective (2d zoom) instead of moving
-> camera in. Pointer should stay in one place"
+Perspective is now invariant: the camera distance depends on the solid's radius
+and on nothing else. Canvas shape is handled by scaling the projection, which is
+a flat magnification and cannot bend a line. Measured bit-identical from 1600×600
+to 300×1200 and across selections from R=0.4 to R=6.
 
-**Done:** zoom now scales the projection instead of dollying the camera, so the
-viewpoint no longer shifts as you magnify, and the range is wide enough to frame
-the largest arrangements. There is a **fit** button and a **home** button.
-
-**Not done:** the pointer does not stay fixed. Zoom is about the centre of the
-view, not about the cursor. In the diagram, zoom *is* about the pointer — so the
-two panes still differ here, which is the sort of inconsistency the morning
-session was about. The 2-D navigation model Vladimir described (drag = up/down,
-shift-drag = left/right, ctrl = zoom at the pointer) was set aside at 11:53
-as «лишнее улучшение», so I have not built it. Say the word and it is a small
-change.
+**Still not done:** zoom is about the centre of the 3-D view, while in the
+diagram it is about the pointer. The two panes still differ. Set aside at 11:53
+as «лишнее улучшение»; it stays set aside until someone asks.
 
 ---
 
 ## 5. The cell numbers
 
-> **12:05** — "numbers are confusing" / «Эти номера ещё что означают?»
+Unchanged from the last note, and still open. The bold number is the orbit index
+within its layer; the small one is the sub-cell index. Neither is Du Val's
+notation, which is what a reader of the literature expects. Mapping our indices
+onto Du Val's letters is possible for the icosahedron and has no general rule for
+the other 120 solids.
 
-The bold number in a box is the **orbit index within its layer**, ordered by the
-strict comparison the Java original uses (primitive count, then facets, then
-vertices, then volume). The small number in a sub-cell box is the **sub-cell
-index within that orbit**. Neither is a name anyone would recognise; they are
-positions in a sorted list.
-
-They are now hidden by default behind the collapse arrow, which removes most of
-the noise. What they are *not* is Du Val's notation — a,b,c…,e₁,f₁ and so on —
-which is what a reader of the literature would expect. Mapping our indices onto
-Du Val's letters is possible for the icosahedron (the walkthrough already does
-it by hand) but there is no general rule for the other 120 solids.
-
-**Open question:** should the boxes show Du Val letters where we know them, and
-fall back to indices elsewhere? That is inconsistent but far more meaningful for
-the one solid everybody actually studies.
+**Open question, unchanged:** show Du Val letters where we know them and indices
+elsewhere? Inconsistent, but far more meaningful for the one solid everyone
+studies.
 
 ---
 
-## 6. Cube orientation
+## 6. Orientation — **partly settled, one piece explicitly parked**
 
-> **12:18** — «У куба, мне казалось, ориентация должна быть как квадрат.»
+**Settled: the solids' own orientation.** Vladimir confirmed at 13:52 that the
+catalog is in his canonical orientation and that this is deliberate — the
+icosahedron stands on an edge with its edges inscribed in the faces of a cube, so
+that its 3-fold and 2-fold axes coincide with the cube's and the coordinates stay
+memorable (side 1, diagonal φ). The cube looked odd because its own 3-fold axis
+points at a vertex, not up the z axis — which is what the "(O)" in his group
+names records, and which he says he once tried to get Conway to name properly.
 
-The geometry files fix each solid's orientation; we display what is in the file.
-The cube arrives rotated so that a body diagonal, not a face, faces the viewer.
-The new **home** button gives a canonical *camera* orientation but does not
-re-orient the *solid*.
-
-Two different things could be wanted:
-- a per-solid canonical orientation stored alongside the geometry, or
-- home choosing a view aligned to the solid's highest-order axis.
-
-The second is automatic and probably what you want; it needs a rule for which
-axis counts as "up", which is precisely what the Java applet's *Face* and
-*Vertex Up* selectors were for. Those exist in the original launcher and have no
-equivalent here.
-
----
-
-## 7. Symmetry axes — done, with a caveat
-
-Added: a **show symmetry axes** toggle drawing the rotation axes of the current
-stellation group through the origin, meant to be used with **home**.
-
-Verified against group theory: E, Cs, Ci give none; C2 one; D2 three mutually
-perpendicular; T seven; O and O_h thirteen; I and I_h thirty-one — that last is
-the textbook 6 + 10 + 15. My first implementation returned twelve for O_h; the
-half-turn case needs the largest column of R + I rather than square roots of the
-diagonal, because a zero component leaves its sign undetermined and two distinct
-axes then collapse onto each other.
-
-**Caveat:** only *rotation* axes are drawn. Cs, Ci and the improper operations
-have mirror planes and inversion centres, which are not lines and are not shown —
-so selecting Cs shows nothing at all, which is correct but looks broken. Mirror
-planes could be drawn as translucent discs if that would help.
+**Parked by him:** the orientation of the *diagram*. For a triangular face of a
+cuboctahedron there is no canonical way to spin the drawing plane, and he said so
+plainly — «правильной ориентации здесь не очевидно… это можно оставить и не
+решать этот вопрос» (13:25). The Java launcher's *Face* and *Vertex Up*
+selectors have no equivalent here, and are the obvious place to start if it is
+ever picked up.
 
 ---
 
-## 8. Smaller things noted but not acted on
+## 7. Symmetry elements — **settled**
 
-- **12:09** — a subgroup *visualiser* beyond bare axes (which operations, in what
-  order). The axes are a first step, not the thing you described.
-- **11:49** — the misaligned yellow outline is fixed. It was a regression from
-  making the model scale sticky: the highlight was still computing its own scale,
-  so it floated off the face it marked.
-- **12:02** — the Cells table not fitting under low symmetry is improved by the
-  collapse-by-default change, but there is still no visible scrollbar; it pans by
-  dragging and by wheel. A drawn scrollbar would make that discoverable.
+Axes are drawn as depth-tested cylinders, so the solid hides what is behind them
+— the fix for «symmetry axes are kind of useless, because of occlusions». Three
+separate toggles, as asked for at 13:54: rotation axes, mirror planes,
+rotoreflection (Sₙ) axes.
+
+Verified against group theory: I_h gives 31 rotation axes (6+10+15), 15 mirror
+planes and 16 Sₙ axes (6 S₁₀ + 10 S₆); O_h gives 13, 9 and 7. E, Cs and Ci give
+no rotation axes, correctly.
+
+**One judgement call:** mirror planes are drawn as a solid rim with only the
+faintest wash inside, not as the translucent discs literally asked for. Fifteen
+translucent discs compound to an opaque ball that hides the solid they are meant
+to explain — I tried it first and it was unusable. The rim is what carries the
+information. Say the word if the filled disc is wanted at low symmetry.
+
+**Still not drawn:** the inversion centre, which is a point rather than a line or
+a plane. It is left out rather than faked.
+
+---
+
+## 8. Things noted and still not acted on
+
+- **13:03 / 14:01 — black edges on the catalog thumbnails.** The 121 picker
+  images are pre-rendered and, as Vladimir said, the data to re-render them is
+  not to hand — «для них нету данных… по-моему, я их делал на Pov-Ray». We could
+  re-render all 121 from our own engine, which would give consistent lighting and
+  real edges but would lose the character of the originals. Not started; wants a
+  decision first.
+- **13:59 — the Cells table pans but does not say so.** Improved by collapsing
+  groups by default, and it scrolls by wheel and by drag, but there is still no
+  drawn scrollbar. Vladimir found the panning only after being told.
+- **12:09 — a subgroup *visualiser* beyond bare elements**: which operations, in
+  what order. The three element toggles are a first step, not the thing he
+  described.
 
 ---
 
 ## 9. Where the plane work stands
 
-Unchanged from this morning and still not started, per your instruction. The
-finding, both prototypes and an acceptance test are in
-`notes/design/plane-representation.md`. The short version is that the port
-already stores four numbers, the blocker is a single guard line, and that guard
-is doing a second job — dropping faces whose normal is undefined — so it cannot
-simply be deleted. Face planarity separates the two cases by sixteen orders of
-magnitude.
+Unchanged and still not started, per instruction. The finding, both prototypes
+and an acceptance test are in `notes/design/plane-representation.md`.
 
-Vladimir's read at 12:15 — «подтвердила мои опасения … плоскости, проходящие
-через ноль, я их избегал» — matches: the twenty commented-out hemipolyhedra are
-excluded for exactly this reason, and the reason is written in the source in his
-own hand.
+Two things from this session bear on it:
+
+- The status line now **declares** the loss: a solid with faces through the
+  centre reads «⚠ 4 of 7 planes» instead of «4 planes». That does not fix
+  anything, but it stops the wrong answer looking like a right one.
+- The winding-number tool refuses 25 solids as non-orientable, and they are the
+  hemipolyhedra and rhombihedra — the same family. Vladimir's read at 12:15
+  («плоскости, проходящие через ноль, я их избегал») and his account at 13:48 of
+  why a face through the origin has no outer side are two views of one problem,
+  and it is the same problem that blocks the face-mode renderer in §3.
+
+---
+
+## 10. New, from the evening session
+
+**Custom plane sets.** Raised by Vladimir at 14:06 and the largest single unlock
+in view: the engine can only stellate the uniform polyhedra in the catalog, and
+allowing an arbitrary plane set — «можно их формы менять, не обязательно из
+этих» — would add, by his own count, about **71 further Brückner figures**. This
+also bounds what the derivation tool in §11 can reach: of the non-convex solids
+it examined, 61 have no convex solid in the catalog sharing their face planes,
+and those are exactly the ones custom plane sets would rescue.
+
+**How many figures the winding tool actually reaches.** The fable report
+estimated 16 → ~55 clickable figures. The tool derives **20 verified
+selections**, not 55. The shortfall is the 61 solids above: they need plane sets
+the catalog does not contain. What it does deliver is machine-checked rather than
+hand-derived, and it re-derived the four Kepler–Poinsot solids from scratch as an
+independent check on the whole pipeline.

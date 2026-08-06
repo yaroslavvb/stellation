@@ -513,3 +513,63 @@ main { grid-template-columns: minmax(0, 1fr) 6px var(--panel-w, 322px); }
   main { grid-template-columns: minmax(0, 1fr); }
   .splitter.vertical { display: none; }
 }
+
+/* ------------------------------------------------ always-visible view tools */
+
+.view { position: relative; }
+.view-tools {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 5px;
+  z-index: 5;
+}
+.view-tools button {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  color: var(--dim);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.view-tools button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* -------------------------------------------------- add / remove, one palette
+
+   Green adds, red carves, and the pair reads the same in the 3-D view, in the
+   diagram and in the Cells table. Keeping the words in the captions the same
+   colour as the outline that appears under the pointer is what ties the three
+   together — before, each view had its own idea of what a highlight looked like.
+   Kept identical in light and dark: these are signal colours, not decoration. */
+:root { --add: #2fa855; --rem: #d63c3c; }
+:root[data-theme="dark"] { --add: #4acb70; --rem: #f05454; }
+.add { color: var(--add); }
+.rem { color: var(--rem); }
+
+/* the three symmetry-element toggles, boxed so they read as one control */
+.sym-elems {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 8px 6px;
+  margin: 6px 0 4px;
+}
+.sym-elems legend { font-size: 10.5px; color: var(--dim); padding: 0 4px; }
+.sym-elems .check { margin: 2px 0; }
+.sw {
+  display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+  vertical-align: baseline; margin-right: 1px;
+}
+.sw.ax { background: #40b8f2; }
+.sw.mi { background: #6be0cc; }
+.sw.im { background: #b873f2; }
+
+/* undo / redo sit with the other cell buttons and grey out when there is
+   nothing to undo — the disabled state is the only affordance saying whether a
+   change has been made yet */
+.buttons button.icon { width: 26px; padding: 4px 0; text-align: center; }
+.buttons button:disabled { opacity: 0.35; cursor: default; }
+.buttons button:disabled:hover { border-color: var(--line); color: inherit; }

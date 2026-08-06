@@ -33,6 +33,7 @@ in vec3 vNormal;
 in vec3 vColor;
 in vec3 vEye;
 uniform float uEdgeDark;
+uniform float uAlpha;      // 1 for solids; mirror-plane discs draw translucent
 out vec4 fragColor;
 void main() {
   vec3 n = normalize(vNormal);
@@ -47,7 +48,7 @@ void main() {
   vec3 c = vColor * (0.34 + d) + spec;   // keep shadowed faces light enough that black edges still read
   // slight rim to separate touching facets
   float rim = pow(1.0 - max(dot(n, V), 0.0), 3.0) * 0.12;
-  fragColor = vec4(c + rim, 1.0);
+  fragColor = vec4(c + rim, uAlpha);
 }`;
 
 /*
@@ -97,6 +98,25 @@ export const LAYER_COLORS = [
 ];
 export const layerColor = i => LAYER_COLORS[i % LAYER_COLORS.length];
 
+/*
+ * One palette for the two gestures, shared by all three views.
+ *
+ * "Shift и Control … может быть, нужно тогда Control сделать разного цвета —
+ * зеленое и красное, наверное, как бы более натуральное." Adding is green,
+ * carving is red, and the same two colours mean the same two things whether you
+ * are pointing at the solid, the diagram or a box in the Cells table.
+ *
+ * `off` is what a modifier gets when the gesture cannot do anything from here —
+ * nothing left to add, or nothing behind the face to remove. Dimming rather
+ * than hiding still tells you where you are pointing, but says the click is
+ * going to be a no-op before you spend it.
+ */
+export const ACTION = {
+  add:    { rgb: [0.29, 0.80, 0.44], css: '#4acb70', off: 'rgba(74,203,112,0.30)' },
+  remove: { rgb: [0.94, 0.33, 0.33], css: '#f05454', off: 'rgba(240,84,84,0.30)' },
+  none:   { rgb: [1.00, 0.93, 0.30], css: '#ffee4d', off: 'rgba(255,238,77,0.30)' },
+};
+
 function compile(gl, type, src) {
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -143,6 +163,9 @@ export class Renderer3D {
     this.distance = 1.0;   // relative zoom; the fit distance is computed per frame
     this.autoRotate = true;
     this.showEdges = true;
+    this.elements = null;      // symmetry axes / mirrors / Sn axes, see setElements
+    this.elemCount = 0;
+    this.discCount = 0;
     this.background = [0.055, 0.06, 0.078];
     this.edgeColor = [0.0, 0.0, 0.0, 1.0];
 
@@ -152,17 +175,140 @@ export class Renderer3D {
     new ResizeObserver(() => this.resize()).observe(canvas);
   }
 
-  /** rescale so the current selection fills the frame, and re-upload */
+  /**
+   * The symmetry elements of the current group, as solid geometry.
+   *
+   *   elements.axes    [{dir}]  proper rotation axes      → teal tubes
+   *   elements.improper[{dir}]  rotoreflection (Sn) axes  → violet tubes
+   *   elements.mirrors [{dir}]  mirror-plane normals      → translucent discs
+   *
+   * Everything is depth-tested against the solid, so an element behind a cell is
+   * hidden by it and you can read which way it actually runs.
+   */
+  setElements(elements) {
+    this.elements = elements || null;
+    this._buildElements();
+    this.draw();
+  }
+
+  _buildElements() {
+    const gl = this.gl;
+    const el = this.elements;
+    const tubes = { pos: [], norm: [], col: [] };
+    const discs = { pos: [], norm: [], col: [] };
+    if (el) {
+      // reach a little past whatever is currently on screen
+      const R = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
+      const ext = R * 1.18;
+      const rad = R * 0.014;
+      for (const a of (el.axes || [])) tube(tubes, a.dir, ext, rad, [0.25, 0.72, 0.95]);
+      for (const a of (el.improper || [])) tube(tubes, a.dir, ext * 0.94, rad * 0.9, [0.72, 0.45, 0.95]);
+      /*
+       * A mirror plane is a *disc*, which is what Vladimir asked for — but I_h
+       * has fifteen of them, and fifteen translucent discs compound into an
+       * opaque ball that hides the solid they are supposed to explain. So each
+       * plane gets a solid rim, which is what actually tells you where it lies,
+       * and only the faintest wash inside it. The rims go in the opaque buffer
+       * so the solid occludes them like everything else; edge-on a flat annulus
+       * collapses to a line, which is exactly right.
+       */
+      for (const m of (el.mirrors || [])) {
+        ring(tubes, m.dir, ext * 0.92, ext * 0.016, [0.42, 0.90, 0.80]);
+        disc(discs, m.dir, ext * 0.92, [0.42, 0.88, 0.80]);
+      }
+    }
+    const put = (which, data, count) => {
+      if (!this[which + 'Vao']) {
+        this[which + 'Vao'] = gl.createVertexArray();
+        this[which + 'Bufs'] = { p: gl.createBuffer(), n: gl.createBuffer(), c: gl.createBuffer() };
+      }
+      const b = this[which + 'Bufs'];
+      gl.bindVertexArray(this[which + 'Vao']);
+      for (const [buf, arr, name] of [[b.p, data.pos, 'aPos'], [b.n, data.norm, 'aNormal'], [b.c, data.col, 'aColor']]) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW);
+        const l = gl.getAttribLocation(this.prog, name);
+        if (l >= 0) { gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 0, 0); }
+      }
+      this[count] = data.pos.length / 3;
+    };
+    put('elem', tubes, 'elemCount');
+    put('disc', discs, 'discCount');
+    gl.bindVertexArray(null);
+  }
+
+  /**
+   * Canonical orientation: x to the right, y up, z toward the viewer — the
+   * frame the symmetry groups' matrices are written in, so a subgroup's axes
+   * point where the group says they do.
+   */
+  home() {
+    this._ease({ rotation: [0, 0, 0, 1], distance: 1.0 });
+  }
+
+  /*
+   * Ease `distance` (and optionally the orientation) to a target.
+   *
+   * Snapping is disorienting: the solid you were looking at is replaced by a
+   * differently-sized one and you have to find your place again. Vladimir asked
+   * for this from the start — "кнопочка fit, которая медленно уменьшает".
+   * Any drag, wheel or second press cancels it, so the animation never fights
+   * the pointer.
+   */
+  _ease(target, ms = 420) {
+    if (this._anim) cancelAnimationFrame(this._anim);
+    if (this._pending) { this._pending.x = 0; this._pending.y = 0; }   // don't fight a glide
+    const d0 = this.distance;
+    const q0 = this.rotation.slice();
+    const q1 = target.rotation;
+    const d1 = target.distance ?? d0;
+    const t0 = performance.now();
+    const step = (now) => {
+      const u = Math.min(1, (now - t0) / ms);
+      const k = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;   // easeInOutCubic
+      this.distance = d0 + (d1 - d0) * k;
+      if (q1) this.rotation = slerp(q0, q1, k);
+      this.draw();
+      if (u < 1) this._anim = requestAnimationFrame(step);
+      else this._anim = null;
+    };
+    this._anim = requestAnimationFrame(step);
+  }
+
+  /** stop any easing — called when the pointer takes over */
+  cancelEase() { if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; } }
+
+  /** ease the zoom until the whole selection is framed */
   fit() {
     if (!this.mesh) return;
-    this.modelScale = 0;
-    this.distance = 1.0;
-    this.setMesh(this.mesh, this.lastFaceLayers);
-    this.draw();
+    // screen size goes as R / (distance * fit), so distance = R frames it
+    const R = Math.max(1e-6, (this.lastMaxR || 1) * (this.modelScale || 1));
+    this._ease({ distance: Math.min(40, Math.max(0.05, R)) });
   }
 
   /** forget the scale so the next mesh sets it — used when the solid changes */
   resetScale() { this.modelScale = 0; }
+
+  /*
+   * The view as five numbers, so it can be put in a URL and in a saved document
+   * — «хорошо, чтобы можно было человеку послать … тогда это просто должна быть
+   * частью JSON файла: ориентация, zoom и еще что там». Four decimals is well
+   * inside what the eye can tell apart and keeps the hash short.
+   */
+  getView() {
+    return [...this.rotation, this.distance].map(v => Math.round(v * 1e4) / 1e4);
+  }
+
+  setView(v) {
+    if (!Array.isArray(v) || v.length < 5 || v.some(x => !Number.isFinite(x))) return false;
+    const n = Math.hypot(v[0], v[1], v[2], v[3]);
+    if (!(n > 1e-6)) return false;
+    this.rotation = [v[0] / n, v[1] / n, v[2] / n, v[3] / n];
+    this.distance = Math.min(40, Math.max(0.05, v[4]));
+    if (this._pending) { this._pending.x = 0; this._pending.y = 0; }
+    this.draw();
+    return true;
+  }
 
   resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -252,6 +398,8 @@ export class Renderer3D {
     this.lineCount = this._uploadSegments(this.lineVao, this.lineBufs, lines);
 
     gl.bindVertexArray(null);
+    // the elements are sized to the arrangement, so they follow it as it grows
+    if (this.elements) this._buildElements();
     this.draw();
   }
 
@@ -302,12 +450,14 @@ export class Renderer3D {
     if (!this.count) return;
 
     const cam = this._camera(W, H);
-    const proj = perspective(cam.fovy, cam.aspect, 0.05, 100);
+    const far = cam.dist + cam.R * 3 + 10;      // never clip a big arrangement
+    const proj = perspective(cam.fovy, cam.aspect, Math.max(0.02, cam.dist * 0.01), far, cam.zoom);
     const view = mat4mul(translation(0, 0, -cam.dist), quatToMat4(this.rotation));
 
     gl.useProgram(this.prog);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uProj'), false, proj);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uView'), false, view);
+    gl.uniform1f(gl.getUniformLocation(this.prog, 'uAlpha'), 1.0);
     gl.bindVertexArray(this.vao);
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1.2, 1.2);      // sink the faces so edges sit cleanly on top
@@ -329,25 +479,81 @@ export class Renderer3D {
     if (this.showEdges && this.lineCount) {
       drawLines(this.lineVao, this.lineCount, this.edgeColor, this.edgeWidth);
     }
+    /*
+     * Symmetry elements are real geometry, drawn into the same depth buffer as
+     * the solid, so an axis that runs behind a cell is hidden by it. Drawn as
+     * overlaid lines they were «kind of useless, because of occlusions»: you
+     * could not tell which side of the solid an axis came out of. Vladimir's own
+     * suggestion was to make them cylinders — «представить цилиндры как набор
+     * выпуклых сегментов, тогда можно было бы тем же вьюером пользоваться».
+     */
+    if (this.elemCount) {
+      gl.useProgram(this.prog);
+      gl.uniform1f(gl.getUniformLocation(this.prog, 'uAlpha'), 1.0);
+      gl.bindVertexArray(this.elemVao);
+      gl.drawArrays(gl.TRIANGLES, 0, this.elemCount);
+    }
+    // mirror planes last: translucent, so they must read over what is behind
+    // them without writing depth, or the discs would hide each other
+    if (this.discCount) {
+      gl.useProgram(this.prog);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      // faint, because they stack: fifteen planes at 0.06 still reach ~0.6
+      gl.uniform1f(gl.getUniformLocation(this.prog, 'uAlpha'), 0.06);
+      gl.bindVertexArray(this.discVao);
+      gl.drawArrays(gl.TRIANGLES, 0, this.discCount);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+      gl.uniform1f(gl.getUniformLocation(this.prog, 'uAlpha'), 1.0);
+    }
+
     if (this.hlCount) {
       gl.disable(gl.DEPTH_TEST);
-      drawLines(this.hlVao, this.hlCount, [1.0, 0.93, 0.3, 1.0], 3.2);
+      drawLines(this.hlVao, this.hlCount, this.hlColor || [1.0, 0.93, 0.3, 1.0], 3.2);
       gl.enable(gl.DEPTH_TEST);
     }
     gl.bindVertexArray(null);
   }
 
   /**
-   * The model is normalised to radius 1, so the camera must sit far enough back
-   * that a unit sphere fits the NARROWER of the two field-of-view angles —
-   * otherwise a tall thin canvas clips the solid left and right.
+   * The camera.
+   *
+   * One rule governs this whole function: **the amount of perspective must not
+   * depend on anything except the solid.** Foreshortening is set by the ratio of
+   * the object's radius to the camera's distance, so that ratio is pinned to the
+   * constant `fit` and everything else — zoom, and framing a canvas of any shape
+   * — is done by scaling the projection, which is a flat 2-D magnification and
+   * cannot bend a straight line.
+   *
+   * Two ways this was previously broken, both reported on 6 August:
+   *
+   *  - `fit` was computed from `min(fovy, fovx)` so that a *narrow* canvas would
+   *    not clip the solid left and right. But fovx depends on the aspect ratio,
+   *    so dragging the splitter moved the camera, and you could watch vertical
+   *    lines bend as you dragged — «размер канвы меняет перспективу, что вообще
+   *    является неприемлемым». Narrow canvases are now framed by shrinking the
+   *    projection instead, which leaves the camera where it was.
+   *  - `R` was floored at 1, so a selection smaller than the initial one left the
+   *    camera too far back and the picture went flat. Toggling the core on and
+   *    off could therefore change the perspective — the Windows report at 13:33,
+   *    where a scrollbar appearing in the Cells panel resized the canvas as well.
+   *
+   * The camera does still retreat as the selection grows, in exact proportion to
+   * its radius: a fixed distance would eventually be swallowed, since the core
+   * has radius 1 and a full stellation reaches past 6. Retreating and magnifying
+   * by the same factor holds both the size and the perspective constant.
    */
   _camera(W, H) {
     const fovy = Math.PI / 4.5;
     const aspect = W / H;
-    const fovx = 2 * Math.atan(Math.tan(fovy / 2) * aspect);
-    const fit = 1.13 / Math.sin(Math.min(fovy, fovx) / 2);
-    return { fovy, aspect, fit, dist: fit * this.distance };
+    const fit = 1.13 / Math.sin(fovy / 2);          // constant: no aspect, no zoom
+    const R = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
+    // A canvas narrower than it is tall sees less sideways than fovy allows;
+    // scale the projection down to compensate rather than moving the camera.
+    const narrow = Math.min(1, aspect / Math.cos(fovy / 2));
+    return { fovy, aspect, fit, R, dist: fit * R, zoom: (R / this.distance) * narrow };
   }
 
   // ---------------------------------------------------------------- picking
@@ -368,7 +574,10 @@ export class Renderer3D {
     const ny = 1 - ((e.clientY - r.top) / r.height) * 2;
 
     const cam = this._camera(this.canvas.width, this.canvas.height);
-    const t = Math.tan(cam.fovy / 2);
+    // the projection is scaled by cam.zoom, so the effective half-angle is
+    // tan(fovy/2)/zoom — pick with the same frustum that was drawn, or clicks
+    // land on the wrong face as soon as you zoom
+    const t = Math.tan(cam.fovy / 2) / cam.zoom;
     const dirView = [nx * cam.aspect * t, ny * t, -1];
 
     const R = quatToMat4(this.rotation);
@@ -383,16 +592,24 @@ export class Renderer3D {
     return best;
   }
 
-  /** outline one face in the accent colour, or clear with -1 */
-  setHighlight(faceIndex) {
-    if (this._hl === faceIndex) return;
-    this._hl = faceIndex;
+  /**
+   * Outline one face, or clear with -1.
+   *
+   * `action` is 'add' | 'remove' | null and picks the colour; `enabled` false
+   * dims it, meaning "you are pointing at this, but the click would do nothing".
+   */
+  setHighlight(faceIndex, action = null, enabled = true) {
+    const want = `${faceIndex}|${action}|${enabled ? 1 : 0}`;
+    const a = ACTION[action] || ACTION.none;
+    this.hlColor = enabled ? [...a.rgb, 1.0] : [...a.rgb, 0.34];
+    if (this._hl === want) { this.draw(); return; }
+    this._hl = want;
     const gl = this.gl;
     const pts = [];
     if (faceIndex >= 0 && this.mesh) {
-      let maxR = 1e-9;
-      for (const v of this.mesh.vertices) maxR = Math.max(maxR, Math.hypot(v.x, v.y, v.z));
-      const s = 1 / maxR;
+      // must be the same scale the mesh was uploaded at, or the outline floats
+      // away from the face it is meant to mark
+      const s = this.modelScale || 1;
       const face = this.mesh.faces[faceIndex];
       if (face) {
         for (let i = 0; i < face.length; i++) {
@@ -410,6 +627,39 @@ export class Renderer3D {
     this.draw();
   }
 
+  /*
+   * Pointer smoothing and momentum.
+   *
+   * A mouse reports in uneven jumps — «то есть у мышки маленький шаг, три
+   * пиксела там, а потом другой шаг пять» — and applying each jump directly
+   * makes the solid stutter. Vladimir's own navigator models the pointer as the
+   * far end of a spring dragging a damped mass, tuned to the ratio that settles
+   * fastest without ringing.
+   *
+   * This is that idea with a first-order filter rather than a second-order one:
+   * the motion you have asked for accumulates in `_pending`, and each frame a
+   * fixed fraction of what is left gets applied. It smooths exactly the same way
+   * and, unlike a spring, it *cannot* overshoot — the remainder only ever shrinks
+   * — so there is no ringing to tune away. Nothing is lost either: the whole of
+   * `_pending` is eventually spent, so a drag turns the solid by exactly as much
+   * as the pointer asked for.
+   *
+   * Momentum comes from the release: the recent pointer speed is pushed into the
+   * same buffer, so a flick coasts on and settles — «я ее толкнул, и она
+   * тихонечко в ту сторону продолжает двигаться».
+   */
+  _spinStep(dt) {
+    const p = this._pending;
+    if (!p || (Math.abs(p.x) < 1e-6 && Math.abs(p.y) < 1e-6)) return false;
+    const k = 1 - Math.exp(-dt / 0.055);       // ~55 ms to settle most of the way
+    const dx = p.x * k, dy = p.y * k;
+    p.x -= dx; p.y -= dy;
+    this.rotation = quatMul(
+      quatMul(quatFromAxis([0, 1, 0], dx), quatFromAxis([1, 0, 0], dy)),
+      this.rotation);
+    return true;
+  }
+
   start() {
     if (this._raf) return;
     let last = performance.now();
@@ -418,6 +668,7 @@ export class Renderer3D {
       if (this.autoRotate && !this.dragging) {
         this.rotation = quatMul(quatFromAxis([0, 1, 0], dt * 0.35), this.rotation);
       }
+      this._spinStep(dt);
       this.draw();
       this._raf = requestAnimationFrame(tick);
     };
@@ -443,37 +694,80 @@ export class Renderer3D {
       return { shift, ctrl: !shift && (e.ctrlKey || e.metaKey || e.altKey), alt: e.altKey };
     };
 
+    let lastT = 0;
+    this._pending = { x: 0, y: 0 };
+    this._vel = { x: 0, y: 0 };
+
     const down = (e) => {
       if (picking(e) || e.button === 2) return;
+      this.cancelEase();
       this.dragging = true;
+      this._vel = { x: 0, y: 0 };
       const p = point(e, c); px = p.x; py = p.y;
+      lastT = performance.now();
       c.setPointerCapture?.(e.pointerId);
     };
     const move = (e) => {
       if (!this.dragging) {
-        if (this.onPickHover) {
-          const hit = picking(e) ? this.pick(e) : null;
-          c.style.cursor = hit ? 'crosshair' : 'grab';
-          this.setHighlight(hit ? hit.face : -1);
-          this.onPickHover(hit, mods(e));
-        }
+        this._lastMove = e;
+        const hit = picking(e) ? this.pick(e) : null;
+        c.style.cursor = hit ? 'crosshair' : 'grab';
+        // the app knows whether the gesture can actually do anything here, so it
+        // owns the highlight colour; without it, fall back to a plain outline
+        if (this.onPickHover) this.onPickHover(hit, mods(e));
+        else this.setHighlight(hit ? hit.face : -1);
         return;
       }
       const p = point(e, c);
-      const dx = (p.x - px), dy = (p.y - py);
+      const dx = (p.x - px) * 0.008, dy = (p.y - py) * 0.008;
       px = p.x; py = p.y;
-      // trackball: drag direction maps to rotation about the perpendicular axis
-      const q = quatMul(quatFromAxis([0, 1, 0], dx * 0.008), quatFromAxis([1, 0, 0], dy * 0.008));
-      this.rotation = quatMul(q, this.rotation);
-      this.draw();
+      // trackball: drag direction maps to rotation about the perpendicular axis.
+      // The motion is banked rather than applied — see _spinStep.
+      this._pending.x += dx; this._pending.y += dy;
+      const now = performance.now();
+      const dt = Math.max(1 / 240, Math.min(0.1, (now - lastT) / 1000));
+      lastT = now;
+      const a = 0.35;                          // EMA of the pointer's rate, rad/s
+      this._vel.x += (dx / dt - this._vel.x) * a;
+      this._vel.y += (dy / dt - this._vel.y) * a;
+      if (!this._raf) { this._spinStep(1 / 60); this.draw(); }
     };
-    const up = (e) => { this.dragging = false; c.releasePointerCapture?.(e.pointerId); };
+    const up = (e) => {
+      if (this.dragging) {
+        // a flick coasts: hand the buffer a slice of the speed it ended at
+        const GLIDE = 0.11;                    // seconds of travel to carry on with
+        this._pending.x += this._vel.x * GLIDE;
+        this._pending.y += this._vel.y * GLIDE;
+      }
+      this.dragging = false;
+      c.releasePointerCapture?.(e.pointerId);
+    };
 
     c.addEventListener('pointerdown', down);
     c.addEventListener('pointermove', move);
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
-    c.addEventListener('pointerleave', () => { this.setHighlight(-1); this.onPickHover?.(null); });
+    c.addEventListener('pointerleave', () => {
+      this._lastMove = null;
+      this.setHighlight(-1); this.onPickHover?.(null);
+    });
+
+    /*
+     * Pressing or releasing a modifier changes what a click would do, so it has
+     * to change the highlight too — without it the green stays on the face after
+     * you let go of shift and the picture lies about what a click will do
+     * («я отпустил Shift, но highlighting не исчез»). The pointer has not moved,
+     * so replay the last move event with the new modifier state.
+     */
+    const replay = (e) => {
+      if (!this._lastMove || this.dragging) return;
+      const m = this._lastMove;
+      move({ clientX: m.clientX, clientY: m.clientY, shiftKey: e.shiftKey,
+             ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey });
+    };
+    addEventListener('keydown', replay);
+    addEventListener('keyup', replay);
+    addEventListener('blur', () => { this.setHighlight(-1); this.onPickHover?.(null); });
 
     c.addEventListener('click', (e) => {
       if (!picking(e) || !this.onPick) return;
@@ -498,7 +792,9 @@ export class Renderer3D {
 
     c.addEventListener('wheel', (e) => {
       e.preventDefault();
-      this.distance = Math.min(4, Math.max(0.35, this.distance * Math.exp(e.deltaY * 0.0012)));
+      this.cancelEase();
+      // wide range: a deep arrangement can be a hundred times the core's radius
+      this.distance = Math.min(40, Math.max(0.05, this.distance * Math.exp(e.deltaY * 0.0012)));
       this.draw();
     }, { passive: false });
   }
@@ -515,10 +811,106 @@ function point(e, el) {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
+// ------------------------------------------------- symmetry-element geometry
+
+/** two unit vectors perpendicular to `d` and to each other */
+function basis(d) {
+  const n = Math.hypot(...d) || 1;
+  const w = [d[0] / n, d[1] / n, d[2] / n];
+  // pick the world axis least aligned with w, so the cross product is stable
+  const a = Math.abs(w[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+  let u = [w[1] * a[2] - w[2] * a[1], w[2] * a[0] - w[0] * a[2], w[0] * a[1] - w[1] * a[0]];
+  const ul = Math.hypot(...u) || 1;
+  u = u.map(x => x / ul);
+  const v = [w[1] * u[2] - w[2] * u[1], w[2] * u[0] - w[0] * u[2], w[0] * u[1] - w[1] * u[0]];
+  return { w, u, v };
+}
+
+function push(o, p, n, c) {
+  o.pos.push(p[0], p[1], p[2]);
+  o.norm.push(n[0], n[1], n[2]);
+  o.col.push(c[0], c[1], c[2]);
+}
+
+/** a capped n-gonal prism along `dir`, from -ext to +ext, as flat triangles */
+function tube(o, dir, ext, rad, col, sides = 10) {
+  const { w, u, v } = basis(dir);
+  const ring = [];
+  for (let i = 0; i < sides; i++) {
+    const t = (i / sides) * Math.PI * 2;
+    const c = Math.cos(t), s = Math.sin(t);
+    ring.push({ n: [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s] });
+  }
+  const at = (r, k) => [r.n[0] * rad + w[0] * k * ext, r.n[1] * rad + w[1] * k * ext, r.n[2] * rad + w[2] * k * ext];
+  for (let i = 0; i < sides; i++) {
+    const a = ring[i], b = ring[(i + 1) % sides];
+    const A = at(a, -1), B = at(b, -1), C = at(b, 1), D = at(a, 1);
+    push(o, A, a.n, col); push(o, B, b.n, col); push(o, C, b.n, col);
+    push(o, A, a.n, col); push(o, C, b.n, col); push(o, D, a.n, col);
+  }
+  // flat caps, so an axis pointing at the viewer is a disc rather than a hole
+  for (const k of [-1, 1]) {
+    const nrm = [w[0] * k, w[1] * k, w[2] * k];
+    const hub = [w[0] * k * ext, w[1] * k * ext, w[2] * k * ext];
+    for (let i = 0; i < sides; i++) {
+      const a = ring[i], b = ring[(i + 1) % sides];
+      push(o, hub, nrm, col);
+      push(o, at(k > 0 ? a : b, k), nrm, col);
+      push(o, at(k > 0 ? b : a, k), nrm, col);
+    }
+  }
+}
+
+/** a flat annulus through the origin with normal `dir` — the rim of a mirror plane */
+function ring(o, dir, rad, w, col, sides = 64) {
+  const { w: nrm, u, v } = basis(dir);
+  const at = (t, r) => {
+    const c = Math.cos(t) * r, s = Math.sin(t) * r;
+    return [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s];
+  };
+  const ri = rad - w, ro = rad;
+  for (let i = 0; i < sides; i++) {
+    const t0 = (i / sides) * Math.PI * 2, t1 = ((i + 1) / sides) * Math.PI * 2;
+    const A = at(t0, ri), B = at(t1, ri), C = at(t1, ro), D = at(t0, ro);
+    push(o, A, nrm, col); push(o, B, nrm, col); push(o, C, nrm, col);
+    push(o, A, nrm, col); push(o, C, nrm, col); push(o, D, nrm, col);
+  }
+}
+
+/** a flat disc through the origin with normal `dir` — one mirror plane */
+function disc(o, dir, rad, col, sides = 48) {
+  const { w, u, v } = basis(dir);
+  const at = (t) => {
+    const c = Math.cos(t) * rad, s = Math.sin(t) * rad;
+    return [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s];
+  };
+  for (let i = 0; i < sides; i++) {
+    const t0 = (i / sides) * Math.PI * 2, t1 = ((i + 1) / sides) * Math.PI * 2;
+    push(o, [0, 0, 0], w, col); push(o, at(t0), w, col); push(o, at(t1), w, col);
+  }
+}
+
 // ---------------------------------------------------------------- tiny math
 
-function perspective(fovy, aspect, near, far) {
-  const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+/** shortest-arc interpolation between two orientations */
+function slerp(a, b, t) {
+  let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  let bb = b;
+  if (d < 0) { bb = [-b[0], -b[1], -b[2], -b[3]]; d = -d; }   // take the short way round
+  if (d > 0.9995) {                                          // nearly aligned: lerp
+    const o = [a[0] + (bb[0] - a[0]) * t, a[1] + (bb[1] - a[1]) * t,
+               a[2] + (bb[2] - a[2]) * t, a[3] + (bb[3] - a[3]) * t];
+    const n = Math.hypot(...o) || 1;
+    return o.map(v => v / n);
+  }
+  const th = Math.acos(d), s = Math.sin(th);
+  const wa = Math.sin((1 - t) * th) / s, wb = Math.sin(t * th) / s;
+  return [a[0] * wa + bb[0] * wb, a[1] * wa + bb[1] * wb,
+          a[2] * wa + bb[2] * wb, a[3] * wa + bb[3] * wb];
+}
+
+function perspective(fovy, aspect, near, far, zoom = 1) {
+  const f = (1 / Math.tan(fovy / 2)) * zoom, nf = 1 / (near - far);
   return new Float32Array([
     f / aspect, 0, 0, 0,
     0, f, 0, 0,

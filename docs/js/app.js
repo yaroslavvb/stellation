@@ -13,6 +13,16 @@ import { writePreset, readDocument, newDocumentName } from './preset.js';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 
+/*
+ * Which build you are looking at.
+ *
+ * Shown in the help dialog because a good part of the 6 August session went on
+ * a bug that had been fixed an hour earlier — the browser was serving an old
+ * app.js and there was no way to tell from the screen. `_headers` stops that
+ * happening; this makes it checkable when it does.
+ */
+export const BUILD = '2026-08-06 · home-session fixes';
+
 const state = {
   catalog: null, symmetry: null, geometry: null,
   current: null,
@@ -95,6 +105,7 @@ async function boot() {
   });
 
   cells = new CellsPanel($('#cells'), {
+    onBeforeChange: () => mark(),
     onChange: () => refresh(),
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
@@ -108,15 +119,54 @@ async function boot() {
   // handy from the console, and what the browser tests drive
   window.stellation = { state, cells, diagram, renderer, call, select, refresh, applyToCell, openDocument };
 
+  /*
+   * file / polyGroup / stellGroup / dDEPTH / vQX,QY,QZ,QW,ZOOM / {cells}
+   *
+   * The `v` segment is the camera, added so that a reload keeps the angle you
+   * were looking from and so that a link shows the recipient the same picture
+   * — «ориентация, конечно, хорошо, чтобы можно было человеку послать». Every
+   * segment stays optional, so links written before it existed still open.
+   */
   const hash = decodeURIComponent(location.hash.slice(1));
-  const m = hash.match(/^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/d(\d+))?(?:\/(\{.*\}))?$/);
+  const m = hash.match(
+    /^([\w]+)(?:\/([\w()]+))?(?:\/([\w()]+))?(?:\/d(\d+))?(?:\/v([-\d.,eE]+))?(?:\/(\{.*\}))?$/);
   if (m && geometry[m[1]]) {
     await select(findItem(m[1]) || { file: m[1], name: m[1], symmetry: m[2] || 'Ih' },
-                 { polySym: m[2], stellSym: m[3], cells: m[5],
-                   depth: m[4] ? Number(m[4]) : undefined });
+                 { polySym: m[2], stellSym: m[3], cells: m[6],
+                   depth: m[4] ? Number(m[4]) : undefined,
+                   view: m[5] ? m[5].split(',').map(Number) : null });
   } else {
     await select(findItem('u27'));
   }
+
+  /*
+   * The camera is not part of the app's state, it lives in the renderer and
+   * changes sixty times a second while you drag. Rather than write the URL from
+   * inside the draw loop, notice after the fact that it settled somewhere new.
+   * replaceState, so turning the solid does not fill the back button.
+   */
+  const catchUp = () => {
+    if (!renderer || !state.current) return;
+    const v = renderer.getView().join(',');
+    if (v === lastView) return;
+    lastView = v;
+    syncHash();
+  };
+  setInterval(catchUp, 900);
+  // and immediately on the way out, so the last position is never the one lost
+  addEventListener('pagehide', catchUp);
+  addEventListener('visibilitychange', catchUp);
+}
+
+let lastView = '';
+
+function syncHash() {
+  if (!state.current) return;
+  const v = renderer ? `/v${renderer.getView().join(',')}` : '';
+  const h = `${state.current.file}/${state.polySym}/${state.stellSym}` +
+            `/d${state.depth}${v}/${state.cellsString || ''}`;
+  try { history.replaceState(null, '', '#' + h); }
+  catch { location.hash = h; }     // file:// URLs reject replaceState
 }
 
 function findItem(file) {
@@ -125,23 +175,83 @@ function findItem(file) {
   return null;
 }
 
+// ------------------------------------------------------------------ undo
+
+/*
+ * Undo and redo over the cell selection.
+ *
+ * «Я вот сейчас раз удалил, у меня всё сломалось… удалил центральную ячейку.
+ * Думаю: что случилось?» — carving with ctrl takes the clicked cell's whole
+ * supporting set, which from a high cell reaches all the way to the core, and
+ * one keystroke can undo a quarter of an hour's building. There is no way to
+ * work that out backwards from the result, so the result is not what we keep:
+ * every operation banks the selection it started from.
+ *
+ * Snapshots, not deltas. A selection is a set of short strings and even the
+ * densest arrangement has a few thousand of them, so a hundred snapshots cost
+ * less than a single rebuild — and a snapshot cannot drift out of step with the
+ * thing it describes the way a replayed delta can.
+ */
+const undoStack = { past: [], future: [], limit: 100 };
+
+function mark() {
+  undoStack.past.push(new Set(state.selected));
+  if (undoStack.past.length > undoStack.limit) undoStack.past.shift();
+  undoStack.future.length = 0;
+  syncUndo();
+}
+
+/** a new arrangement is a new document: nothing before it can be restored */
+function clearHistory() {
+  undoStack.past.length = 0;
+  undoStack.future.length = 0;
+  syncUndo();
+}
+
+function syncUndo() {
+  const u = $('#undoBtn'), r = $('#redoBtn');
+  if (u) u.disabled = !undoStack.past.length;
+  if (r) r.disabled = !undoStack.future.length;
+}
+
+function undo() {
+  if (!undoStack.past.length) return;
+  undoStack.future.push(new Set(state.selected));
+  state.selected = undoStack.past.pop();
+  syncUndo();
+  refresh();
+}
+
+function redo() {
+  if (!undoStack.future.length) return;
+  undoStack.past.push(new Set(state.selected));
+  state.selected = undoStack.future.pop();
+  syncUndo();
+  refresh();
+}
+
 // ------------------------------------------------------------------ picking
 
 /**
  * A click on a diagram region or on a face of the solid.
  *   plain  toggle this cell
- *   shift  add it and everything supporting it — the result always holds together
- *   ctrl   remove it and everything resting on it, for the same reason
- * `outward` is set when the gesture means "grow here": on the solid, shift-click
- * adds the cell sitting on the far side of the face you clicked.
+ *   shift  add it, and everything supporting it, down to the core
+ *   ctrl   remove exactly that same set again
+ *
+ * The two act on the same set, in the same direction — inward, toward the
+ * centre — so ctrl undoes a shift exactly. An earlier version had ctrl remove
+ * the cell's *dependents* instead, which reads as the natural opposite but is
+ * not an inverse: shift reached inward and ctrl reached outward, so the pair
+ * never cancelled and which cells vanished depended on what was already built.
  */
 function applyToCell(key, mod) {
   if (!key) return;
+  mark();
   const sel = state.selected;
   if (mod.shift) {
     for (const k of cells.supportKeys(key)) sel.add(k);
   } else if (mod.ctrl) {
-    for (const k of dependentKeys(key)) sel.delete(k);
+    for (const k of cells.supportKeys(key)) sel.delete(k);
   } else {
     sel.has(key) ? sel.delete(key) : sel.add(key);
   }
@@ -196,23 +306,41 @@ function onPick3D(hit, mod) {
 
   if (mod.shift) {
     if (!outside) { setStatus('nothing further out on that face — raise the build depth', false); return; }
+    mark();
     applyChange(cells.supportKeys(outside), true);
   } else if (mod.ctrl) {
     if (!inside) { setStatus('no cell inside that face', false); return; }
-    applyChange(dependentKeys(inside), false);
+    mark();
+    applyChange(cells.supportKeys(inside), false);   // the exact inverse of shift
   } else {
     return;
   }
   refresh();
 }
 
+/*
+ * What a click here would do, said in colour before it is spent.
+ *
+ * Green adds, red removes — «зеленое и красное, наверное, более натуральное».
+ * And when the gesture has nothing to work on the outline is dimmed rather than
+ * dropped: «делать highlight, если ячейки можно добавить», but you still want to
+ * see which face you are pointing at, so it stays visible and stops looking like
+ * a live target.
+ */
 function onHover3D(hit, mod) {
   const mesh = state.mesh;
-  if (!hit || !mesh) { $('#hover3d').textContent = ''; return; }
+  if (!hit || !mesh) {
+    $('#hover3d').textContent = '';
+    renderer?.setHighlight(-1);
+    return;
+  }
+  const action = mod?.shift ? 'add' : (mod?.ctrl ? 'remove' : null);
   const key = mod?.shift ? mesh.faceOutside[hit.face] : mesh.faceInside[hit.face];
-  $('#hover3d').textContent = key
-    ? `${mod?.shift ? 'grow' : 'carve'} ${key}`
-    : (mod?.shift ? 'nothing further out' : '');
+  const live = !!key && !!action;
+  renderer?.setHighlight(hit.face, action, live || !action);
+  $('#hover3d').textContent = !action ? ''
+    : key ? `${mod.shift ? 'grow' : 'carve'} ${key}`
+    : (mod.shift ? 'nothing further out on this face' : 'nothing behind this face');
 }
 
 // ------------------------------------------------------------------ catalog
@@ -314,6 +442,8 @@ async function select(item, opts = {}) {
 
   syncSymmetrySelects();
   await build(opts.cells);
+  // after the build, so the mesh (and therefore the model scale) already exists
+  if (opts.view && renderer?.setView(opts.view)) lastView = renderer.getView().join(',');
 }
 
 const NO_LIMIT = 60;   // slider top = build every layer there is
@@ -450,6 +580,91 @@ function installSplitters() {
   }
 }
 
+/**
+ * The axis of a proper rotation, from its matrix. Null for the identity.
+ *
+ * The axis is the eigenvector for eigenvalue 1, and the skew part gives it
+ * directly as (R32-R23, R13-R31, R21-R12) = 2·sin(θ)·n. A half-turn defeats
+ * that, because sin(180°) = 0; there R + I is 2·n·nᵀ, rank one with every column
+ * parallel to the axis, so the longest column serves. Recovering the sign from
+ * square roots of the diagonal instead loses an axis of Oh, because a zero
+ * component leaves its sign undetermined and two distinct axes then collapse
+ * onto each other.
+ */
+function rotationAxis(a, b, c, d, e, f, g, h, i) {
+  if (a + e + i > 2.999) return null;              // the identity
+  let v = [h - f, c - g, d - b];
+  if (Math.hypot(...v) < 1e-6) {
+    const cols = [[a + 1, d, g], [b, e + 1, h], [c, f, i + 1]];
+    v = cols.reduce((best, col) =>
+      Math.hypot(...col) > Math.hypot(...best) ? col : best, cols[0]);
+  }
+  const L = Math.hypot(...v);
+  return L < 1e-6 ? null : v.map(x => x / L);
+}
+
+/*
+ * Every symmetry element of a group, sorted into the three kinds that can be
+ * drawn — asked for at 13:54: «add checkbox to show rotating planes (translucent
+ * disks) separate from axes, and a third one for зеркально-винтовой плоскость».
+ *
+ *   axes      proper rotations (det +1)
+ *   mirrors   reflections (det -1, trace +1) — reported as the plane's normal
+ *   improper  rotoreflections S_n, the "glide reflection in 3D" (det -1, other)
+ *
+ * The trick for the improper ones is that if M is improper then -M is a proper
+ * rotation (in 3D, det(-M) = -det(M)), so the same axis extraction works on it.
+ * For a plain mirror -M is the half-turn about the plane's normal, which is
+ * exactly the number needed to orient the disc. The inversion centre is neither
+ * a line nor a plane and is left out.
+ */
+function symmetryElements(name) {
+  const G = state.symmetry[name];
+  const out = { axes: [], mirrors: [], improper: [] };
+  if (!G?.matrices?.length) return out;
+  const seen = { axes: [], mirrors: [], improper: [] };
+
+  const add = (bucket, v) => {
+    if (!v) return;
+    // ±v are the same line, and the same plane; pick one lexicographically
+    if (v[0] < -1e-9 || (Math.abs(v[0]) <= 1e-9 && (v[1] < -1e-9 ||
+        (Math.abs(v[1]) <= 1e-9 && v[2] < 0)))) v = v.map(x => -x);
+    if (seen[bucket].some(u => Math.abs(u[0] - v[0]) + Math.abs(u[1] - v[1]) +
+                               Math.abs(u[2] - v[2]) < 1e-4)) return;
+    seen[bucket].push(v);
+    out[bucket].push({ dir: v });
+  };
+
+  for (const m of G.matrices) {
+    const [a, b, c, d, e, f, g, h, i] = m.length === 9
+      ? m
+      : [m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]];   // 4x4 row-major
+    const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+    const trace = a + e + i;
+    if (det > 0) { add('axes', rotationAxis(a, b, c, d, e, f, g, h, i)); continue; }
+    if (trace < -2.999) continue;                  // the inversion centre: a point
+    const n = rotationAxis(-a, -b, -c, -d, -e, -f, -g, -h, -i);
+    add(Math.abs(trace - 1) < 1e-6 ? 'mirrors' : 'improper', n);
+  }
+  return out;
+}
+
+/** what the three "show" checkboxes currently want to see */
+function shownElements() {
+  const el = symmetryElements(state.stellSym);
+  return {
+    axes: $('#showAxes')?.checked ? el.axes : [],
+    mirrors: $('#showMirrors')?.checked ? el.mirrors : [],
+    improper: $('#showImproper')?.checked ? el.improper : [],
+  };
+}
+
+function refreshElements() {
+  if (!renderer) return;
+  const any = ['#showAxes', '#showMirrors', '#showImproper'].some(id => $(id)?.checked);
+  renderer.setElements(any ? shownElements() : null);
+}
+
 // ------------------------------------------------------------------ build
 
 async function build(cellsString) {
@@ -459,6 +674,7 @@ async function build(cellsString) {
 
   const g = state.geometry[state.current.file];
   renderer?.resetScale();      // a new arrangement re-frames; edits within one do not
+  clearHistory();              // a different arrangement: nothing earlier applies
   const polyM = state.symmetry[state.polySym]?.matrices || state.symmetry.E.matrices;
   const subM = state.symmetry[state.stellSym]?.matrices || null;
 
@@ -470,6 +686,8 @@ async function build(cellsString) {
 
     state.outline = info.outline;
     cells.setOutline(info.outline);
+    fillFaceSelect(info.faces);
+    refreshElements();
     renderLegend();
 
     if (cellsString) {
@@ -482,9 +700,15 @@ async function build(cellsString) {
 
     await refresh();
     const slow = info.ms > 5000 && !state.depthAuto;
-    setStatus(`${info.planes} planes · ${info.facets.toLocaleString()} facets · ` +
+    setStatus(`${planeReport(info)} · ${info.facets.toLocaleString()} facets · ` +
               `${info.layers} layers · ${(info.ms / 1000).toFixed(info.ms > 5000 ? 1 : 3)} s` +
               (slow ? ' — lower the depth for a quicker rebuild' : ''), false);
+    const dropped = (info.planesCentral || 0) + (info.planesDegenerate || 0);
+    $('#status').title = dropped
+      ? `${dropped} of this solid's ${info.planesTotal} faces have no usable plane here` +
+        (info.planesCentral ? ` — ${info.planesCentral} pass exactly through the centre, ` +
+          'which this representation cannot hold (see notes/design/plane-representation.md)' : '')
+      : '';
   } catch (err) {
     setStatus('failed: ' + err.message, false);
     startWorker();
@@ -510,7 +734,50 @@ async function refresh() {
   const { cells: str } = await call('formatCells', { selected });
   state.cellsString = str;
   $('#cellsString').value = str;
-  location.hash = `${state.current.file}/${state.polySym}/${state.stellSym}/d${state.depth}/${str}`;
+  syncHash();
+}
+
+/*
+ * "N planes", or "N of M planes" when some of the solid's faces did not make it.
+ *
+ * Silently building an arrangement out of fewer planes than the solid has is the
+ * worst failure this program can have, because the answer looks perfectly
+ * healthy: you get a stellation, it is just a stellation of a *different* solid.
+ * The hemipolyhedra lose their central planes here and there was nothing on
+ * screen to say so. Now the count says it, and the tooltip says why.
+ */
+function planeReport(info) {
+  const total = info.planesTotal ?? info.planes;
+  const dropped = (info.planesCentral || 0) + (info.planesDegenerate || 0);
+  if (!dropped) return `${info.planes} planes`;
+  return `⚠ ${info.planes} of ${total} planes`;
+}
+
+/*
+ * The diagram can be drawn on any face plane, but planes the symmetry carries
+ * onto one another give the same picture — so offer one of each kind rather
+ * than a number to type with no upper bound («здесь должно быть только два
+ * выбора… но нету ограничителя»). Each entry is named after the polygon at the
+ * centre of that diagram, which is the solid's own face there.
+ */
+const POLYGON = { 3: 'triangle', 4: 'square', 5: 'pentagon', 6: 'hexagon',
+                  7: 'heptagon', 8: 'octagon', 9: 'nonagon', 10: 'decagon', 12: 'dodecagon' };
+
+function fillFaceSelect(faces) {
+  state.faces = Array.isArray(faces) ? faces : [];
+  const sel = $('#planeIndex');
+  if (!sel) return;
+  if (!state.faces.length) {
+    sel.innerHTML = '<option value="0">the only face</option>';
+    state.planeIndex = 0;
+    return;
+  }
+  if (!state.faces.some(f => f.index === state.planeIndex)) state.planeIndex = state.faces[0].index;
+  sel.innerHTML = state.faces.map(f => {
+    const shape = POLYGON[f.sides] || (f.sides ? `${f.sides}-gon` : 'face');
+    return `<option value="${f.index}"${f.index === state.planeIndex ? ' selected' : ''}>` +
+           `${shape} · ${f.count} plane${f.count === 1 ? '' : 's'}</option>`;
+  }).join('');
 }
 
 /** the key to the bar colours: one swatch per distinct number of congruent pieces */
@@ -547,26 +814,48 @@ function wireControls() {
   $('#planeIndex').onchange = (e) => { state.planeIndex = Number(e.target.value) || 0; refresh(); };
 
   $('#selectCore').onclick = async () => {
-      const { keys } = await call('layerKeys', { n: 1 });
-    state.selected = new Set(keys); refresh();
+    const { keys } = await call('layerKeys', { n: 1 });
+    mark(); state.selected = new Set(keys); refresh();
   };
-  $('#selectNone').onclick = () => { state.selected.clear(); refresh(); };
+  $('#selectNone').onclick = () => { mark(); state.selected = new Set(); refresh(); };
   $('#selectAll').onclick = async () => {
-      const { keys } = await call('layerKeys', { n: state.outline.length });
-    state.selected = new Set(keys); refresh();
+    const { keys } = await call('layerKeys', { n: state.outline.length });
+    mark(); state.selected = new Set(keys); refresh();
   };
   $('#growLayer').onclick = async () => {
-      let n = 0;
+    let n = 0;
     state.outline.forEach((layer, l) => {
       if (layer.cells.some(c => c.subCells.some(s => state.selected.has(`${l}.${c.index}.${s.index}`)))) n = l + 1;
     });
     const { keys } = await call('layerKeys', { n: Math.min(n + 1, state.outline.length) });
-    state.selected = new Set(keys); refresh();
+    mark(); state.selected = new Set(keys); refresh();
   };
+  $('#undoBtn').onclick = undo;
+  $('#redoBtn').onclick = redo;
+
+  /*
+   * ctrl+Z everywhere, cmd+Z as well on macOS — both, rather than one per
+   * platform, because a Mac keyboard has ctrl too and nobody is surprised when
+   * it works. Ignored while typing in the cell string or the search box.
+   */
+  addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); }
+  });
 
   $('#autoRotate').onchange = (e) => { if (renderer) renderer.autoRotate = e.target.checked; };
   $('#showEdges').onchange = (e) => { if (renderer) { renderer.showEdges = e.target.checked; renderer.draw(); } };
   $('#fitView').onclick = () => { renderer?.fit(); setStatus('rescaled to fit', false); };
+  $('#homeView').onclick = () => { renderer?.home(); setStatus('canonical orientation', false); };
+
+  for (const id of ['#showAxes', '#showMirrors', '#showImproper']) {
+    const el = $(id);
+    if (el) el.onchange = refreshElements;
+  }
 
   installSplitters();
 
@@ -600,6 +889,7 @@ function wireControls() {
       showEdges: $('#showEdges').checked,
       showAllFacets: $('#showAllFacets').checked,
       spin: $('#autoRotate').checked,
+      view: renderer?.getView() || null,
     }), 'application/json');
   };
   $('#exportStel').onclick = () => download(`${name()}.stel`, writeStel({
@@ -625,7 +915,11 @@ function wireControls() {
     b.onclick = async () => openDocument(await fetch(`samples/${b.dataset.file}`).then(r => r.text()), b.dataset.file);
   });
 
-  $('#help').onclick = () => $('#helpDialog').showModal();
+  $('#help').onclick = () => {
+    const b = $('#buildStamp');
+    if (b) b.textContent = BUILD;
+    $('#helpDialog').showModal();
+  };
   $('#helpClose').onclick = () => $('#helpDialog').close();
 
   $('#themeBtn').onclick = cycleTheme;
@@ -725,7 +1019,8 @@ async function openDocument(text, filename = '') {
     }
   }
 
-  await select(item, { polySym: doc.polySymmetry, stellSym: doc.stellSymmetry, cells: doc.cells, depth: doc.planeDepth ?? undefined });
+  await select(item, { polySym: doc.polySymmetry, stellSym: doc.stellSymmetry, cells: doc.cells,
+                       depth: doc.planeDepth ?? undefined, view: doc.view });
   setStatus(`opened ${doc.name || filename} (${doc.source === 'json' ? 'JSON' : '.stel'})`, false);
 }
 

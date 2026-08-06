@@ -47,8 +47,12 @@
     <div class="views">
       <div class="view">
         <canvas id="view3d"></canvas>
+        <div class="view-tools">
+          <button id="fitView" title="Rescale so the whole selection fits the frame">fit</button>
+          <button id="homeView" title="Canonical orientation: x right, y up, z toward you">home</button>
+        </div>
         <div class="view-label">
-          <span>drag to turn · <kbd>shift</kbd>-click adds · <kbd class="kSub">ctrl</kbd>-click removes</span>
+          <span>drag to turn · <kbd>shift</kbd>-click <b class="add">adds</b> · <kbd class="kSub">ctrl</kbd>-click <b class="rem">removes</b></span>
           <span id="hover3d" class="hover"></span>
         </div>
       </div>
@@ -56,7 +60,7 @@
       <div class="view">
         <canvas id="diagram"></canvas>
         <div class="view-label">
-          <span>stellation diagram · drag to pan · <kbd>shift</kbd>-click adds · <kbd class="kSub">ctrl</kbd>-click removes · double-click resets</span>
+          <span>stellation diagram · drag to pan · <kbd>shift</kbd>-click <b class="add">adds</b> · <kbd class="kSub">ctrl</kbd>-click <b class="rem">removes</b> · double-click resets</span>
           <span id="hover2d" class="hover"></span>
         </div>
       </div>
@@ -80,6 +84,8 @@
           <button id="growLayer" title="Add the next shell outward">+ layer</button>
           <button id="selectAll">all</button>
           <button id="selectNone">clear</button>
+          <button id="undoBtn" class="icon" title="Undo the last change to the cells (ctrl+Z)" disabled>↶</button>
+          <button id="redoBtn" class="icon" title="Redo (ctrl+shift+Z)" disabled>↷</button>
         </div>
       </div>
       <div class="cells-wrap"><canvas id="cells"></canvas></div>
@@ -90,10 +96,11 @@
         of cells. <a href="controls.html">Controls &amp; views →</a>
       </p>
       <ul class="note keys">
-        <li><kbd>shift</kbd>-click add, with everything under it</li>
-        <li><kbd class="kSub">ctrl</kbd>-click remove, with everything on it</li>
+        <li><kbd>shift</kbd>-click <b class="add">add</b>, with everything under it</li>
+        <li><kbd class="kSub">ctrl</kbd>-click <b class="rem">remove</b>, with everything on it</li>
         <li><kbd>click</kbd> toggle one cell — in this table only</li>
         <li><kbd>row №</kbd> whole layer</li>
+        <li><kbd>ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>Z</kbd> redo</li>
       </ul>
       <input id="cellsString" class="mono" spellcheck="false"
              title="cell-selection string, same syntax as the original .stel files">
@@ -113,9 +120,9 @@
         <span>build out to <b id="depthLabel">20</b> shells</span>
         <input id="depth" type="range" min="2" max="60" value="20">
       </label>
-      <label class="field" title="Which face of the polyhedron the stellation diagram is drawn on. Solids with more than one kind of face have a different diagram for each.">
+      <label class="field" title="Which face of the polyhedron the stellation diagram is drawn on. Only faces the chosen symmetry cannot carry onto one another are listed — the rest would give the same picture.">
         <span>diagram face</span>
-        <input id="planeIndex" type="number" min="0" value="0">
+        <select id="planeIndex"></select>
       </label>
       <p class="note">
         Cells are grouped into orbits of the first group, then split by the second —
@@ -125,11 +132,14 @@
 
     <details class="group">
       <summary><h2>View</h2></summary>
-      <div class="row buttons tight">
-        <button id="fitView" title="Rescale so the current selection fills the frame">fit</button>
-      </div>
       <label class="check"><input id="autoRotate" type="checkbox"> spin the solid</label>
       <label class="check"><input id="showEdges" type="checkbox" checked> draw edges</label>
+      <fieldset class="sym-elems">
+        <legend title="The symmetry elements of the stellation group, drawn through the origin as real geometry so the solid hides the parts behind it. Use with home.">symmetry elements</legend>
+        <label class="check"><input id="showAxes" type="checkbox"> <i class="sw ax"></i> rotation axes</label>
+        <label class="check" title="Each mirror plane as a translucent disc through the origin"><input id="showMirrors" type="checkbox"> <i class="sw mi"></i> mirror planes</label>
+        <label class="check" title="Rotoreflection (Sₙ) axes — turn, then reflect. The three-dimensional cousin of a glide reflection."><input id="showImproper" type="checkbox"> <i class="sw im"></i> rotoreflection axes</label>
+      </fieldset>
       <label class="field" title="Thickness of the edge lines, in pixels">
         <span>edge weight <b id="edgeWidthLabel">1.0</b></span>
         <input id="edgeWidth" type="range" min="0.5" max="8" step="0.5" value="1">
@@ -233,6 +243,7 @@
     original Java: the same facet counts, the same cell structure, the same volumes to
     six decimal places.
   </p>
+  <p class="note">Build <span id="buildStamp" class="mono"></span> · <a href="changes.html">what changed →</a></p>
   <button id="helpClose">close</button>
 </dialog>
 

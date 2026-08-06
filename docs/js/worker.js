@@ -9,7 +9,7 @@
 
 import {
   buildStellation, extractMesh, parseCells, formatCells, selectedSubCells,
-  createDiagram, selKey, subCellForFacet,
+  createDiagram, selKey, subCellForFacet, diagramFaces,
 } from './core.js';
 
 let stel = null;
@@ -111,6 +111,20 @@ self.onmessage = (e) => {
         meta = { ms: performance.now() - t0 };
         reply({
           planes: stel.planes.length,
+          /*
+           * What was left out of the arrangement.
+           *
+           * A solid whose planes pass through the centre quietly loses them
+           * here, and what you then stellate is not the solid you picked. The
+           * counts go up to the UI so it can say "N of M planes" instead of
+           * showing a wrong answer with a confident face.
+           */
+          planesTotal: stel.planes.total ?? stel.planes.length,
+          planesCentral: stel.planes.central ?? 0,
+          planesDegenerate: stel.planes.degenerate ?? 0,
+          planesDuplicate: stel.planes.duplicate ?? 0,
+          // the inequivalent faces to offer as diagram planes
+          faces: diagramFaces(stel, subMatrices || matrices),
           layers: stel.cellLayers.length,
           vertices: stel.pool.size,
           facets: stel.arrangement.reduce((s, a) => s + a.length, 0),

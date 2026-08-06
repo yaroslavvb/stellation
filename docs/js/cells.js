@@ -31,15 +31,25 @@ const GAP_Y    = 5;    // between rows
 const LAYER_W  = 30;   // the layer-number column
 const PAD      = 8;    // around the whole table
 const GROUP_PAD = 4;   // inside a sub-cell group's container
+const SUB_W    = 19;   // a sub-cell box: visibly smaller than its parent
+const SUB_H    = 20;
+/* The arrow and its part-count were too faint to find: «поярче сделать надписи
+   и стрелочки … их просто почти не видно, этих стрелочек», with the note that
+   more horizontal space was available for them. Widened, and drawn heavier. */
+const TWISTY_W = 19;   // the expand/collapse arrow beside a group
 const FONT = (px, weight = 600) =>
   `${weight} ${px}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 
+import { ACTION } from './render3d.js';
+
 export class CellsPanel {
-  constructor(canvas, { onChange, onHover } = {}) {
+  constructor(canvas, { onChange, onHover, onBeforeChange } = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.onChange = onChange;
     this.onHover = onHover;
+    this.onBeforeChange = onBeforeChange;
+    this.hoverAction = null;   // 'add' | 'remove' | null — see draw()
 
     this.outline = null;      // [layer][cell] = {index, subCells:[...], ...}
     this.selected = new Set();
@@ -47,13 +57,26 @@ export class CellsPanel {
     this.hover = null;
     this.scroll = 0;     // vertical
     this.scrollX = 0;    // horizontal — deep layers run wide
+    /*
+     * Sub-cell groups start collapsed.
+     *
+     * Under a low symmetry a single orbit can split into a hundred and twenty
+     * sub-cells; expanded by default that is a row far wider than any sensible
+     * panel, and it buries the layer structure the table exists to show. The
+     * arrow beside a group opens it when you actually want the parts.
+     */
+    this.expanded = new Set();   // "layer.cell" for each opened group
 
     canvas.addEventListener('pointermove', (e) => {
       if (this._onDragMove && this._onDragMove(e)) return;
+      this._lastMove = e;
       const h = this.hitTest(e);
+      const m = modifiersOf(e);
+      const act = m.shift ? 'add' : m.ctrl ? 'remove' : null;
       const same = (a, b) => a === b || (a && b && a.key === b.key && a.kind === b.kind);
-      if (!same(h, this.hover)) {
+      if (!same(h, this.hover) || act !== this.hoverAction) {
         this.hover = h;
+        this.hoverAction = act;
         canvas.style.cursor = h ? 'pointer' : 'default';
         // a real hover tooltip, as the Java window has: hold still and the
         // details appear, so the boxes themselves can stay bare numbers
@@ -63,7 +86,8 @@ export class CellsPanel {
       }
     });
     canvas.addEventListener('pointerleave', () => {
-      if (this.hover) { this.hover = null; this.draw(); this.onHover?.(null); }
+      this._lastMove = null;
+      if (this.hover) { this.hover = null; this.hoverAction = null; this.draw(); this.onHover?.(null); }
     });
     // Deep tables are wider and taller than the panel, so the canvas pans. A drag
     // must not toggle whatever it started on, so a click counts only if the
@@ -120,6 +144,23 @@ export class CellsPanel {
       this._clampScroll();
       this.draw();
     }, { passive: false });
+
+    // holding or releasing a modifier changes what a click would do, and the
+    // pointer has not moved to tell us — replay the last position with the new
+    // keys, so the green never outlives the shift that produced it
+    const replay = (e) => {
+      if (!this._lastMove) return;
+      const act = e.shiftKey ? 'add'
+                : (e.ctrlKey || e.metaKey || e.altKey) ? 'remove' : null;
+      if (act === this.hoverAction) return;
+      this.hoverAction = act;
+      this.draw();
+    };
+    addEventListener('keydown', replay);
+    addEventListener('keyup', replay);
+    addEventListener('blur', () => {
+      if (this.hoverAction) { this.hoverAction = null; this.draw(); }
+    });
 
     new ResizeObserver(() => this.draw()).observe(canvas);
   }
@@ -185,18 +226,29 @@ export class CellsPanel {
   }
 
   apply(hit, mod) {
+    // the arrow beside a group opens and closes it; it selects nothing
+    if (hit.kind === 'twisty') {
+      const id = `${hit.layer.layer}.${hit.cell.index}`;
+      this.expanded.has(id) ? this.expanded.delete(id) : this.expanded.add(id);
+      this._clampScroll();
+      this.draw();
+      return;
+    }
+
+    this.onBeforeChange?.();                     // bank the selection for undo
+
     const sel = this.selected;
     const keys = hit.keys;                       // the sub-cells this hit covers
 
     if (mod.shift || mod.ctrl) {
-      // Grow pulls in what holds the cell up; carve takes away what rests on it.
-      // The original's carve cleared the supporting set instead — downward — which
-      // leaves the cells above it floating in mid-air. Both directions here keep
-      // the selection a solid that holds together.
+      /*
+       * Both gestures walk the same way — inward, to the cells holding this one
+       * up — so that ctrl undoes a shift exactly. Reaching outward for the
+       * carve reads as the natural opposite, but then the pair does not cancel:
+       * what disappears depends on what was already standing above.
+       */
       const all = new Set();
-      for (const k of keys) {
-        for (const s of (mod.shift ? this.supportKeys(k) : this.dependentKeys(k))) all.add(s);
-      }
+      for (const k of keys) for (const s of this.supportKeys(k)) all.add(s);
       for (const k of all) mod.shift ? sel.add(k) : sel.delete(k);
     } else {
       const anyOff = keys.some(k => !sel.has(k));
@@ -226,15 +278,22 @@ export class CellsPanel {
       for (const cell of layer.cells) {
         const n = cell.subCells.length;
         if (n > 1) {
-          // header + its sub-cells, wrapped in one container
-          const inner = (n + 1) * BOX_W + n * GAP_X;
+          const open = this.expanded.has(`${layer.layer}.${cell.index}`);
+          const inner = open
+            ? BOX_W + TWISTY_W + n * (SUB_W + GAP_X)
+            : BOX_W + TWISTY_W;
           cb({ kind: 'group', layer, cell, x: x - GROUP_PAD, y: y - GROUP_PAD,
                w: inner + 2 * GROUP_PAD, h: BOX_H + 2 * GROUP_PAD });
           cb({ kind: 'header', layer, cell, x, y, w: BOX_W, h: BOX_H });
-          let sx = x + BOX_W + GAP_X;
-          for (const sub of cell.subCells) {
-            cb({ kind: 'sub', layer, cell, sub, x: sx, y, w: BOX_W, h: BOX_H });
-            sx += BOX_W + GAP_X;
+          cb({ kind: 'twisty', layer, cell, open, n,
+               x: x + BOX_W, y, w: TWISTY_W, h: BOX_H });
+          if (open) {
+            let sx = x + BOX_W + TWISTY_W;
+            for (const sub of cell.subCells) {
+              cb({ kind: 'sub', layer, cell, sub,
+                   x: sx, y: y + (BOX_H - SUB_H) / 2, w: SUB_W, h: SUB_H });
+              sx += SUB_W + GAP_X;
+            }
           }
           x += inner + GAP_X + 2 * GROUP_PAD;
         } else {
@@ -263,6 +322,11 @@ export class CellsPanel {
 
   _toHit(b) {
     const L = b.layer.layer;
+    if (b.kind === 'twisty') {
+      // the open state is part of the key so the tooltip refreshes on toggle
+      return { kind: 'twisty', key: `T${L}.${b.cell.index}.${b.open ? 1 : 0}`, keys: [],
+               layer: b.layer, cell: b.cell, open: b.open, n: b.n };
+    }
     if (b.kind === 'layer') {
       const keys = [];
       for (const c of b.layer.cells) for (const s of c.subCells) keys.push(`${L}.${c.index}.${s.index}`);
@@ -309,8 +373,12 @@ export class CellsPanel {
         const some = any && b.layer.cells.some(c => c.subCells.some(s => sel.has(`${L}.${c.index}.${s.index}`)));
 
         if (hoverKey === `L${L}`) {
+          const act = ACTION[this.hoverAction];
           roundRect(ctx, b.x, b.y, b.w, b.h, 7);
-          ctx.fillStyle = S.rowHover; ctx.fill();
+          ctx.fillStyle = act
+            ? `rgba(${act.rgb.map(v => Math.round(v * 255)).join(',')},0.26)`
+            : S.rowHover;
+          ctx.fill();
         }
         ctx.fillStyle = on ? S.accent : some ? S.accentSoft : S.line;
         roundRect(ctx, b.x, b.y + 4, 2.5, b.h - 8, 1.5);
@@ -337,6 +405,37 @@ export class CellsPanel {
         return;
       }
 
+      /*
+       * ---- the expand/collapse arrow for a group of sub-cells
+       *
+       * The two states are opposite directions along one axis, not two
+       * different axes: ▸ opens the group to the right, ◂ closes it back up
+       * again. A downward arrow for "close" made the pair read as unrelated —
+       * «она здесь расширить, она туда делает, а сузить это какой-то вниз. По
+       * идее нужна просто обратно стрелочка».
+       */
+      if (b.kind === 'twisty') {
+        const hov = hoverKey === `T${L}.${b.cell.index}.${b.open ? 1 : 0}`;
+        ctx.strokeStyle = hov ? S.accent : S.arrow;
+        ctx.lineWidth = 2.3;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        const cx = b.x + b.w / 2, r = 4.2;
+        const cy = b.y + b.h / 2 - (b.open ? 0 : 4);   // room for the count below
+        const d = b.open ? -1 : 1;                     // ◂ closes, ▸ opens
+        ctx.beginPath();
+        ctx.moveTo(cx - r * 0.6 * d, cy - r);
+        ctx.lineTo(cx + r * 0.7 * d, cy);
+        ctx.lineTo(cx - r * 0.6 * d, cy + r);
+        ctx.stroke();
+        if (!b.open) {                    // how many parts are hidden in there
+          ctx.fillStyle = hov ? S.accent : S.arrow;
+          ctx.font = FONT(11, 700);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(b.n), cx, cy + r + 7);
+        }
+        return;
+      }
+
       const isHeader = b.kind === 'header';
       const key = isHeader ? null : `${L}.${b.cell.index}.${b.sub.index}`;
       const hovered = hoverKey === (isHeader ? `${L}.${b.cell.index}` : key);
@@ -346,12 +445,21 @@ export class CellsPanel {
         : sel.has(key);
       const part = isHeader && !on && b.cell.subCells.some(s => sel.has(`${L}.${b.cell.index}.${s.index}`));
 
-      // box
+      // box. A hovered box is outlined in the colour of what a click would do:
+      // green to add, red to carve, the accent when a bare click just toggles.
+      const act = hovered ? ACTION[this.hoverAction] : null;
       roundRect(ctx, b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1, 7);
       ctx.fillStyle = on ? S.accent : part ? S.accentFaint : S.boxFill;
       ctx.fill();
-      ctx.strokeStyle = hovered ? S.accent : on ? S.accent : S.boxLine;
-      ctx.lineWidth = hovered ? 1.6 : 1;
+      if (act) {
+        const rgb = act.rgb.map(v => Math.round(v * 255)).join(',');
+        ctx.fillStyle = `rgba(${rgb},0.30)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgb(${rgb})`;
+      } else {
+        ctx.strokeStyle = hovered || on ? S.accent : S.boxLine;
+      }
+      ctx.lineWidth = hovered ? 2 : 1;
       ctx.stroke();
 
       // the colour bar, in its own lane at the foot of the box — never under the digit
@@ -381,6 +489,11 @@ export class CellsPanel {
       return `layer ${hit.layer.layer} · ${hit.layer.cells.length} cells, ${n} selectable · volume ${v.toFixed(5)}`;
     }
     const L = hit.layer.layer, c = hit.cell;
+    if (hit.kind === 'twisty') {
+      return hit.open
+        ? `${L}(${c.index}) · click to collapse its ${hit.n} sub-cells`
+        : `${L}(${c.index}) · ${hit.n} sub-cells hidden — click to expand`;
+    }
     if (hit.kind === 'header') {
       return `${L}(${c.index}) · ${c.subCells.length} sub-cells · ${c.primitives} elem. cells ` +
              `[${c.facets}, ${c.vertices}, ${c.volume.toFixed(5)}]`;
@@ -464,6 +577,9 @@ function themeColors() {
     boxLine: dark ? 'rgba(200,212,235,0.20)' : 'rgba(40,55,85,0.20)',
     groupFill: dark ? 'rgba(111,168,255,0.09)' : 'rgba(37,99,201,0.06)',
     groupLine: dark ? 'rgba(111,168,255,0.28)' : 'rgba(37,99,201,0.22)',
+    // the arrow and its count carry the same weight as the box numbers now;
+    // at the old group-line opacity they simply were not findable
+    arrow: dark ? 'rgba(150,192,255,0.85)' : 'rgba(30,80,170,0.80)',
     rowHover: dark ? 'rgba(255,255,255,0.05)' : 'rgba(20,30,60,0.045)',
   };
 }

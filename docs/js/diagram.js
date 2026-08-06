@@ -5,7 +5,7 @@
  * region is a cell, and clicking one adds or removes it.
  */
 
-import { layerColor } from './render3d.js';
+import { layerColor, ACTION } from './render3d.js';
 
 export class DiagramView {
   constructor(canvas, { onToggle, onHover } = {}) {
@@ -53,13 +53,32 @@ export class DiagramView {
         return;
       }
       const i = this.hitTest(e);
-      if (i !== this.hover) {
+      const m = mods(e);
+      const act = m.shift ? 'add' : m.ctrl ? 'remove' : null;
+      if (i !== this.hover || act !== this.hoverAction) {
         this.hover = i;
+        this.hoverAction = act;
         this.canvas.style.cursor = i >= 0 ? 'pointer' : 'grab';
         this.draw();
         this.onHover?.(i >= 0 ? this.data.facets[i] : null);
       }
     });
+
+    /*
+     * The colour under the pointer says what a click would do, so it has to
+     * follow the modifier keys and not just the pointer — otherwise letting go
+     * of shift leaves the diagram claiming a click will still add.
+     */
+    const replay = (e) => {
+      if (!this._last || down) return;
+      const act = e.shiftKey ? 'add' : (e.ctrlKey || e.metaKey || e.altKey) ? 'remove' : null;
+      if (act === this.hoverAction) return;
+      this.hoverAction = act;
+      this.draw();
+    };
+    addEventListener('keydown', replay);
+    addEventListener('keyup', replay);
+    canvas.addEventListener('pointermove', (e) => { this._last = e; });
 
     /*
      * A bare click does nothing here, exactly as in the 3D view — there it
@@ -262,8 +281,10 @@ export class DiagramView {
       if (!facet.selected) continue;
       const c = layerColor(facet.layer).map(v => Math.round(v * 255));
       const inward = facet.facing === 0;
+      // inward faces were pale enough to be missed entirely — "слишком слабо
+      // видно". Still clearly lighter than an outward face, but readable.
       ctx.fillStyle = inward
-        ? `rgba(${c.join(',')},${dark ? 0.20 : 0.16})`
+        ? `rgba(${c.join(',')},${dark ? 0.42 : 0.34})`
         : `rgb(${c.join(',')})`;
       this._path(ctx, facet.poly, f);
       ctx.fill();
@@ -288,13 +309,22 @@ export class DiagramView {
     }
     ctx.setLineDash([]);
 
-    // 5. hover highlight
+    /*
+     * 5. hover highlight, coloured by what a click would do.
+     *
+     * Green for shift (add), red for the carve modifier, and a neutral wash when
+     * neither is held, since a bare click here only pans. The same two colours
+     * mean the same two things in the 3-D view and in the Cells table.
+     */
     if (this.hover >= 0 && facets[this.hover]) {
-      ctx.fillStyle = dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.14)';
+      const a = ACTION[this.hoverAction];
+      const rgb = a ? a.rgb.map(v => Math.round(v * 255)).join(',') : null;
+      ctx.fillStyle = rgb ? `rgba(${rgb},0.36)`
+                          : (dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.14)');
       this._path(ctx, facets[this.hover].poly, f);
       ctx.fill();
-      ctx.strokeStyle = dark ? '#fff' : '#000';
-      ctx.lineWidth = Math.max(1.5, f.dpr * 1.6);
+      ctx.strokeStyle = rgb ? `rgb(${rgb})` : (dark ? '#fff' : '#000');
+      ctx.lineWidth = Math.max(1.5, f.dpr * (rgb ? 2.2 : 1.6));
       ctx.stroke();
     }
   }

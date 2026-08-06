@@ -1,0 +1,503 @@
+{
+  "generatedBy": "tools/derive-stellation.mjs",
+  "method": "winding number (Van Oosterom-Strackee solid angle) of the star surface at every primitive cell centre",
+  "note": "verified = the chosen cells' volume agrees with a Monte-Carlo measure of {winding != 0} to 3%",
+  "counts": {
+    "derived": 22,
+    "verified": 20,
+    "refusedNotClosedOrOriented": 25,
+    "noMatchingBase": 61
+  },
+  "derived": [
+    {
+      "star": "d08",
+      "starName": "d08",
+      "base": "d12",
+      "baseName": "rhombic dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.577350269,
+      "cells": "{0}",
+      "subCells": 1,
+      "volume": 2,
+      "monteCarloVolume": 6.609897,
+      "volumeError": 0.6974,
+      "verified": false,
+      "splitSubCells": 3,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d18",
+      "starName": "small hexacronic icositetrahedron",
+      "base": "d15",
+      "baseName": "strombic icositetrahedron",
+      "polySymmetry": "Oh",
+      "stellSymmetry": "O",
+      "scale": 0.414213562,
+      "cells": "{0,1,2(1)3(1)4(0)}",
+      "subCells": 5,
+      "volume": 7.469182,
+      "monteCarloVolume": 7.536515,
+      "volumeError": 0.0089,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d19",
+      "starName": "great hexacronic icositetrahedron",
+      "base": "d14",
+      "baseName": "triakisoctahedron",
+      "polySymmetry": "Oh",
+      "stellSymmetry": "O",
+      "scale": 0.414213562,
+      "cells": "{0,1,2,3,4(0,1)5(2)6(2,3)7(1)8(0)}",
+      "subCells": 16,
+      "volume": 5.918299,
+      "monteCarloVolume": 5.967113,
+      "volumeError": 0.0082,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d22",
+      "starName": "great strombic icositetrahedron",
+      "base": "d14",
+      "baseName": "triakisoctahedron",
+      "polySymmetry": "Oh",
+      "stellSymmetry": "O",
+      "scale": 0.414213562,
+      "cells": "{0,1,2,3,4,5(1,2)6(1,2,3)7(1)8(0)}",
+      "subCells": 20,
+      "volume": 10.497657,
+      "monteCarloVolume": 10.515367,
+      "volumeError": 0.0017,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d24",
+      "starName": "great triakisoctahedron",
+      "base": "d15",
+      "baseName": "strombic icositetrahedron",
+      "polySymmetry": "Oh",
+      "stellSymmetry": "O",
+      "scale": 0.099057646,
+      "cells": "{0,1,2,3,4,5,6,7(0,1,2)8(0,3)9(0)}",
+      "subCells": 33,
+      "volume": 84.446712,
+      "monteCarloVolume": 81.726596,
+      "volumeError": 0.0333,
+      "verified": false,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d35",
+      "starName": "small triambic icosahedron",
+      "base": "u27",
+      "baseName": "icosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.93796237,
+      "cells": "{0,1}",
+      "subCells": 2,
+      "volume": 3.402603,
+      "monteCarloVolume": 3.400575,
+      "volumeError": 0.0006,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d38",
+      "starName": "small dodecacronic hexecontahedron",
+      "base": "d32",
+      "baseName": "strombic hexecontahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.745355992,
+      "cells": "{0,1,2(1)3(1)4(1)5(0)}",
+      "subCells": 6,
+      "volume": 4.696291,
+      "monteCarloVolume": 4.676471,
+      "volumeError": 0.0042,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d39",
+      "starName": "d39",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.562777422,
+      "cells": "{0,1,2}",
+      "subCells": 3,
+      "volume": 10.076818,
+      "monteCarloVolume": 10.074936,
+      "volumeError": 0.0002,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d40",
+      "starName": "d40",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.562777422,
+      "cells": "{0,1}",
+      "subCells": 2,
+      "volume": 6.227816,
+      "monteCarloVolume": 6.234936,
+      "volumeError": 0.0011,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d41",
+      "starName": "medial rhombic triacontahedron",
+      "base": "d29",
+      "baseName": "rhombic triacontahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.618033989,
+      "cells": "{0,1,2,3(1)4(0)5(0)}",
+      "subCells": 6,
+      "volume": 5.81234,
+      "monteCarloVolume": 5.785151,
+      "volumeError": 0.0047,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d46",
+      "starName": "medial triambic icosahedron",
+      "base": "u27",
+      "baseName": "icosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3,4(1)5(0)}",
+      "subCells": 6,
+      "volume": 23.32179,
+      "monteCarloVolume": 23.543351,
+      "volumeError": 0.0094,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d47",
+      "starName": "great ditrigonal dodecacronic hexecontahedron",
+      "base": "d31",
+      "baseName": "triakisicosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.788854382,
+      "cells": "{0,1,2,3,4(0,1)5(2)6(2,3)7(3)8(0,2)9(2)10(0)}",
+      "subCells": 20,
+      "volume": 3.95291,
+      "monteCarloVolume": 3.933304,
+      "volumeError": 0.005,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d52",
+      "starName": "great triambic icosahedron",
+      "base": "u27",
+      "baseName": "icosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3,4(1)5(0)}",
+      "subCells": 6,
+      "volume": 23.32179,
+      "monteCarloVolume": 23.543351,
+      "volumeError": 0.0094,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d53",
+      "starName": "great icosacronic hexecontahedron",
+      "base": "d31",
+      "baseName": "triakisicosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.562777422,
+      "cells": "{0,1,2,3,4,5,6,7(0,1,3,4)8(0,1,2,3,5)9(0,2,5)10(0,2,3)11(2)12(0)}",
+      "subCells": 45,
+      "volume": 7.999265,
+      "monteCarloVolume": 7.977117,
+      "volumeError": 0.0028,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d57",
+      "starName": "d57",
+      "base": "u27",
+      "baseName": "icosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3,4,5,6}",
+      "subCells": 11,
+      "volume": 55.55171,
+      "monteCarloVolume": 56.174681,
+      "volumeError": 0.0111,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d58",
+      "starName": "d58",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3}",
+      "subCells": 4,
+      "volume": 42.686084,
+      "monteCarloVolume": 42.441059,
+      "volumeError": 0.0058,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d59",
+      "starName": "great rhombic triacontahedron",
+      "base": "d29",
+      "baseName": "rhombic triacontahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.419469524,
+      "cells": "{0,1,2,3,4,5,6,7(0,1)8(1)9(0)}",
+      "subCells": 19,
+      "volume": 16.589012,
+      "monteCarloVolume": 16.577283,
+      "volumeError": 0.0007,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "d63",
+      "starName": "great pentakisdodekahedron",
+      "base": "d32",
+      "baseName": "strombic hexecontahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.078689326,
+      "cells": "{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14(1,2,3,4,5,6,7)15(0,1,2,3,4,6,8,9)16(2,3,4,5,7,8,9)17(1,2,3,4,10)18(4,5,8)19(0,1)20(7)21(0,1)22(7)23(0,1)24(5)25(0)}",
+      "subCells": 163,
+      "volume": 126.961614,
+      "monteCarloVolume": 128.177081,
+      "volumeError": 0.0095,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "u39",
+      "starName": "small stellated dodecahedron",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.562777422,
+      "cells": "{0,1}",
+      "subCells": 2,
+      "volume": 6.227816,
+      "monteCarloVolume": 6.234936,
+      "volumeError": 0.0011,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "u40",
+      "starName": "great dodecahedron",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.562777422,
+      "cells": "{0,1,2}",
+      "subCells": 3,
+      "volume": 10.076818,
+      "monteCarloVolume": 10.074936,
+      "volumeError": 0.0002,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "u57",
+      "starName": "great stellated dodecahedron",
+      "base": "u28",
+      "baseName": "dodecahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3}",
+      "subCells": 4,
+      "volume": 42.686084,
+      "monteCarloVolume": 42.441059,
+      "volumeError": 0.0058,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    },
+    {
+      "star": "u58",
+      "starName": "great icosahedron",
+      "base": "u27",
+      "baseName": "icosahedron",
+      "polySymmetry": "Ih",
+      "stellSymmetry": "I",
+      "scale": 0.236067977,
+      "cells": "{0,1,2,3,4,5,6}",
+      "subCells": 11,
+      "volume": 55.55171,
+      "monteCarloVolume": 56.174681,
+      "volumeError": 0.0111,
+      "verified": true,
+      "splitSubCells": 0,
+      "ambiguousCells": 0
+    }
+  ],
+  "refused": [
+    {
+      "file": "d09",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d20",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d23",
+      "name": "small rhombihexacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d26",
+      "name": "great rhombihexacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d44",
+      "name": "small rhombidodecacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d54",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d55",
+      "name": "small dodecicosacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d56",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d61",
+      "name": "rhombicosacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d67",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d68",
+      "name": "great dodecicosacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d70",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d75",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d76",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "d78",
+      "name": "great rhombidodecacron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u23",
+      "name": "small rhombihexahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u26",
+      "name": "great rhombihexahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u44",
+      "name": "small rhombidodecahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u55",
+      "name": "small dodecicosahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u61",
+      "name": "rhombicosahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u68",
+      "name": "great dodecicosahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u70",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u75",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u76",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    },
+    {
+      "file": "u78",
+      "name": "great rhombidodecahedron",
+      "why": "orientation is contradictory — the surface is non-orientable"
+    }
+  ]
+}

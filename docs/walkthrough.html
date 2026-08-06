@@ -108,6 +108,8 @@
       Layer 0 is the icosahedron. Layer 1 is the first shell of cells resting on its
       faces — twenty of them, one per face. Layer 2 is the next shell out, and so on
       to layer 7, where the last cells run off into the long spikes of the diagram.
+      In the table the core is the bottom row and each shell sits on the one below it,
+      so the rows stack the way the solid does.
     </p>
     <aside class="note-box">
       <b>These layers are not an invention of the program.</b> Patrick Du Val, working
@@ -178,7 +180,7 @@
     <p>
       Boxes sharing a colour therefore contain the same number of pieces, and that
       number is determined: it is 120 divided by the symmetry a single cell retains, as
-      the table below sets out. Following a colour down the table identifies cells of
+      the table below sets out. Following a colour through the table identifies cells of
       the same <em>kind</em> — the vertex-centred ones, the edge-centred ones — which is
       the structure needed when searching for a particular solid.
     </p>
@@ -423,10 +425,11 @@
     </p>
     <ul class="todo">
       <li>Click <b>0</b> in row 0 to restore the icosahedron.</li>
-      <li>Click a box far down the table, then <kbd>shift</kbd>-click the same box, and
-        compare the floating shell with the supported solid.</li>
-      <li><kbd class="kSub">alt</kbd>-click, or right-click, a cell in a low layer to remove it
-        together with everything resting on it.</li>
+      <li>Click a box high in the table, well away from the core, then
+        <kbd>shift</kbd>-click the same box, and compare the floating shell with the
+        supported solid.</li>
+      <li><kbd class="kSub">ctrl</kbd>-click a cell in a low layer to remove it together
+        with everything resting on it. (A right-click does nothing.)</li>
       <li>Click a row <em>number</em> to select an entire layer.</li>
       <li>Hover over any box: the readout gives the cell's identifier, its number of
         congruent pieces, and its volume.</li>
