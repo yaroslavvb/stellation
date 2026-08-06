@@ -1,0 +1,350 @@
+/*
+ * A small self-contained WebGL renderer for stellated polyhedra.
+ *
+ * Deliberately dependency-free: the shapes are flat-shaded polygon soups, which
+ * needs far less than a general 3D engine, and a static page with no build step
+ * loads instantly.
+ *
+ * Faces are given per-face flat normals and a per-face colour keyed to the
+ * stellation layer, so you can read the structure of a stellation by eye.
+ */
+
+const VERT = `#version 300 es
+precision highp float;
+in vec3 aPos;
+in vec3 aNormal;
+in vec3 aColor;
+uniform mat4 uProj;
+uniform mat4 uView;
+out vec3 vNormal;
+out vec3 vColor;
+out vec3 vEye;
+void main() {
+  vec4 p = uView * vec4(aPos, 1.0);
+  vEye = p.xyz;
+  vNormal = mat3(uView) * aNormal;
+  vColor = aColor;
+  gl_Position = uProj * p;
+}`;
+
+const FRAG = `#version 300 es
+precision highp float;
+in vec3 vNormal;
+in vec3 vColor;
+in vec3 vEye;
+uniform float uEdgeDark;
+out vec4 fragColor;
+void main() {
+  vec3 n = normalize(vNormal);
+  // two-sided: stellation cells are open shells seen from both sides
+  if (!gl_FrontFacing) n = -n;
+  vec3 L1 = normalize(vec3(-0.35, 0.55, 0.9));
+  vec3 L2 = normalize(vec3(0.6, -0.3, 0.4));
+  float d = max(dot(n, L1), 0.0) * 0.85 + max(dot(n, L2), 0.0) * 0.25;
+  vec3 V = normalize(-vEye);
+  vec3 H = normalize(L1 + V);
+  float spec = pow(max(dot(n, H), 0.0), 48.0) * 0.35;
+  vec3 c = vColor * (0.22 + d) + spec;
+  // slight rim to separate touching facets
+  float rim = pow(1.0 - max(dot(n, V), 0.0), 3.0) * 0.12;
+  fragColor = vec4(c + rim, 1.0);
+}`;
+
+const LINE_VERT = `#version 300 es
+precision highp float;
+in vec3 aPos;
+uniform mat4 uProj;
+uniform mat4 uView;
+void main() {
+  vec4 p = uView * vec4(aPos, 1.0);
+  p.xyz *= 1.001;             // nudge toward the camera so edges are not z-fought
+  gl_Position = uProj * p;
+}`;
+
+const LINE_FRAG = `#version 300 es
+precision highp float;
+uniform vec4 uColor;
+out vec4 fragColor;
+void main() { fragColor = uColor; }`;
+
+// layer palette — warm at the core, cool further out
+export const LAYER_COLORS = [
+  [0.98, 0.76, 0.32], [0.95, 0.55, 0.30], [0.88, 0.38, 0.38],
+  [0.78, 0.35, 0.55], [0.58, 0.40, 0.72], [0.38, 0.50, 0.80],
+  [0.30, 0.65, 0.78], [0.32, 0.72, 0.62], [0.45, 0.75, 0.45],
+  [0.68, 0.75, 0.35], [0.85, 0.70, 0.35], [0.70, 0.55, 0.45],
+];
+export const layerColor = i => LAYER_COLORS[i % LAYER_COLORS.length];
+
+function compile(gl, type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    throw new Error('shader: ' + gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+function program(gl, vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+    throw new Error('link: ' + gl.getProgramInfoLog(p));
+  }
+  return p;
+}
+
+export class Renderer3D {
+  constructor(canvas) {
+    this.canvas = canvas;
+    const gl = this.gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+    if (!gl) throw new Error('WebGL2 is not available in this browser');
+
+    this.prog = program(gl, VERT, FRAG);
+    this.lineProg = program(gl, LINE_VERT, LINE_FRAG);
+
+    this.vao = gl.createVertexArray();
+    this.posBuf = gl.createBuffer();
+    this.normBuf = gl.createBuffer();
+    this.colBuf = gl.createBuffer();
+    this.count = 0;
+
+    this.lineVao = gl.createVertexArray();
+    this.lineBuf = gl.createBuffer();
+    this.lineCount = 0;
+
+    this.rotation = quatFromEuler(-0.42, 0.6, 0);
+    this.distance = 1.0;   // relative zoom; the fit distance is computed per frame
+    this.autoRotate = true;
+    this.showEdges = true;
+    this.background = [0.055, 0.06, 0.078];
+
+    this._installControls();
+    this._raf = null;
+    this.resize();
+    new ResizeObserver(() => this.resize()).observe(canvas);
+  }
+
+  resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(this.canvas.clientWidth * dpr));
+    const h = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
+    if (this.canvas.width !== w || this.canvas.height !== h) {
+      this.canvas.width = w; this.canvas.height = h;
+    }
+    this.draw();
+  }
+
+  /** upload a mesh: {vertices:[{x,y,z}], faces:[[i,...]]} plus a layer per face */
+  setMesh(mesh, faceLayers) {
+    const gl = this.gl;
+    const pos = [], norm = [], col = [], lines = [];
+
+    // normalise scale so every solid frames the same way
+    let maxR = 1e-9;
+    for (const v of mesh.vertices) maxR = Math.max(maxR, Math.hypot(v.x, v.y, v.z));
+    const s = 1 / maxR;
+
+    mesh.faces.forEach((face, fi) => {
+      const c = layerColor(faceLayers ? faceLayers[fi] : 0);
+      const p = face.map(i => mesh.vertices[i]);
+      // flat normal from the first non-degenerate corner
+      let nx = 0, ny = 0, nz = 0;
+      for (let i = 0; i < p.length; i++) {
+        const a = p[i], b = p[(i + 1) % p.length];
+        nx += (a.y - b.y) * (a.z + b.z);
+        ny += (a.z - b.z) * (a.x + b.x);
+        nz += (a.x - b.x) * (a.y + b.y);
+      }
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl; ny /= nl; nz /= nl;
+
+      for (let i = 1; i < p.length - 1; i++) {
+        for (const v of [p[0], p[i], p[i + 1]]) {
+          pos.push(v.x * s, v.y * s, v.z * s);
+          norm.push(nx, ny, nz);
+          col.push(c[0], c[1], c[2]);
+        }
+      }
+      for (let i = 0; i < p.length; i++) {
+        const a = p[i], b = p[(i + 1) % p.length];
+        lines.push(a.x * s, a.y * s, a.z * s, b.x * s, b.y * s, b.z * s);
+      }
+    });
+
+    const upload = (vao, buf, loc, data, size, prog) => {
+      gl.bindVertexArray(vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+      const l = gl.getAttribLocation(prog, loc);
+      if (l >= 0) { gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, size, gl.FLOAT, false, 0, 0); }
+    };
+
+    upload(this.vao, this.posBuf, 'aPos', pos, 3, this.prog);
+    upload(this.vao, this.normBuf, 'aNormal', norm, 3, this.prog);
+    upload(this.vao, this.colBuf, 'aColor', col, 3, this.prog);
+    this.count = pos.length / 3;
+
+    upload(this.lineVao, this.lineBuf, 'aPos', lines, 3, this.lineProg);
+    this.lineCount = lines.length / 3;
+
+    gl.bindVertexArray(null);
+    this.draw();
+  }
+
+  draw() {
+    const gl = this.gl;
+    const W = this.canvas.width, H = this.canvas.height;
+    gl.viewport(0, 0, W, H);
+    gl.clearColor(...this.background, 1);
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);          // shells are visible from both sides
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (!this.count) return;
+
+    // The model is normalised to radius 1, so the camera must sit far enough back
+    // that a unit sphere fits the NARROWER of the two field-of-view angles —
+    // otherwise a tall thin canvas clips the solid left and right.
+    const fovy = Math.PI / 4.5;
+    const aspect = W / H;
+    const fovx = 2 * Math.atan(Math.tan(fovy / 2) * aspect);
+    const fit = 1.13 / Math.sin(Math.min(fovy, fovx) / 2);
+
+    const proj = perspective(fovy, aspect, 0.05, 100);
+    const view = mat4mul(translation(0, 0, -fit * this.distance), quatToMat4(this.rotation));
+
+    gl.useProgram(this.prog);
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uProj'), false, proj);
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.prog, 'uView'), false, view);
+    gl.bindVertexArray(this.vao);
+    gl.drawArrays(gl.TRIANGLES, 0, this.count);
+
+    if (this.showEdges && this.lineCount) {
+      gl.useProgram(this.lineProg);
+      gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uProj'), false, proj);
+      gl.uniformMatrix4fv(gl.getUniformLocation(this.lineProg, 'uView'), false, view);
+      gl.uniform4f(gl.getUniformLocation(this.lineProg, 'uColor'), 0.06, 0.05, 0.09, 0.85);
+      gl.bindVertexArray(this.lineVao);
+      gl.drawArrays(gl.LINES, 0, this.lineCount);
+    }
+    gl.bindVertexArray(null);
+  }
+
+  start() {
+    if (this._raf) return;
+    let last = performance.now();
+    const tick = (t) => {
+      const dt = Math.min((t - last) / 1000, 0.05); last = t;
+      if (this.autoRotate && !this.dragging) {
+        this.rotation = quatMul(quatFromAxis([0, 1, 0], dt * 0.35), this.rotation);
+      }
+      this.draw();
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  stop() { if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; } }
+
+  _installControls() {
+    const c = this.canvas;
+    let px = 0, py = 0;
+    const down = (e) => {
+      this.dragging = true;
+      const p = point(e, c); px = p.x; py = p.y;
+      c.setPointerCapture?.(e.pointerId);
+    };
+    const move = (e) => {
+      if (!this.dragging) return;
+      const p = point(e, c);
+      const dx = (p.x - px), dy = (p.y - py);
+      px = p.x; py = p.y;
+      // trackball: drag direction maps to rotation about the perpendicular axis
+      const q = quatMul(quatFromAxis([0, 1, 0], dx * 0.008), quatFromAxis([1, 0, 0], dy * 0.008));
+      this.rotation = quatMul(q, this.rotation);
+      this.draw();
+    };
+    const up = (e) => { this.dragging = false; c.releasePointerCapture?.(e.pointerId); };
+    c.addEventListener('pointerdown', down);
+    c.addEventListener('pointermove', move);
+    c.addEventListener('pointerup', up);
+    c.addEventListener('pointercancel', up);
+    c.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.distance = Math.min(4, Math.max(0.35, this.distance * Math.exp(e.deltaY * 0.0012)));
+      this.draw();
+    }, { passive: false });
+  }
+
+  /** a PNG data URL of the current view */
+  snapshot() {
+    this.draw();
+    return this.canvas.toDataURL('image/png');
+  }
+}
+
+function point(e, el) {
+  const r = el.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+// ---------------------------------------------------------------- tiny math
+
+function perspective(fovy, aspect, near, far) {
+  const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+  return new Float32Array([
+    f / aspect, 0, 0, 0,
+    0, f, 0, 0,
+    0, 0, (far + near) * nf, -1,
+    0, 0, 2 * far * near * nf, 0,
+  ]);
+}
+
+function translation(x, y, z) {
+  return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
+}
+
+function mat4mul(a, b) {
+  const o = new Float32Array(16);
+  for (let i = 0; i < 4; i++)
+    for (let j = 0; j < 4; j++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[k * 4 + j] * b[i * 4 + k];
+      o[i * 4 + j] = s;
+    }
+  return o;
+}
+
+function quatFromAxis(axis, angle) {
+  const l = Math.hypot(...axis) || 1;
+  const s = Math.sin(angle / 2);
+  return [axis[0] / l * s, axis[1] / l * s, axis[2] / l * s, Math.cos(angle / 2)];
+}
+
+function quatFromEuler(x, y, z) {
+  let q = quatFromAxis([1, 0, 0], x);
+  q = quatMul(quatFromAxis([0, 1, 0], y), q);
+  return quatMul(quatFromAxis([0, 0, 1], z), q);
+}
+
+function quatMul(a, b) {
+  return [
+    a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+    a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+    a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+    a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+  ];
+}
+
+function quatToMat4(q) {
+  const [x, y, z, w] = q;
+  return new Float32Array([
+    1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w), 0,
+    2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w), 0,
+    2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y), 0,
+    0, 0, 0, 1,
+  ]);
+}

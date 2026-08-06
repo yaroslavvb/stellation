@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stellation — polyhedra and their stars</title>
+<meta name="description" content="Interactive stellations of the uniform polyhedra. A JavaScript port of Vladimir Bulatov's Stellation applet.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Stellation</h1>
+  <p class="tag">extend a polyhedron's faces until they meet again</p>
+  <div class="spacer"></div>
+  <button id="help" class="ghost">What is this?</button>
+</header>
+
+<main>
+
+  <!-- ------------------------------------------------ left: the catalog -->
+  <aside class="panel left">
+    <div class="panel-head">
+      <h2>Polyhedra</h2>
+      <input id="search" type="search" placeholder="search 121 solids…" autocomplete="off">
+    </div>
+    <div id="catalog" class="scroll"></div>
+  </aside>
+
+  <!-- ------------------------------------------------ centre: the solid -->
+  <section class="stage">
+    <div class="stage-head">
+      <div>
+        <h2 id="title">…</h2>
+        <p id="subtitle" class="dim"></p>
+      </div>
+      <div id="stats" class="dim"></div>
+    </div>
+
+    <div class="views">
+      <div class="view">
+        <canvas id="view3d"></canvas>
+        <div class="view-label">the solid · drag to turn, scroll to zoom</div>
+      </div>
+      <div class="view">
+        <canvas id="diagram"></canvas>
+        <div class="view-label">
+          the stellation diagram · click a region to add or remove that cell
+          <span id="hover" class="hover"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <div id="progress"></div>
+      <span id="status">loading…</span>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ right: controls -->
+  <aside class="panel right">
+
+    <div class="group">
+      <h2>Cells</h2>
+      <div class="row buttons">
+        <button id="selectCore">core only</button>
+        <button id="growLayer">+ layer</button>
+        <button id="selectAll">all</button>
+        <button id="selectNone">none</button>
+      </div>
+      <div id="layers" class="scroll layers"></div>
+    </div>
+
+    <div class="group">
+      <h2>Symmetry</h2>
+      <label class="field">
+        <span>of the polyhedron</span>
+        <select id="polySym"></select>
+      </label>
+      <label class="field">
+        <span>of the stellation</span>
+        <select id="stellSym"></select>
+      </label>
+      <p class="note">
+        Cells are grouped into orbits of the first group, then split by the second.
+        Choosing the rotation-only subgroup (I inside I<sub>h</sub>) lets a chiral
+        cell contribute just one of its two mirror halves.
+      </p>
+      <label class="field">
+        <span>plane depth <b id="depthLabel">12</b></span>
+        <input id="depth" type="range" min="2" max="40" value="12">
+      </label>
+      <p class="note">How many half-spaces deep to carve. Raise it to reach further
+        stellations; dense solids get slow past about 15.</p>
+      <label class="field">
+        <span>diagram on face</span>
+        <input id="planeIndex" type="number" min="0" value="0">
+      </label>
+    </div>
+
+    <div class="group">
+      <h2>View</h2>
+      <label class="check"><input id="autoRotate" type="checkbox" checked> spin</label>
+      <label class="check"><input id="showEdges" type="checkbox" checked> edges</label>
+      <label class="check"><input id="showAllFacets" type="checkbox" checked> all diagram cells</label>
+    </div>
+
+    <div class="group">
+      <h2>Selection</h2>
+      <input id="cellsString" class="mono" spellcheck="false" title="the cell-selection string, same syntax as the original .stel files">
+      <div class="row buttons">
+        <button class="sample" data-file="sample_01.stel">sample 1</button>
+        <button class="sample" data-file="sample_02.stel">sample 2</button>
+        <button class="sample" data-file="sample_03.stel">sample 3</button>
+        <button class="sample" data-file="sample_04.stel">sample 4</button>
+      </div>
+      <label class="filebtn">
+        open a .stel file…
+        <input id="loadStel" type="file" accept=".stel,.txt">
+      </label>
+    </div>
+
+    <div class="group">
+      <h2>Export</h2>
+      <div class="row buttons">
+        <button id="exportStl">STL</button>
+        <button id="exportObj">OBJ</button>
+        <button id="exportOff">OFF</button>
+      </div>
+      <div class="row buttons">
+        <button id="exportStel">.stel</button>
+        <button id="exportSvg">diagram SVG</button>
+        <button id="exportPng">view PNG</button>
+      </div>
+    </div>
+
+  </aside>
+</main>
+
+<dialog id="helpDialog">
+  <h2>Stellation, in one minute</h2>
+  <p>
+    Take a pentagon and extend its five sides. They cross again, and the crossings
+    outline a five-pointed star. That is a stellation: <em>the same lines, followed
+    further</em>.
+  </p>
+  <p>
+    In three dimensions you extend a polyhedron's face <em>planes</em> instead. The
+    planes slice space into small bounded regions — <b>cells</b>. Every choice of
+    cells that respects the solid's symmetry is a stellation of it. The icosahedron
+    famously has 59 of them.
+  </p>
+  <h3>How to use this</h3>
+  <ul>
+    <li>Pick a solid on the left. The centre shows it, and to its right is the
+      <b>stellation diagram</b>: one face plane with every other face plane's trace
+      drawn across it.</li>
+    <li>Each little region in that diagram is a cell. <b>Click one</b> to add or
+      remove it, and the solid updates.</li>
+    <li>Cells come in <b>layers</b>, numbered outward from the core. The buttons
+      <em>core only</em> and <em>+ layer</em> walk out one shell at a time — layer 0
+      alone is the original polyhedron, layer 0+1 is its first stellation.</li>
+    <li>A cell marked <sup>L</sup>/<sup>R</sup> is <b>chiral</b>: it comes as a
+      mirror pair, and you may take one hand.</li>
+    <li>Export the result as STL for printing, or save the selection as a
+      <code>.stel</code> file in the original program's format.</li>
+  </ul>
+  <h3>Where this comes from</h3>
+  <p>
+    This is a JavaScript port of the Stellation applet written by
+    <a href="http://bulatov.org/polyhedra/stellation_applet/" target="_blank" rel="noopener">Vladimir Bulatov</a>
+    in 1998–2001. The geometry here is a direct port of his algorithm, checked
+    against the original Java: the same facet counts, the same cell structure, the
+    same volumes to six decimal places.
+  </p>
+  <button id="helpClose">close</button>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,47 +1,196 @@
+# Stellation, resurrected
 
-# Stellation "Applet"
+### ▶ **[Open the app](https://yaroslavvb.github.io/stellation/)**
 
-This project is being ported from Java to Javascript, to run in the web.
-The original Java code ran as an applet, but of course that is now impossible.
-See the updated README section below the original one.
+Vladimir Bulatov's **Stellation** program (1998–2001) was a Java applet. Applets are
+gone, so this repository does two things:
 
-## Original README
+1. **Runs the original Java again** on a modern machine — it still works, unchanged.
+2. **Ports it to JavaScript**, so it runs in a browser with no plugin, and checks the
+   port against the original number for number.
 
-This is source code of the stellation applet. 
-The applet and the source web site is: 
-http://www.physics.orst.edu/~bulatov/polyhedra/stellation_applet/
+---
 
-The source code is indented for people, who wish to modify or extend the applet 
-functionality. It is not needed to run the applet. 
+## What a stellation is
 
-To build the applet, you need to have java JDK installed on your system. 
+Take a pentagon and extend its five sides. They cross again, and the crossings outline
+a five-pointed star. That is a stellation: *the same lines, followed further*.
 
-makeall.bat on Windows system will compile everything and create 
-executable stellation.jar file. 
+In three dimensions you extend a polyhedron's face **planes** instead. The planes slice
+space into small bounded regions — **cells** — arranged in shells, or **layers**, around
+the original solid. Any choice of cells that respects the solid's symmetry is a
+stellation of it. The icosahedron famously has 59.
 
-Several people's work was used in the applet code. 
-In particular, 
-Fmt package by Jef Poskanzer, 
-Math expression parser by Darius Bacon, 
-Jama matrix package by Jama team, 
-Paul Prants helped to extended incomplete Symmetry class. 
+---
 
-I apologize if I've forgot somebody. 
+## 1. Running the original Java
 
-Vladimir Bulatov
+The original compiles and runs cleanly under a current JDK. On macOS:
 
-## Updated README
-
-To build and run this project, you need a Java 11 JDK installed.
-
-Open a shell in this folder, and run
 ```bash
-./build.bash
+brew install openjdk@11
 ```
-That runs the [JSweet transpiler](https://www.jsweet.org/) over the
-Java source code (except for the UI code), converting it to Javascript.
 
-Once that is done, simply launch a web server in this directory, and visit
-`index.html`.  The simplest way to do this is to use Visual Studio Code's "live server".
+Then, from the repository root:
 
-At the moment, you won't see anything on the page!  All of the output is in the console.
+```bash
+JAVA_HOME=/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
+export PATH="$JAVA_HOME/bin:$PATH"
+mkdir -p bin
+find src/main/java src/ui/java -name '*.java' > /tmp/srcs.txt
+javac -nowarn -d bin -encoding UTF-8 @/tmp/srcs.txt
+java -Xmx512M -cp "bin:resources" pvs.polyhedra.stellation.ui.StellationMain
+```
+
+That opens the original Swing/AWT application. Notes:
+
+- **Use the source, not `stellation.jar`.** The checked-in jar is a 2017 build of an
+  older tree (package `PVS`, uppercase) and does not match `src/`.
+- `resources` must be on the classpath — the program loads polyhedra as classpath
+  resources at `/images/off/<name>.off`.
+- The `build.bash` / JSweet path in the upstream README transpiles the core to
+  JavaScript but produces no visible UI, and depends on a `3.1.0-SNAPSHOT` transpiler
+  from a third-party Maven repository. The port here does not use it.
+
+### Headless drivers
+
+Two small programs were added under `src/test/java/vbulatov/` to get at the
+geometry without the GUI:
+
+```bash
+# print the cell structure and write meshes for the first few layers
+java -cp "bin:resources" vbulatov.Driver u27 Ih I 1000
+
+# render the stellation diagram and the solid to PNG, no display needed
+java -Djava.awt.headless=true -cp "bin:resources" vbulatov.ReferenceRender u27 Ih I 2
+
+# dump the symmetry tables, the catalog and all 150 polyhedra as JSON
+java -cp "bin:resources" vbulatov.ExportData
+```
+
+---
+
+## 2. The JavaScript port
+
+Everything under `docs/` is a static site — no build step, no dependencies.
+
+```bash
+python3 -m http.server 8731 --directory docs
+```
+
+Then open <http://localhost:8731>.
+
+### What it does
+
+- Browse **121 polyhedra** in five categories, with the original thumbnails.
+- See the **stellation diagram**: one face plane with every other face plane's trace
+  drawn across it. Click a region to add or remove that cell.
+- See the **solid** in WebGL, coloured by layer so the shell structure is readable.
+- Walk outward one layer at a time, or pick individual cells — including single halves
+  of a **chiral** pair.
+- Load and save `.stel` files in the original program's format, and export **STL**,
+  **OBJ**, **OFF**, diagram **SVG**, and **PNG**.
+- Every state is in the URL: `#u27/Ih/I/{0,1,2}`.
+
+### How it is organised
+
+| file | what it holds |
+|---|---|
+| `docs/js/core.js` | the port: plane arrangement, layers, cells, symmetry orbits, mesh extraction, `.stel` parsing |
+| `docs/js/worker.js` | runs the build off the main thread with progress |
+| `docs/js/render3d.js` | a small dependency-free WebGL2 renderer |
+| `docs/js/diagram.js` | the interactive 2D stellation diagram |
+| `docs/js/app.js` | the UI |
+| `docs/data/symmetry.json` | all 85 symmetry groups, **dumped from the Java** rather than re-derived |
+| `docs/data/catalog.json` | the `PolyNames` catalog |
+| `docs/data/geometry.json` | all 150 `.off` polyhedra |
+
+The symmetry tables are exported from the original Java instead of being hand-ported.
+`Symmetry.java` is 2300 lines of hardcoded matrices; transcribing them by hand would
+have been the most likely place to introduce a silent error.
+
+### The algorithm
+
+The heart of it, and the reason the port is small:
+
+1. Each face gives a plane `n·x = d`.
+2. For each plane, start with a huge polygon lying in it, then clip that polygon
+   against the half-space of every other plane. Clipping splits polygons; each piece is
+   a **facet**. A facet's **layer** is the number of planes it lies entirely outside of.
+   That one counter is the whole depth structure.
+3. Bucket facets by layer.
+4. A cell at layer *L* is capped by facets of layer *L* and floored by facets of layer
+   *L−1*; cells are grown by walking oriented shared edges.
+5. Group cells into orbits of the symmetry group, then split each orbit by the
+   stellation subgroup — that split is what exposes chirality.
+6. Select cells; drop every facet shared by two selected cells; what remains is the
+   surface of the stellation.
+
+The original leans on Java reference identity (`vertexA == vertexB`) to know two facets
+share a vertex, backed by a tolerance-matching hashtable. The port interns vertices into
+integer ids through a spatial hash, so identity is integer equality — the same idea, but
+it probes all 27 neighbouring grid cells instead of trusting a single hash bucket.
+
+---
+
+## 3. Is the port correct?
+
+It is checked against the Java, not merely eyeballed.
+
+```bash
+node docs/test/validate.mjs   # 42 assertions against numbers the Java printed
+node docs/test/samples.mjs    # the four .stel samples, round-tripped
+node docs/test/sweep.mjs      # all 121 catalog entries, timing and failures
+```
+
+For the icosahedron under `Ih / I`, the port reproduces the Java exactly:
+
+| | Java | JS |
+|---|---|---|
+| planes | 20 | 20 |
+| facets per plane | 67 | 67 |
+| total facets | 1340 | 1340 |
+| layers | 8 | 8 |
+| primitive cells per layer | 1, 20, 30, 60, 80, 132, 90, 60 | same |
+| symmetric cells per layer | 1, 1, 1, 1, 2, 2, 2, 1 | same |
+| layer volumes | 2.536151, 0.866453, 2.102924, 2.599358, 5.812340, 16.209771, 25.424714, 197.585371 | same to 6 dp |
+| mesh, layers 0–1 | 32 v / 60 f | same |
+| mesh, layers 0–2 | 62 v / 120 f | same |
+
+and the sanity checks land where they should: the cube and the tetrahedron produce a
+single facet each (neither has any stellation), the dodecahedron's first layer is the
+small stellated dodecahedron (32 v / 60 f), and the icosahedron's is the triakis
+icosahedron.
+
+All four `.stel` samples decode and re-encode byte-identically, including
+`{0,1,2,3,4,5(1[1])}` — which selects one hand of a chiral pair, and therefore only
+round-trips if the cell ordering matches the original's comparator (fewest primitive
+cells, then fewest facets, then fewest vertices, then smallest volume).
+
+### Known differences
+
+- **Chirality can be mirrored.** When an orbit splits into a mirror pair, both halves
+  tie on every ordering key, so which one is `[0]` depends on hash iteration order — in
+  the Java too. The port breaks the tie geometrically instead, so it is at least
+  deterministic. A `.stel` file may therefore give you the mirror image of what the Java
+  showed. Both are correct stellations.
+- **Depth is capped by default.** The `plane depth` control maps to the original's
+  `maxintersection`. Full depth on the densest duals takes ~30 s; depth 12 is the
+  default and is exact for every Platonic and Archimedean solid.
+- **Unimplemented symmetry groups are hidden.** `Symmetry.getMatrices` returns nothing
+  for `C8`–`C12` and their variants in the original; the UI does not offer them.
+
+---
+
+## 4. Where the pieces came from
+
+- everything outside `docs/` and `notes/` is the upstream repository unchanged, apart
+  from the three driver classes added under `src/test/java/vbulatov/`.
+- `notes/` — nine detailed specs reverse-engineered from the Java source, covering the
+  plane arrangement, cells and layers, symmetry, polyhedron I/O, mesh extraction, the
+  diagram, the UI, the `.stel` grammar, and the catalog.
+- `notes/reference/` — renders produced by the Java itself, used to check the port.
+
+Original program and all the polyhedron data: **Vladimir Bulatov**,
+<http://bulatov.org/polyhedra/stellation_applet/>. The applet also credits Jef
+Poskanzer (Fmt), Darius Bacon (expression parser), the JAMA team, and Paul Prants.
