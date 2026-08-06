@@ -178,6 +178,7 @@ class BFigure {
           this.refresh();
         },
       });
+      if (this.el.dataset.lines === 'true') this.diagram.lineOnly = true;
     }
 
     const foot = document.createElement('div');
@@ -314,6 +315,10 @@ async function boot() {
       const f = figs.get(btn.dataset.target);
       if (!f) return;
       f.start();
+      if (btn.dataset.lines && f.diagram) {
+        f.diagram.lineOnly = btn.dataset.lines === 'true';
+        f.diagram.draw();
+      }
       if (btn.dataset.cells) f.setCells(btn.dataset.cells);
       $$(`[data-target="${btn.dataset.target}"]`).forEach(b => b.classList.remove('on'));
       btn.classList.add('on');

@@ -18,6 +18,9 @@ export class DiagramView {
     this.zoom = 1;
     this.pan = { x: 0, y: 0 };
     this.showAll = true;
+    // draw the arrangement the way Brückner and Hess drew it: full plane traces,
+    // no fills, no shell tinting. See _lines().
+    this.lineOnly = false;
 
     // Drag pans, a click without meaningful movement selects. Without the
     // distinction you cannot pan at all without toggling whatever is underneath.
@@ -58,15 +61,35 @@ export class DiagramView {
       }
     });
 
+    // The first click of a double-click has already toggled a cell by the time
+    // the second arrives, so a double-click would otherwise reset the view and
+    // leave the selection changed. Remember what the last plain click did and
+    // undo it — a plain toggle is its own inverse.
+    let recent = null;
+
     const release = (e) => {
       if (!down) return;
       const wasDrag = moved > 3;
       down = null;
       capture(e, false);
       canvas.style.cursor = 'grab';
-      if (wasDrag) return;
+      if (wasDrag) { recent = null; return; }
       const i = this.hitTest(e);
-      if (i >= 0) this.onToggle?.(this.data.facets[i], mods(e));
+      if (i < 0) { recent = null; return; }
+      const m = mods(e);
+
+      if (recent && !m.shift && !m.ctrl &&
+          e.timeStamp - recent.t < 450 &&
+          Math.hypot(e.clientX - recent.x, e.clientY - recent.y) < 8) {
+        this.onToggle?.(recent.facet, { shift: false, ctrl: false, alt: false });
+        recent = null;
+        return;                             // the dblclick handler resets the view
+      }
+
+      const facet = this.data.facets[i];
+      recent = (m.shift || m.ctrl) ? null
+             : { t: e.timeStamp, x: e.clientX, y: e.clientY, facet };
+      this.onToggle?.(facet, m);
     };
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', () => { down = null; });
@@ -139,6 +162,61 @@ export class DiagramView {
     ctx.closePath();
   }
 
+  /*
+   * The distinct plane traces, as infinite lines ax + by + c = 0 with (a,b) a
+   * unit normal. Every facet edge lies on one of them, so collecting the edges
+   * and deduping recovers the lines themselves — for the icosahedron there are
+   * eighteen, because the twentieth plane is parallel to the drawing plane and
+   * one of the twenty is the drawing plane.
+   */
+  _lines() {
+    if (this._lineFor === this.data) return this._lineCache;
+    const extent = this.data.extent || 1;
+    const angTol = 2e-3;                  // ~0.1°
+    const offTol = 1e-3 * extent;
+    const out = [];
+
+    // A line and its negation are the same line, so compare both orientations
+    // rather than trying to pick a canonical sign — the sign rule is unstable
+    // exactly when a normal component sits near zero, which is common here.
+    const same = (L, a, b, c) =>
+      (Math.abs(L[0] - a) < angTol && Math.abs(L[1] - b) < angTol && Math.abs(L[2] - c) < offTol) ||
+      (Math.abs(L[0] + a) < angTol && Math.abs(L[1] + b) < angTol && Math.abs(L[2] + c) < offTol);
+
+    for (const facet of this.data.facets) {
+      const p = facet.poly;
+      for (let i = 0; i < p.length; i++) {
+        const [x1, y1] = p[i], [x2, y2] = p[(i + 1) % p.length];
+        let a = y2 - y1, b = x1 - x2;
+        const n = Math.hypot(a, b);
+        if (n < 1e-9) continue;
+        a /= n; b /= n;
+        const c = -(a * x1 + b * y1);
+        if (!out.some(L => same(L, a, b, c))) out.push([a, b, c]);
+      }
+    }
+    this._lineFor = this.data;
+    this._lineCache = out;
+    return out;
+  }
+
+  /** the traces, drawn full width — the engraved look of the printed plates */
+  _drawLines(ctx, f, dark) {
+    const R = Math.hypot(f.w, f.h);                 // longer than any chord
+    ctx.strokeStyle = dark ? 'rgba(205,215,240,0.62)' : 'rgba(25,25,35,0.72)';
+    ctx.lineWidth = Math.max(0.55, f.dpr * 0.55);
+    for (const [a, b, c] of this._lines()) {
+      // a point on the line, in diagram coordinates, then along its direction
+      const x0 = -a * c, y0 = -b * c;
+      const px = f.cx + x0 * f.scale, py = f.cy - y0 * f.scale;
+      const dx = -b, dy = a;                        // direction, screen y flipped
+      ctx.beginPath();
+      ctx.moveTo(px - dx * R, py + dy * R);
+      ctx.lineTo(px + dx * R, py - dy * R);
+      ctx.stroke();
+    }
+  }
+
   draw() {
     const ctx = this.ctx;
     const f = this._frame();
@@ -151,6 +229,23 @@ export class DiagramView {
     if (!this.data) return;
 
     const facets = this.data.facets;
+
+    if (this.lineOnly) {
+      this._drawLines(ctx, f, dark);
+      // the original face, so the centre of the figure is identifiable
+      const core = facets.find(x => x.layer === 0);
+      if (core) {
+        ctx.fillStyle = dark ? 'rgba(230,180,90,0.30)' : 'rgba(200,140,40,0.28)';
+        this._path(ctx, core.poly, f);
+        ctx.fill();
+      }
+      if (this.hover >= 0 && facets[this.hover]) {
+        ctx.fillStyle = dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.13)';
+        this._path(ctx, facets[this.hover].poly, f);
+        ctx.fill();
+      }
+      return;
+    }
 
     // 1. every facet, filled faintly by layer, so the arrangement reads as depth
     if (this.showAll) {
