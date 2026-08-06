@@ -299,65 +299,127 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(2px); 
 /* Only style the open state with `display`: a bare `display: flex` here would
    beat the UA's `dialog:not([open]) { display: none }` and leave it always up. */
 #catalogDialog {
-  width: min(900px, 92vw);
-  height: min(660px, 86vh);
+  width: min(860px, 94vw);
+  height: min(600px, 88vh);
   overflow: hidden;
 }
 #catalogDialog[open] { display: flex; flex-direction: column; }
+
 .cat-head {
-  display: flex; gap: 8px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
+  display: flex; gap: 8px; align-items: center;
+  padding: 12px 14px 10px;
   flex: none;
 }
 #search {
   flex: 1;
-  padding: 6px 10px;
+  padding: 7px 11px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel-2);
   color: var(--text);
-  font: inherit;
+  font: inherit; font-size: 13px;
 }
+#search::placeholder { color: var(--dim); }
 #search:focus { outline: 2px solid var(--accent-2); outline-offset: -1px; }
 
-#catalog { flex: 1; overflow-y: auto; padding: 8px 12px 16px; }
+.cat-chips {
+  display: flex; gap: 5px;
+  padding: 0 14px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.cat-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--dim);
+  font: inherit; font-size: 11.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+#catalog { flex: 1; overflow-y: auto; padding: 0 14px 14px; }
 .scroll { overscroll-behavior: contain; }
 
 .cat h3 {
-  display: flex; align-items: center; gap: 6px;
-  margin: 12px 2px 6px;
-  font-size: 11px; font-weight: 600;
-  letter-spacing: 0.05em; text-transform: uppercase;
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 8px;
+  margin: 0;
+  padding: 12px 2px 6px;
+  font-size: 10.5px; font-weight: 650;
+  letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--dim);
-  cursor: pointer; user-select: none;
+  background: linear-gradient(var(--panel) 72%, transparent);
 }
-.cat h3::before { content: "▾"; font-size: 9px; }
-.cat.collapsed h3::before { content: "▸"; }
-.cat h3 em { margin-left: auto; font-style: normal; opacity: 0.65; }
-.cat.collapsed .grid { display: none; }
+.cat h3 em { font-style: normal; opacity: 0.6; font-size: 10px; }
+.cat h3::after {
+  content: ""; flex: 1; height: 1px;
+  background: var(--line);
+}
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 5px; }
+/* the specimen grid: thumbnails only, names live in the footer */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 4px;
+}
 
 .poly {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 6px 4px 7px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: none;
-  color: var(--dim);
-  font: inherit; font-size: 10px; line-height: 1.2;
-  text-align: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  overflow: hidden;
   cursor: pointer;
+  transition: transform 0.09s ease, border-color 0.09s ease, box-shadow 0.09s ease;
 }
-.poly img { width: 52px; height: 52px; border-radius: 6px; background: #fff; object-fit: contain; }
-.poly span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.poly:hover { background: var(--panel-2); color: var(--text); }
+.poly img {
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;
+}
+:root[data-theme="dark"] .poly { filter: brightness(0.9); }
+.poly:hover, .poly:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  outline: none;
+  filter: none;
+  z-index: 2;
+  position: relative;
+}
 .poly.active {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--text);
+  box-shadow: 0 0 0 2px var(--accent);
+  filter: none;
 }
+
+.cat-foot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-2);
+  flex: none;
+  min-height: 54px;
+}
+.cat-foot img {
+  width: 34px; height: 34px;
+  border-radius: 6px;
+  background: #fff;
+  object-fit: contain;
+  flex: none;
+}
+.cat-foot-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+#footName { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#footMeta { font-size: 11px; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#footCount { margin-left: auto; font-size: 11px; white-space: nowrap; }
 
 #helpDialog { max-width: 620px; padding: 22px 26px 20px; line-height: 1.62; }
 #helpDialog h2 { font-size: 18px; text-transform: none; letter-spacing: -0.01em; color: var(--text); margin-bottom: 10px; }

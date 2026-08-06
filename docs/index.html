@@ -149,10 +149,19 @@
 <!-- ------------------------------------------------ catalog drawer -->
 <dialog id="catalogDialog">
   <div class="cat-head">
-    <input id="search" type="search" placeholder="search 121 solids…" autocomplete="off">
-    <button id="catalogClose" class="ghost">close</button>
+    <input id="search" type="search" placeholder="Search 121 solids by name, file or symmetry…" autocomplete="off">
+    <button id="catalogClose" class="ghost">Close</button>
   </div>
+  <nav id="catChips" class="cat-chips"></nav>
   <div id="catalog" class="scroll"></div>
+  <footer class="cat-foot">
+    <img id="footThumb" alt="" width="34" height="34">
+    <div class="cat-foot-text">
+      <b id="footName">—</b>
+      <span id="footMeta" class="dim"></span>
+    </div>
+    <span id="footCount" class="dim"></span>
+  </footer>
 </dialog>
 
 <dialog id="helpDialog">

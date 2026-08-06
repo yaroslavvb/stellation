@@ -90,7 +90,6 @@ async function boot() {
     onHover: (hit) => { $('#cellInfo').textContent = cells.describe(hit); },
   });
 
-  buildCatalog();
   wireControls();
   startWorker();
   applyTheme(localStorage.getItem('theme') || 'auto');   // now that the views exist
@@ -178,16 +177,42 @@ function onHover3D(hit, mod) {
 
 // ------------------------------------------------------------------ catalog
 
+/*
+ * The catalog is a specimen sheet: nothing but thumbnails, densely packed, with
+ * the name of whatever you are pointing at spelled out along the bottom. Names
+ * under every tile would triple the height and turn 121 solids into a scroll.
+ *
+ * It is built the first time the picker opens rather than at start-up — 121
+ * thumbnails is about half a megabyte, which has no business delaying the first
+ * render of the solid. Built that late, the images can load eagerly, so the
+ * sheet never shows the half-filled grid lazy loading gives you inside a dialog.
+ */
+let catalogBuilt = false;
+function ensureCatalog() {
+  if (!catalogBuilt) { buildCatalog(); catalogBuilt = true; }
+  $$('.poly').forEach(b => b.classList.toggle('active', b.dataset.file === state.current?.file));
+}
+
 function buildCatalog() {
   const host = $('#catalog');
+  const chips = $('#catChips');
   host.innerHTML = '';
+  chips.innerHTML = '';
+
   for (const cat of state.catalog) {
+    const slug = cat.category.replace(/\W+/g, '-');
+
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = cat.category;
+    chip.onclick = () => host.querySelector(`#sec-${slug}`)
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+    chips.appendChild(chip);
+
     const section = document.createElement('section');
     section.className = 'cat';
-    const h = document.createElement('h3');
-    h.innerHTML = `<span>${cat.category}</span><em>${cat.items.length}</em>`;
-    h.onclick = () => section.classList.toggle('collapsed');
-    section.appendChild(h);
+    section.id = `sec-${slug}`;
+    section.innerHTML = `<h3><span>${cat.category}</span><em>${cat.items.length}</em></h3>`;
 
     const grid = document.createElement('div');
     grid.className = 'grid';
@@ -195,16 +220,34 @@ function buildCatalog() {
       const b = document.createElement('button');
       b.className = 'poly';
       b.dataset.file = item.file;
-      b.title = `${item.name} (${item.file}, ${item.symmetry})`;
-      b.innerHTML =
-        `<img src="img/poly/${item.file}_tmb.gif" alt="" loading="lazy" width="48" height="48">` +
-        `<span>${item.name}</span>`;
+      b.dataset.name = item.name;
+      b.dataset.sym = item.symmetry;
+      b.dataset.cat = cat.category;
+      b.setAttribute('aria-label', item.name);
+      b.innerHTML = `<img src="img/poly/${item.file}_tmb.gif" alt="" width="46" height="46">`;
+      b.onmouseenter = () => showFoot(item, cat.category);
+      b.onfocus = () => showFoot(item, cat.category);
       b.onclick = () => { $('#catalogDialog').close(); select({ ...item, category: cat.category }); };
       grid.appendChild(b);
     }
     section.appendChild(grid);
     host.appendChild(section);
   }
+
+  host.onmouseleave = () => showFoot(state.current, state.current?.category);
+  updateCatCount();
+}
+
+function showFoot(item, category) {
+  if (!item) return;
+  $('#footThumb').src = `img/poly/${item.file}_tmb.gif`;
+  $('#footName').textContent = item.name;
+  $('#footMeta').textContent = `${item.file} · ${item.symmetry} · ${category || ''}`;
+}
+
+function updateCatCount() {
+  const vis = $$('.poly').filter(b => b.style.display !== 'none').length;
+  $('#footCount').textContent = vis === 121 ? '121 solids' : `${vis} of 121`;
 }
 
 // ------------------------------------------------------------------ selection
@@ -304,7 +347,13 @@ async function refresh() {
 // ------------------------------------------------------------------ controls
 
 function wireControls() {
-  $('#pickPoly').onclick = () => $('#catalogDialog').showModal();
+  $('#pickPoly').onclick = () => {
+    ensureCatalog();
+    $('#catalogDialog').showModal();
+    showFoot(state.current, state.current?.category);
+    $('#search').focus();
+    document.querySelector('.poly.active')?.scrollIntoView({ block: 'center' });
+  };
   $('#catalogClose').onclick = () => $('#catalogDialog').close();
 
   $('#polySym').onchange = (e) => { state.polySym = e.target.value; build(); };
@@ -377,16 +426,36 @@ function wireControls() {
 
   $('#themeBtn').onclick = cycleTheme;
 
-  $('#search').oninput = (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    $$('.poly').forEach(b => { b.style.display = (!q || b.title.toLowerCase().includes(q)) ? '' : 'none'; });
+  const runSearch = () => {
+    const q = $('#search').value.trim().toLowerCase();
+    $$('.poly').forEach(b => {
+      const hay = `${b.dataset.name} ${b.dataset.file} ${b.dataset.sym} ${b.dataset.cat}`.toLowerCase();
+      b.style.display = (!q || hay.includes(q)) ? '' : 'none';
+    });
     $$('.cat').forEach(sec => {
       const any = [...sec.querySelectorAll('.poly')].some(b => b.style.display !== 'none');
       sec.style.display = any ? '' : 'none';
     });
+    updateCatCount();
+    const first = $$('.poly').find(b => b.style.display !== 'none');
+    if (q && first) {
+      showFoot({ name: first.dataset.name, file: first.dataset.file, symmetry: first.dataset.sym },
+               first.dataset.cat);
+    } else if (q && !first) {
+      $('#footThumb').removeAttribute('src');
+      $('#footName').textContent = 'nothing matches';
+      $('#footMeta').textContent = `no solid named, filed or symmetric as “${$('#search').value.trim()}”`;
+    }
+  };
+  $('#search').oninput = runSearch;
+  $('#search').onkeydown = (e) => {
+    if (e.key !== 'Enter') return;
+    const first = $$('.poly').find(b => b.style.display !== 'none');
+    first?.click();
   };
 
-  $('#catalogDialog').addEventListener('close', () => { $('#search').value = ''; $('#search').oninput({ target: $('#search') }); });
+  $('#catalogDialog').addEventListener('close', () => { $('#search').value = ''; runSearch(); });
+  $('#catalogDialog').addEventListener('cancel', () => { $('#search').value = ''; });
 }
 
 // ------------------------------------------------------------------ theme
