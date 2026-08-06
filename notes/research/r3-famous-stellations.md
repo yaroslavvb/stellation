@@ -4,6 +4,12 @@ Research note for the "Cells" tutorial. Written for a reader who has never met a
 stellation before. Everything here is sourced; where I checked a claim by direct
 computation I say so explicitly, and where sources disagree I say that too.
 
+> Adversarially fact-checked 2026-08-05 against Wikipedia, MathWorld, Polytope
+> Wiki, steelpillow.com, IUCr/ADS and Cambridge Core. Corrections applied in
+> place; see **§11** for the log of what survived and what did not. Anything
+> marked **UNCERTAIN** is an inference of mine, not a sourced fact — do not
+> promote it to prose in the tutorial without a citation.
+
 ---
 
 ## 0. Two-minute orientation
@@ -476,15 +482,22 @@ them is excluded by Miller's rules. The interesting exclusions are elsewhere:
   discrete pieces; Miller's rule (iv) removes those with sealed cavities. Note
   though that two of Wheeler's fully discrete figures *did* survive into the 59:
   **f₂** (twelve free-floating trapezohedra, Crennell 16) and **g₁** (thirty
-  bipyramids, Crennell 11). Inchbald considers their inclusion a defect — you
-  cannot really call a figure a *stellation* of an icosahedron that isn't there.
+  bipyramids, Crennell 11). Inchbald questions their inclusion: of **f₂** he
+  writes that "as a loose collection of polyhedra it would appear to go against
+  the spirit, if not the letter, of rule (v)", and says the same criticism applies
+  to **g₁**, whose pieces are "at least vertex-connected". (He floats calling such
+  figures *coronae* instead. The stronger gloss "you cannot call a figure a
+  stellation of an icosahedron that isn't there" was mine, not his — dropped.)
 
-**The rule-(v) exception.** Miller's rule (v) allows exactly one enantiomorphic
-pair with no common part. I believe the case is Crennell **10**, the stellation
-**f₁** on its own: it is nothing but the 120 shell-f₁ cells, which fall into two
-disjoint mirror-image 60-cell figures (Crennell 33 and its mirror). Every other
-stellation containing bold **f₁** also contains achiral cells, so it does not
-split. **UNCERTAIN** — I did not find a source that names the case explicitly.
+**The rule-(v) exception.** Miller's rule (v) permits a compound of two
+enantiomorphous solids with no common part. **UNCERTAIN** on two counts: no
+source I found says the rule is invoked *exactly once*, and none names the case.
+My reasoning: it is Crennell **10**, the stellation **f₁** on its own — nothing
+but the 120 shell-f₁ cells, which fall into two disjoint mirror-image 60-cell
+figures. That is at least consistent with the table, where Crennell **33** (the
+"tenth stellation") is the single-handed f₁, i.e. exactly half of Crennell 10.
+Every other stellation containing bold **f₁** also contains achiral cells, so it
+does not split. Present this as an inference, not as the book's statement.
 
 ---
 
@@ -537,16 +550,19 @@ Primary / book-length
   Toronto 1924*, vol. 1, pp. 701–708.
 * L. Poinsot, "Mémoire sur les polygones et les polyèdres", *Journal de l'École
   Polytechnique* **4** (1810), pp. 16–49.
-* A. L. Cauchy, "Recherches sur les polyèdres", *Journal de l'École Polytechnique*
-  **16** (1813), pp. 68–86.
+* A. L. Cauchy, "Recherches sur les polyèdres" (premier mémoire), *Journal de
+  l'École Polytechnique* tome **9**, XVI<sup>e</sup> cahier (1813), pp. 68–86.
+  (Often cited as "16 (1813), 68–86", using the cahier number in place of the
+  volume — the earlier draft of this note did that; both refer to the same paper.)
 * Magnus Wenninger, *Polyhedron Models*, Cambridge University Press, 1971
   (models 23–25 the compounds, 26–42 the stellations); *Dual Models*, CUP, 1983.
-* N. J. Bridge, "Facetting the dodecahedron", *Acta Crystallographica* **A30**
-  (1974), pp. 548–552.
+* N. J. Bridge, "Faceting the dodecahedron", *Acta Crystallographica* **A30**
+  (1974), pp. 548–552. (IUCr and ADS both give the title with one "t"; Inchbald
+  cites it as "Facetting".)
 * J. L. Hudson & J. G. Kingston, "Stellating polyhedra", *Mathematical
   Intelligencer* **10** (1988), pp. 50–61.
 * G. Inchbald, "In search of the lost icosahedra", *The Mathematical Gazette*
-  **86** (July 2002), pp. 208–215.
+  **86**, no. 506 (July 2002), pp. 208–215, doi:10.2307/3621842.
 
 Web
 
@@ -569,8 +585,9 @@ Web
 * George W. Hart, "59 Stellations of the Icosahedron"
   <https://www.georgehart.com/virtual-polyhedra/stellations-icosahedron-index.html>
 * K. & D. Crennell, corrections to the 3rd edition, Fortran Friends
-  <http://fortran.orpheusweb.co.uk/Poly/59icos.htm> (cited by Wikipedia; not
-  re-checked here — **UNCERTAIN** whether the page is still live).
+  <http://fortran.orpheusweb.co.uk/Poly/59icos.htm> — checked, live, last updated
+  1 September 2023; it is an errata list for the 3rd edition (2000–2023) and
+  offers a PDF of corrected pages.
 * Robert Webb, *Stella* software <https://www.software3d.com/> — source of the
   "18 fully supported (16 reflexible, 2 chiral)" figure.
 * A. M. Cutler & E. Schulte, "Regular polyhedra of index two, I", 2010
@@ -581,27 +598,86 @@ Web
 
 ## 10. Open questions / unresolved
 
-* **UNCERTAIN — attribution of the regular compounds.** Hess 1876 (Wikipedia,
-  Coxeter) vs Cauchy 1812/13 (Inchbald). Worth phrasing as "first systematically
-  described by Hess in 1876, though Cauchy appears to have known them".
+* **UNCERTAIN — attribution of the regular compounds.** Hess 1876 (Wikipedia's
+  articles on the compounds of five octahedra, five tetrahedra and ten tetrahedra
+  all say "first described by Edmund Hess in 1876") vs Cauchy (Inchbald's history
+  page: "Cauchy is also aware of the regular compounds, of five and ten tetrahedra
+  and of five octahedra, as stellations of the regular icosahedron", placed at
+  1812). Note that Inchbald's own timeline has **no 1876 Hess entry** — his Hess
+  entry is 1883, and his 1876 entry is Hugel — so the two sources are not even
+  using the same Hess publication. Phrase as "first systematically described by
+  Hess in 1876, though Cauchy appears to have known them", and do not cite
+  Inchbald for the 1876 date.
 * **UNCERTAIN — Cauchy's date.** 1812 (work) vs 1813 (publication) vs "1812" as
   given by Wikipedia's final-stellation article. Use "1812/13".
-* **UNCERTAIN — Wheeler numbers for f₂ and g₁.** Wikipedia's table gives Wheeler
-  21 = g₁ ("discrete skeleton"), 22 = f₂ ("discrete twelve-pointed"); Inchbald's
-  Gazette article says f₂ = 21 and g₁ = 22. The descriptive names favour
-  Wikipedia's assignment.
+* **UNCERTAIN — Wheeler numbers for f₂ and g₁.** Re-checked, and the conflict is
+  real. Wikipedia's table: Crennell 11 = **g₁**, Wheeler "21, Discrete skeleton";
+  Crennell 16 = **f₂**, Wheeler "22, Discrete twelve-pointed, crown-rimmed group".
+  Inchbald's web version of the Gazette article: "Wheeler had earlier discovered
+  **f₂** and **g₁**, listing them as 21 and 22 respectively" — i.e. f₂ = 21,
+  g₁ = 22, the opposite. Unresolved; the descriptive names in Wikipedia's table
+  are at least internally consistent with its own assignment.
 * **UNCERTAIN — the single rule-(v) exception.** My reasoning says it is
   stellation **f₁** (Crennell 10); no source found that states it.
 * **UNCERTAIN — origin of the name "excavated dodecahedron".**
-* **UNCERTAIN — Inchbald's "Ef₁g₂ ... noble and self-dual" remark** in *Tidy
-  Dodecahedra and Icosahedra*. Wikipedia and Wenninger both place the noble,
-  self-dual excavated dodecahedron at **Ef₁g₁** (Crennell 26 / W28), and the
+* **UNCERTAIN — the "noble and self-dual" remark** in *Tidy Dodecahedra and
+  Icosahedra*. On re-reading, the page mentions "one both noble and self-dual" in
+  a list of categories but does not attach that to a named symbol, so the earlier
+  reading of it as an **Ef₁g₂** claim is not supported by the text and may have
+  been a mis-transcription on my part. What *is* solid: Wikipedia gives the noble,
+  self-dual excavated dodecahedron as **Ef₁g₁** (Crennell 26 / W28), and the
   geometry agrees (its outer points reach only the dodecahedron's vertex radius,
-  which **g₂** cells overshoot by a factor of ~1.8). Either he means a different
-  figure or one of the labels is a slip. Do not repeat the Ef₁g₂ claim without
-  checking.
+  which **g₂** cells overshoot by a factor of ~1.8). Do not repeat any Ef₁g₂
+  claim.
 * **Not chased:** the exact face-region ("stellation diagram") numbering 0–13 and
-  which regions belong to which famous stellation. Wikipedia's table has it
-  (e.g. five tetrahedra = regions 5 6 **7** 9 10, ten tetrahedra = 7 9 10, great
-  icosahedron = 11 12, final = 13) if the tutorial wants to show face diagrams
-  next to cell diagrams.
+  which regions belong to which famous stellation. Wikipedia's table has it, and
+  the four entries quoted here were spot-checked against it and match: five
+  tetrahedra (47) = regions 5 6 7 9 10, ten tetrahedra (22) = 7 9 10, great
+  icosahedron (7) = 11 12, final (8) = 13. Use it if the tutorial wants face
+  diagrams next to cell diagrams.
+
+---
+
+## 11. Fact-check pass (2026-08-05)
+
+An adversarial re-check against primary web sources. **Confirmed unchanged:**
+473 cells / 12 shapes and 2¹² − 1 = 4095 (Inchbald, *Gazette* 86 no. 506,
+208–215); MathWorld's 20+30+60+20+60+120+12+30+60+60 "of 10 different shapes and
+sizes" after Wenninger 1989 p. 41; 18 fully supported = 16 reflexible + 2 chiral;
+32 reflexible / 27 chiral among the 59; Crennell numbers 2, 3, 6, 7, 8, 10, 11,
+16, 21, 22, 23, 26, 30, 33, 47 with their Wenninger numbers, Brückner plates and
+Wheeler numbers; W26 triakis / W27 second / W28 third / W29 fourth / W34 ninth /
+W37 twelfth / W41 great icosahedron / W42 final; small triambic icosahedron
+20/60/32 with 104.48°/135.52° hexagon angles, DU30, dual = small ditrigonal
+icosidodecahedron; five octahedra UC17, W23, [5{3,4}]2{3,5}, hull =
+icosidodecahedron, "small icosicosahedron", the only regular compound without a
+regular hull; five tetrahedra UC5, W24, {5,3}[5{3,3}]{3,5}, "chiricosahedron",
+chiral group I, dual = own enantiomorph; ten tetrahedra UC6, W25,
+2{5,3}[10{3,3}]2{3,5}, "icosicosahedron", 180 faces (120 triangles + 60 concave
+quads) / 300 edges / 122 vertices as a plain solid; great icosahedron {3,5/2},
+20/30/12, density 7, U53, edge ratio (7+3√5)/2 = φ⁴; excavated dodecahedron
+20/60/20, χ = −20, noble and self-dual, Ef₁g₁, W28, one of ten abstract regular
+polyhedra of index two with vertices on one orbit (Cutler & Schulte 2010); final
+stellation 20/90/60 as a star polyhedron and 180/270/92 as a simple solid,
+"echidnahedron" coined by Andrew Hume in 1995; medial triambic 24 vertices (12
+outside) vs great triambic 32 vertices (12 outside), both with exterior De₂f₂;
+Poinsot's memoir (presented 1809, *J. École Polytechnique* **4**, 1810, 16–49);
+Wheeler's 1924 Toronto congress paper, vol. 1, 701–708; Hudson & Kingston,
+*Math. Intelligencer* **10** (1988), 50–61; Bridge's 22 faceted dodecahedra
+(1974); Kepler edge-stellating the icosahedron to get the great stellated
+dodecahedron, and Inchbald's charge that Coxeter's introduction misses this.
+
+**Corrected or downgraded in this pass:** the "mainline" term is no longer
+attributed to Coxeter; the Crennell ordering is reflexible-then-chiral, not plate
+order; the "exactly one case" gloss on rule (v) is now marked as an inference; the
+fully-supported membership list is now marked UNCERTAIN; the Flather-model dates
+moved from "2005 / met Coxeter in 1932" to "rediscovered 1 Jan 2005, Cambridge
+models seen 7 July 2006, models made around 1930"; the Hudson & Kingston link to
+those models is now flagged as unsourced; Cauchy's citation now gives tome 9,
+cahier 16; Bridge's title is "Faceting", not "Facetting"; the Fortran Friends
+errata page is live (last updated 1 Sept 2023); the *Tidy Dodecahedra* "noble and
+self-dual" remark is not attached to Ef₁g₂ in the source. Three passages that ran
+close to their sources' wording — Miller's rule (iii), the excavated
+dodecahedron's edge description, and the five-tetrahedra dual/enantiomorph
+paragraph — were rewritten, and two paraphrases of Inchbald (on g₁, and on his
+objection to f₂ and g₁) were replaced with his actual words.

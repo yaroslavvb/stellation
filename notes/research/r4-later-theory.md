@@ -44,29 +44,32 @@ I flag where his gloss is editorial rather than factual.
 | 1980 | Wenninger | "Avenues for Polyhedronal Research", *Structural Topology* **5**. Reciprocation theory for uniform polyhedra and their stellations. |
 | 1983 | Wenninger, *Dual Models* (CUP) | Practical reciprocation, including the hemi solids whose duals have vertices at infinity. |
 | 1988 | J. L. Hudson & J. G. Kingston | "Stellating polyhedra", *Mathematical Intelligencer* **10**(3), 50–61. A readable cell-based account with *relaxed* rules: the principal condition is only that the cell set have no cavities. |
-| 1989 | G. M. Fleurent | "Symmetry and polyhedral stellation — I", *Computers & Math. with Applications* **17**, 167–193. |
+| 1989 | G. M. Fleurent | "Symmetry and polyhedral stellation — Ia", *Computers & Math. with Applications* **17**(1–3), 167–175, with a companion "— Ib" at 177–193. (The single range "167–193" often quoted for "part I" actually spans both papers.) |
 | 1989 | P. W. Messer & M. J. Wenninger | "Symmetry and polyhedral stellation — II", same volume, 195–201. Defines **primary** stellations. |
 | 1989 | John A. Gingrich | First computer enumeration of the rhombic triacontahedron under Miller's rules (private communication, reported by Messer). |
 | 1995 | P. W. Messer | "Stellations of the rhombic triacontahedron and beyond", *Structural Topology* **21**, 25–46. Updated as *Symmetry: Culture and Science* **11**(1–4), 201–230 (dated 2000, actually out 2003). |
 | c. 2000–01 | Robert Webb | *Great Stella* software; cell-diagram-driven stellation, reciprocation, and later faceting tools. |
-| c. 2001 | Bulatov | Java **Polyhedra Stellations Applet**; Bridges 2001 paper on stellations with *sub-symmetries*. (This is the program being documented.) |
+| c. 2001 | Bulatov | Java **Polyhedra Stellations Applet** (dated 2000 in his own reference list; an earlier "Polyhedra Stellations" is dated 1998); Bridges 2001 paper, "An Interactive Creation of Polyhedra Stellations with Various Symmetries". (This is the program being documented.) |
 | 2002 | Guy Inchbald | "In search of the lost icosahedra", *Math. Gazette* **86**(506), 208–215. |
 | 2003 | Inchbald | "Towards stellating the icosahedron and facetting the dodecahedron", *Symmetry: Culture and Science* **11**(1–4), 269–291 (dated 2000, published 2003). |
-| 2005 | Inchbald | "Some lost stellations of the icosahedron" (web). Rediscovers two non-Miller models at Cambridge, tentatively attributed to Flather. |
-| 2006 | Inchbald | "Facetting diagrams", *Math. Gazette* **90**(518 or 519), 253–261. |
-| 2009 | J. Hudson | "Further Stellations of the Uniform Polyhedra", *Math. Intelligencer* **31**(4), 18–26. Introduces "external" vs "internal" stellation. |
+| 2005–06 | Inchbald | "Some lost stellations of the icosahedron" (web, still being revised). He rediscovers the stellation **De1g1** on 1 Jan 2005; the two physical non-Miller models at Cambridge come to light on **7 July 2006**, on a visit with Vince Matsko. |
+| 2006 | Inchbald | "Facetting diagrams", *Math. Gazette* **90**(518), July 2006, 253–261. |
+| 2009 | J. L. Hudson | "Further Stellations of the Uniform Polyhedra", *Math. Intelligencer* **31**(4), 18–26. Introduces "external" vs "internal" stellation. (Same Hudson as the 1988 paper.) |
 | 2025 | Inchbald | Web essays giving dual definitions of stellation/faceting and *infinite* regular stellations of the cube. |
 
-**UNCERTAIN:** the issue number of the 2006 *Gazette* paper — Inchbald's own publication list
-says No. 518, one page of his site says No. 519. Everything else about it agrees.
+*(Resolved: the 2006 Gazette paper is No. 518 — Taylor & Francis and JSTOR both give
+Vol. 90, No. 518, July 2006, 253–261, DOI 10.1017/S0025557200179653.)*
 
 ---
 
 ## 2. The vocabulary the programs use
 
 These definitions come mostly from Robert Webb's *Stella* glossary and from Bulatov's own
-Bridges 2001 paper, which is the direct source for the program you are documenting. They
-agree almost word for word, which is convenient.
+Bridges 2001 paper, which is the direct source for the program you are documenting. The two
+agree on substance — cell, cell type/orbit, layer, top and bottom facets, support — but the
+wording is quite different, and Webb's definitions are the more careful of the two (his
+"supported" carries an *unless the cell is unsupportable* escape clause that Bulatov's has no
+equivalent of). Do not treat them as interchangeable phrasings of one text.
 
 - **Cell.** A convex region of space bounded by some of the face planes and cut by none of
   them. Only *finite* cells are used; far enough out, everything is unbounded.
@@ -76,14 +79,19 @@ agree almost word for word, which is convenient.
   orbit or none of it, so people say "cell" when they mean "cell type".
 - **Sub-cell** (Bulatov's term). If you demand only the symmetry of a *subgroup* H of the
   core's group G, an orbit under G can break into several orbits under H. Bulatov's worked
-  example: under the tetrahedral subgroup T_h, the icosahedron's 20-cell orbit splits 8 + 12.
-  For a rotation-only subgroup like I inside I_h, a 120-cell orbit splits into two chiral
-  halves of 60 — exactly the split your layer 5 shows.
+  example: under the tetrahedral subgroup T_h, the icosahedron's 20-cell orbit splits 8 + 12
+  (verified — he says exactly this, and warns that the 8-cell piece looks like it has O_h
+  symmetry but has only T_h, lacking 4-fold axes).
+  **My inference, not Bulatov's text:** for a rotation-only subgroup like I inside I_h, a
+  120-cell orbit should split into two chiral halves of 60 — which is the split your layer 5
+  shows. Bulatov's paper does not discuss this case; he only works the T_h example.
 - **Layer.** Bulatov's definition: the layer number of a cell is *the number of face planes
   crossed by a ray from the centre of the core to a point inside the cell*. Layer 0 is the
-  core. Webb's equivalent phrasing: each layer is the minimal set of cells needed to cover
-  the previous layer (or to cover as much of it as can be covered, out where the shells get
-  holes). Du Val used exactly this quantity in 1938 and called it the cell's **power**.
+  core. Webb reaches the same layers from the other side, building each one as the smallest
+  set of cells that covers the layer beneath — or covers as much of it as anything can, since
+  the outer shells stop being closed. Du Val's 1938 notation rests on the same quantity,
+  which is called the cell's **power** (this is how English Wikipedia glosses his system;
+  I have not checked the 1938 text itself for the word).
 - **Top and bottom facets.** A cell's *bottom* facets face the centre; its *top* facets face
   away. Every elementary region of the 2-D stellation diagram is the top of one cell and the
   bottom of another.
@@ -94,26 +102,34 @@ agree almost word for word, which is convenient.
   node to a node in the layer below when the two cell types share a facet — i.e. when the
   lower one *supports* the upper one. This is the object Miller's rules 4 and 5 are really
   talking about (see §4).
-- **Aggregate.** Webb's term (credited to George Olshevsky) for a stellation described only
-  by its outward-visible faces, with no internal faces. This is what *Great Stella* — and
-  any cell-selection program — actually produces. Two aggregates that look identical from
-  outside are the same object here even if, as full face-polyhedra, they are topologically
-  different. Inchbald's central complaint (§5) is precisely that this throws away real
-  information.
+- **Aggregate.** A word Webb's glossary credits to George Olshevsky (not Webb's own coinage)
+  for a stellation carrying no internal faces — only the outward-visible ones, as in *The
+  Fifty-Nine Icosahedra*. This is what *Great Stella* — and any cell-selection program —
+  actually produces. Because the internal faces are simply absent, a program cannot tell
+  apart two figures with the same outside and different insides, though as full
+  face-polyhedra they may be topologically distinct. Inchbald's central complaint (§5) is
+  precisely that this throws away real information.
 
 ### The icosahedron, concretely
 
-The 20 face planes of the regular icosahedron cut space into **473 finite cells**
-(Inchbald; also the English Wikipedia article on *The Fifty-Nine Icosahedra*). Du Val
-labelled the shells outward as a (the core), b, c, d, e, f, g, h; shells that contain more
-than one shape get numeric suffixes — e1/e2, f1/f2, g1/g2 — and f1 is the chiral one, whose
-left and right forms Du Val distinguished by italics.
+The 20 face planes of the regular icosahedron cut space into **473 finite cells**. The only
+source I could find for that number is **Guy Inchbald**, "In search of the lost icosahedra"
+("The face planes of the regular icosahedron intersect eachother … to dissect space into
+numerous regions, of which 473 are finite cells"). **Corrected:** an earlier draft of this
+note also credited the English Wikipedia article on *The Fifty-Nine Icosahedra* — that
+article does not state a cell total at all. Treat 473 as single-sourced.
+
+Du Val labelled the shells outward as a (the core), b, c, d, e, f, g, h; shells that contain
+more than one shape get numeric suffixes — e1/e2, f1/f2, g1/g2 — and f1 is the chiral one,
+whose left and right forms Du Val distinguished by roman vs italic type.
 
 That gives **8 layers** and **10 non-core cell types** (9 mirror-symmetric + 1 chiral), which
 is exactly what your program reports, and exactly what two independent sources report:
 
 - Messer 1995, in his table of isohedral cores, gives the regular icosahedron **7 layers,
   10 cell types (9 reflexible, 1 chiral)** — he does not count the core as a layer or a type.
+  The same row gives him **17 (15, 2)** fully supported stellations, which is Webb's 18
+  (16, 2) minus the core. (Read off the scan at 250 dpi, not OCR.)
 - Webb's *Great Stella* enumeration page gives the icosahedron **8 layers, 11 cell types
   (10 reflexible, 1 chiral), max 3 cell types in any one layer** — he *does* count the core,
   and he counts a chiral pair as two when computing the "max per layer" figure.
@@ -124,7 +140,7 @@ just the core. **Your cell table agrees with both published enumerations.**
 
 Reconstructed mapping from your per-layer counts onto Du Val's letters (see the evidence
 column; I have not seen a single source that prints the whole table, so treat this as a
-reconstruction, **UNCERTAIN** in the two places noted):
+reconstruction — still **UNCERTAIN** in the one place noted below, layer 6):
 
 | Layer | Cells | Du Val | Evidence |
 |---|---|---|---|
@@ -132,26 +148,49 @@ reconstruction, **UNCERTAIN** in the two places noted):
 | 1 | 20 | b | 20 triangular pyramids on the faces; Bulatov, Fig. 6. |
 | 2 | 30 | c | by elimination |
 | 3 | 60 | d | by elimination |
-| 4 | 20 | e1 | Bulatov explicitly identifies his layer-4, 20-cell type with Du Val's **e1**. |
+| 4 | 20 | e1 | Verified: Bulatov's Fig. 15 caption calls his layer-4, 20-cell type "stellation **e1** from [2]". |
 | 4 | 60 | e2 | by elimination |
 | 5 | 120 (chiral) | f1 | Du Val's f1 is the enantiomorphous one (Wikipedia); your 120 is the one that splits 60/60. |
-| 5 | 12 | f2 | Inchbald describes **f2** as "twelve isolated trapezohedra". |
-| 6 | 30 | g1 | Inchbald describes **g1** as "thirty disconnected bipyramids". |
+| 5 | 12 | f2 | Inchbald: f2 "comprises twelve quite disconnected trapezohedra floating in space". |
+| 6 | 30 | g1 | Inchbald: g1 "is a collection of thirty bipyramids". |
 | 6 | 60 | g2 | by elimination |
 | 7 | 60 | h | outermost shell; the final stellation is Du Val's **H**. |
 
-Total 1+20+30+60+20+60+120+12+30+60+60 = **473** ✔, which is a genuine cross-check: the
-counts are forced once you fix e1 = 20, f2 = 12, g1 = 30.
+Total 1+20+30+60+20+60+120+12+30+60+60 = **473** ✔. Note what this does and does not prove:
+it confirms that the per-layer counts your program reports are consistent with Inchbald's
+473, and — because layers 1, 2, 3 and 7 hold one cell type each — the *letter assignment* is
+then forced once e1 = 20, f2 = 12 and g1 = 30 are pinned. It does not independently derive
+the counts.
 
-**UNCERTAIN:** whether e1 is the 20 and e2 the 60, or vice versa, rests on a single sentence
-in Bulatov's Bridges paper. Likewise which of the 30/60 pair in layer 6 is g1 rests on
-Inchbald's "thirty bipyramids" remark.
+**Correction to an earlier draft:** g1 was described here as "thirty disconnected
+bipyramids". Inchbald says the opposite — the thirty bipyramids "are at least
+vertex-connected", and that is exactly why he treats g1 as a milder case than f2. The f2
+description was also given in quotation marks in wording that is not his. Both are now
+quoted as written.
 
-**UNCERTAIN / minor conflict:** several sources (Inchbald; English Wikipedia) say the 473
-cells "come in just **12** shapes". Ten non-core orbits plus the core is 11. The extra one is
-probably the left/right pair of f1 being counted as two *shapes* (they are mirror images, so
-one orbit but two congruence classes if reflection is disallowed). I could not confirm this
-reading anywhere.
+**Now confirmed (was UNCERTAIN):** e1 = the 20-cell orbit. Bulatov's Fig. 15 caption states
+it, and the layer-4 split into "20 elementary cells of one type" and "60 … another type" is
+spelled out in his running text.
+
+**Still UNCERTAIN:** which of the 30/60 pair in layer 6 is g1 rests entirely on Inchbald's
+"thirty bipyramids" remark. No source I reached prints the full letter-to-count table.
+
+**The "12 shapes" question — resolved.** Inchbald (not Wikipedia; the Wikipedia article says
+nothing of the kind, and an earlier draft of this note miscredited it) writes that the 473
+cells "come in just 12 shapes". Ten non-core orbits plus the core is 11. The extra one is the
+left/right pair of f1 counted as two shapes, and there are two independent confirmations:
+
+1. English Wikipedia's account of Du Val's notation says outright that "there are 3 kinds of
+   cells in the layer with power 5 (shell **f**): f1, *f1* and **f2**".
+2. Inchbald's own index numbers for stellations are a **12-bit mask** over
+   a, b, c, d, e1, e2, f1, *f1*, f2, g1, g2, h. I checked six of his published index numbers
+   against that reading and all six fit: Be1 = 1+2+16 = 19, Ce2 = 1+2+4+32 = 39,
+   Df1 = 1+2+4+8+64 = 79, Af2 = 1+256 = 257, Df2 = 1+2+4+8+256 = 271,
+   De1f1f2 = 1+2+4+8+16+64+256 = 351 (he prints 351 himself).
+
+Be aware there is a *third* count in circulation: MathWorld says the icosahedron's cells come
+in **10** different shapes, citing Wenninger 1989. So 10, 11 and 12 are all published, and
+they differ only over whether the core and the chiral mirror-image are counted.
 
 ---
 
@@ -162,12 +201,12 @@ reading anywhere.
 Three equivalent phrasings, all in circulation:
 
 1. **Cell-local (Messer 1995, Bulatov 2001):** every included cell has all of its *bottom*
-   facets covered by included cells from the layer below. Messer's own wording of the rule
-   is that no cell may leave any of its bottom surface uncovered, and his image for it is a
-   stack of balls in which the top ball rests on all the balls beneath it.
-2. **Ray test (Webb):** any ray from the centre of the core outwards crosses the model's
-   surface exactly once. Webb also calls this **radially convex** — in ordinary maths
-   language the solid is a *star domain* about its centre.
+   facets covered by included cells from the layer below. Messer states it as a prohibition —
+   "no cell shall have any of its bottom surface uncovered" — and reaches for a stack of
+   balls, where the ball on top leans on every ball under it, as the mental picture.
+2. **Ray test (Webb):** the glossary's version is that a ray leaving the centre in any
+   direction meets the model's surface once and once only. Webb also calls this **radially
+   convex** — in ordinary maths language the solid is a *star domain* about its centre.
 3. **Face-side test (Pawley's original "non-reentrant", 1975):** every visible part of every
    face is seen from the same side; there are no *undercut* or *overhang* regions where you
    see the underside of a face from outside.
@@ -192,15 +231,18 @@ rules are mostly *combinatorial* conditions on the cell diagram plus a symmetry 
 Empirically the fully supported set is always the smaller of the two:
 
 - Icosahedron: **18** fully supported (16 reflexible + 2 chiral) versus **59** under Miller's
-  rules (32 + 27). MathWorld states these as "18 of the 59", i.e. as a subset.
+  rules (32 + 27). MathWorld's *Icosahedron Stellations* page states these as "18 of the 59",
+  i.e. as a subset. (Its separate *Fully Supported Stellation* entry gives no counts at all —
+  it only defines the term and cites Webb.)
 - Rhombic triacontahedron: **227** versus ~358.8 **million**.
 - Truncated dodecahedron: **1141** versus **2,645,087,084,526**. Webb uses this pair to make
   the point that the two criteria are not remotely comparable in size.
 
 English Wikipedia asserts flatly that main-line, fully supported, monoacral and primary
-stellations "are all subsets of the Miller stellations". Every published pair of counts I
-found is consistent with that, and MathWorld's phrasing for the icosahedron ("18 of the 59")
-asserts it directly for that case. **UNCERTAIN:** I found no proof, and no source that
+stellations "are all subsets of the Miller stellations" (verified verbatim: "The four kinds
+of stellation just defined are all subsets of the Miller stellations"). Every published pair
+of counts I found is consistent with that, and MathWorld's phrasing for the icosahedron
+("18 of the 59") asserts it directly for that case. **UNCERTAIN:** I found no proof, and no source that
 addresses whether it holds for every core. It is not obviously forced — Miller's rule 5 in
 particular constrains the *unused* cells, which support says nothing about.
 
@@ -213,8 +255,8 @@ Five reasons, all attested:
    awkward to build. Ede's main-line and Pawley's non-reentrant lists were both compiled by
    and for model makers.
 2. **It matches naive intuition of "solid".** A fully supported stellation has no hidden
-   voids: the surface bounds a star-shaped body, and George Hart glosses it as "no hollows
-   between any point in the solid and its centre."
+   voids: the surface bounds a star-shaped body. George Hart's gloss, verbatim, is that there
+   are "no hollows between any point in the solid and its center."
 3. **Size.** It reduces astronomically. See the truncated dodecahedron numbers above.
 4. **It makes the surface well defined.** If every outward ray hits the surface once, the set
    of externally visible facelets is unambiguous — which is what a renderer and a net
@@ -309,9 +351,15 @@ actually build — they are also the hardest to compute with.
 
 ## 5. Guy Inchbald: the standing critique
 
-Inchbald (b. Cambridge MA, an independent researcher; site *steelpillow.com*) is the most
-persistent modern critic of the 1938 settlement. His argument, developed across four
-publications and a long-running website, runs roughly:
+Inchbald is an independent researcher writing at *steelpillow.com*, and the most persistent
+modern critic of the 1938 settlement. His argument, developed across four publications and a
+long-running website, runs roughly:
+
+*(An earlier draft of this note said "b. Cambridge MA". That was wrong and is deleted. His
+own "about me" page gives no birthplace and says he lives in Worcestershire, England; a
+secondary profile has him born in London in 1952. Nothing about his biography bears on the
+argument anyway — the Cambridge that matters below is Cambridge, England, where Flather's
+models are kept.)*
 
 **(a) Miller's rules have no theory behind them.** They were, he says, proposed by a student
 to colleagues without a rigorous background, nobody knew what they would yield, and they
@@ -335,13 +383,21 @@ can meet at a vertex — as the exact dual of the stellation diagram.
 **(d) Concrete casualties.** "In search of the lost icosahedra" (2002) presents figures that
 are perfectly good stellations by any Keplerian reading but are excluded by Miller's rules:
 he names **De1f1f2** and its enantiomorph, and discusses **De1f1f2g1**. Conversely he argues
-that some of the accepted 59 are dubious — index 16 is Du Val's **f2**, twelve trapezohedra
-floating in space with no icosahedron present at all ("how can one stellate an icosahedron
-that is not there?"). He suggests calling such figures **coronae** rather than stellations.
-In 2005 he rediscovered two non-Miller models physically present in the Cambridge Department
-of Pure Mathematics next to Flather's famous set of 59 — **Ce2** (Crennell index 39) and
-**De1g1** — and tentatively attributes them to Flather, made around 1930 before he met
-Coxeter.
+that some of the accepted 59 are dubious — Crennell index 16 is Du Val's **f2**, twelve
+trapezohedra floating in space with no icosahedron present at all ("how can one stellate an
+icosahedron that is not there?"). He suggests calling such figures **coronae** rather than
+stellations.
+
+Two non-Miller models sit physically in the Cambridge Department of Pure Mathematics &
+Mathematical Statistics next to Flather's famous set of 59: **Ce2** and **De1g1**. Inchbald
+tentatively attributes both to Flather, made around 1930, before he met Coxeter. The dates:
+he rediscovered **De1g1** as a *figure* on 1 January 2005, but did not see either *model*
+until he visited the Department with Vince Matsko on **7 July 2006**. An earlier draft of
+this note put the model rediscovery in 2005; that is wrong.
+
+**Corrected:** an earlier draft called Ce2's index 39 a "Crennell index". It is not. Crennell
+index 39 is f1g2, and Ce2 is not among the 59 at all. The 39 is Inchbald's own code number —
+the 12-bit cell mask described in §2, where Ce2 = a+b+c+e2 = 1+2+4+32 = 39.
 
 **(e) His trial replacement rules also fail.** This is the part most relevant to a program.
 He tried three alternative criteria by computer (results self-described as unvalidated):
@@ -375,11 +431,19 @@ Messer records that Pawley catalogued the fully supported, *reflexible* ones —
 descriptions — and listed, for each, how many chiral pairs could be derived from it by
 deleting chiral cells while keeping rotational symmetry and full support.
 
-**Messer 1995.** *Structural Topology* **21**, 25–46 (the journal's last issue; the paper is
-bilingual English/French). Messer's own summary: **226** fully supported stellations, of
+**Messer 1995.** *Structural Topology* **21**, 25–46; the paper is bilingual English/French,
+printed in parallel columns. (An earlier draft called No. 21 the journal's last issue. It is
+not: the UPC repository that hosts the run lists issues 1–22, with No. 22 appearing in 1997.
+No. 21 does appear to be the second-to-last.) Messer's own summary: **226** fully supported stellations, of
 which **114** have the full icosahedral symmetry of the core and the remaining **112** are
 each one member of a chiral pair. He verified Pawley's total independently by inspection, and
-Paul A. Gingrich verified it by computer. The paper's substance is a systematic *notation*:
+P. A. Gingrich verified it by computer.
+
+**Two Gingriches, not a typo.** Messer's text names **John A. Gingrich** (Toronto, Canada,
+1989) as the source of the 358,833,072 Miller's-rules enumeration, reported as a personal
+communication, and says it was corroborated "by his son, **Paul A. Gingrich**", who is also
+the one who checked Pawley's 226 by computer. §1's "John" and this section's "Paul" are both
+correct and refer to different people. Webb's site deals only with John. The paper's substance is a systematic *notation*:
 lines of the stellation diagram labelled A, B, C, … outward along a symmetry line; three
 kinds of line (primary, secondary, and symmetry lines — the last are not real plane
 intersections and do not cut the diagram); elementary regions labelled by layer number plus a
@@ -396,16 +460,36 @@ Reconciling 226 / 227 / 228:
 - 228 = Inchbald's history page. Probably an error; I could not reproduce it. **UNCERTAIN.**
 - George Hart's page independently gives 226 fully supported.
 
-**Messer's table of isohedral cores** (1995) is the single most useful published cross-check
-for a program like yours: for each of a dozen isohedra it lists layers, cell types (split
-reflexible / chiral), and fully supported stellations (same split). Every entry I compared
-matches Webb's *Great Stella* enumeration exactly after adding 1 for the core — icosahedron,
-triakis tetrahedron, tetrakis hexahedron, triakis octahedron, deltoidal hexecontahedron,
-pentagonal icositetrahedron. The one exception is the **deltoidal (trapezoidal)
-icositetrahedron**, where Messer's scan reads 1076 (385 reflexible, 691 chiral) against
-Webb's 1201 (386, 815). **UNCERTAIN:** the Messer PDF is a scan and the OCR of that row is
-not fully trustworthy, so this may be an artefact rather than a real disagreement — worth
-checking against a clean copy before repeating it.
+**Messer's Table 4, "isohedral cores"** (1995) is the single most useful published
+cross-check for a program like yours. It has fourteen rows; for each it gives layers, cell
+types (split reflexible / chiral) and fully supported stellations (same split), but four rows
+are wholly blank and two more are partly blank — Messer says a blank means the data "is not
+readily accessible without computer assistance". So the usable comparisons are fewer than the
+row count suggests.
+
+Every usable entry matches Webb's *Great Stella* enumeration exactly after adding 1 for the
+core, **with one exception**. Verified rows (Messer → Webb):
+
+| Core | Messer: layers, cell types, FS stellations | Webb | Agrees? |
+|---|---|---|---|
+| regular icosahedron | 7, 10 (9,1), 17 (15,2) | 8, 11 (10,1), 18 (16,2) | ✔ +1 core |
+| triakis tetrahedron | 5, 8 (6,2), 20 (16,4) | 6, 9 (7,2), 21 (17,4) | ✔ |
+| tetrakis hexahedron | 9, 30 (17,13), 1761 (371,1390) | 10, 31 (18,13), 1762 (372,1390) | ✔ |
+| triakis octahedron | 9, 31 (18,13), 3082 (564,2518) | 10, 32 (19,13), 3083 (565,2518) | ✔ |
+| pentagonal icositetrahedron | 11, 68 (0,0), 72620 (0,72620) | 12, 69 (0,69), 72621 (0,72621) | ✔ (Messer's "(0,0)" is a misprint for (0,68)) |
+| rhombic triacontahedron | 12, 28 (19,9), 226 (114,112) | 13, 29 (20,9), 227 (115,112) | ✔ |
+| trapezoidal hexecontahedron | 28, 225 (82,143), — | 29, 226 (83,143), 7146284014 | ✔ on cell types; Messer's stellation cell is blank |
+| **trapezoidal icositetrahedron** | **9, 31 (19,12), 1076 (385,691)** | **10, 32 (19,13), 1201 (386,815)** | **✘** |
+
+**Corrected — this is a real disagreement, not an OCR artefact.** An earlier draft of this
+note guessed that the odd row was scanner noise. I rendered page 8 of the PDF at 250 dpi and
+read the printed figures directly: they are 9 layers, 31 (19,12) cell types, 1076 (385,691)
+stellations. Note also that the cell-type entry disagrees too, which the earlier draft
+missed: Messer 31 (19,12) against Webb's 32 (19,13), and the pattern of the four rows above
+it would predict 31 (18,13). The reflexible stellation count is the only part that fits
+(385 = Webb's 386 − 1); the chiral counts differ by 124. One of the two enumerations is
+wrong, and I have no basis for saying which. **UNCERTAIN:** which. Do not repeat either
+figure for this solid without the caveat.
 
 **Named subsets, all due to this circle:**
 
@@ -442,25 +526,38 @@ icosahedron, and vice versa — that is the reciprocity Coxeter noted in 1947.
 
 Bridge, "Facetting the dodecahedron", *Acta Crystallographica* **A30** (1974), 548–552.
 He enumerated what Inchbald calls the **tidy** facetings of the regular dodecahedron, then
-reciprocated them to get stellated icosahedra. Inchbald's count of Bridge's result: **22**
-tidy facetings, plus the dodecahedron itself, plus two hemi facetings that Bridge rejected —
-24 figures in all; and Inchbald's own breakdown agrees, 8 regular/quasiregular plus 14
-further tidy ones. Bridge's tidiness conditions were stricter than Inchbald's: no coincident
-edges or vertices, no collinear edges, and no edges passing through the centre — chosen so
-that the reciprocal figures would also be acceptable.
+reciprocated them to get stellated icosahedra.
+
+**Corrected arithmetic.** An earlier draft of this note read "22 tidy facetings, *plus* the
+dodecahedron itself, *plus* two hemi facetings — 24 in all", which does not add up. Inchbald's
+actual chain is: 7 + 14 = **21** facettings, plus the original dodecahedron = **22** derived
+by Bridge, plus the **2** hemi facettings Bridge rejected = **24** in all. The dodecahedron is
+inside the 22, not additional to it. His 8-plus-14 breakdown is the same 22 sliced differently
+(the 8 regular/quasiregular figures already include the dodecahedron).
+
+Inchbald's own baseline for a tidy polygon is that it be finite and admit an unambiguous
+circuit, with no coincident edges and no coincident vertices. Bridge is stricter, adding two
+rules of his own: no collinear edges (his rule 5) and no edges through the centre (rule 8).
+Inchbald says those two exist to guarantee the reciprocal figure is acceptable too, and that
+he himself declines to reject a tidy figure just because its reciprocal is untidy.
 
 The headline result: reciprocating the facetings turned up a stellated icosahedron,
-**Df2**, which is a proper uniform dual but is *not* among the 59, because Miller's rules
-forbid it. Inchbald calls it "a perfect counter-example to the use of Miller's rules in
-defining stellations". Coxeter, per Inchbald, was uninterested.
+**Df2**, which Inchbald's history page describes as "a uniform dual but nevertheless not
+present among the 59 (being forbidden by Miller's rules)". Note this is Inchbald's
+characterisation — Bridge himself, per Inchbald, wrote it as "D + f2", a compound of two
+Miller stellations, apparently unwilling to accept it as a single polyhedron. Inchbald calls
+it "a perfect counter-example to the use of Miller's rules in defining stellations" (verified
+verbatim). Coxeter, per Inchbald, was uninterested.
 
 Inchbald also computes, in the other direction, that only **16** of the 59 Miller icosahedra
-can be built as *tidy* polyhedra; the other 43 are untidy in one way or another. His own
-verdict on the whole tidiness business is that it is subjective, whereas polar reciprocity
-is a mathematical principle.
+can be built as *tidy* polyhedra; the other 43 are untidy in one way or another (verified
+verbatim; 16 + 43 = 59 ✔). His own verdict on the whole tidiness business is that it is a
+subjective judgement on a polyhedron rather than an objective property of one, whereas polar
+reciprocity is a mathematical principle.
 
-Terminological trivia from the same source: Bridge, working in isolation, introduced the
-double-t spelling "facetting" and the noun "facetion".
+Terminological trivia from the same source: Bridge, "working more or less in isolation",
+introduced the double-t spelling "facetting" and the noun "facetion" — the latter, Inchbald
+says, chosen for its resemblance to "stellation".
 
 **UNCERTAIN:** the author's given name. The paper is by *N. J. Bridge*; English Wikipedia
 calls him "James Bridge". I did not resolve this.
@@ -525,11 +622,14 @@ several-months-of-CPU result. Cite the two or three figures you actually need an
 There is much less published here than one might hope. What exists:
 
 **McKeown & Badler (1980)**, "Creating polyhedral stellations", *ACM SIGGRAPH Computer
-Graphics* **14**(3), 19–24 (Univ. of Pennsylvania). The earliest published program: it
-takes a polyhedral solid, performs the stellation process, and renders the result; the paper
-shows icosahedron and rhombic triacontahedron stellations. I could not read the full text
-(ACM DL blocks automated fetch), so **UNCERTAIN**: whether they enumerate or merely
-construct.
+Graphics* **14**(3), 19–24 (Kathleen R. McKeown and Norman I. Badler, Univ. of Pennsylvania).
+The earliest published program: it takes a polyhedral solid, performs the stellation process,
+and renders the result; the paper shows icosahedron and rhombic triacontahedron stellations.
+I still could not read the full text (ACM DL blocks automated fetch), but the published
+abstract settles the earlier open question: it describes a program that "performs the
+stellation process on an input object and generates a 3-dimensional image of the stellated
+object". That is construction and display, not enumeration. **Mildly UNCERTAIN** only in that
+this rests on the abstract rather than the body.
 
 **Gingrich (1989)**, the first Miller's-rules enumeration of the rhombic triacontahedron.
 Webb records that Gingrich designed a **circuit board specifically for the job** — this is a
@@ -560,10 +660,12 @@ you would be selecting the cell above and yellow if the cell below. He notes tha
 facet may force a whole cascade of other facets in or out, and that the program resolves this
 automatically.
 
-**Antiprism** (Adrian Rossiter, open source) has a `stellate` program that works from the
-stellation diagram: you name a face of the input and then the diagram faces you want, with a
-`-s` option for a symmetry subgroup in Schoenflies notation. It has no notion of layers,
-support, or enumeration — it is a constructor, not an enumerator.
+**Antiprism** (Adrian Rossiter's open-source suite) ships a `stellate` program — **written by
+Roger Kaufman**, not by Rossiter; the manual page says so explicitly, and an earlier draft of
+this note credited it to Rossiter. It works from the stellation diagram: you name a face of
+the input and then the diagram faces you want (`-f 0,18`), with `-s` for a symmetry subgroup
+in Schoenflies notation. It has no notion of layers, support, or enumeration — it is a
+constructor, not an enumerator.
 
 ### The combinatorial shape of the problem (my own framing — not from a source)
 
@@ -607,10 +709,14 @@ the tutorial's own observation, not as received theory.
 2. The chiral split of the 120-cell orbit into 60+60 under **I** rather than **I_h** is
    Bulatov's sub-symmetry idea from the Bridges 2001 paper, and it is the feature that
    distinguishes his program from *Great Stella* and from every pre-1990s treatment. The
-   ancestry of "stellations with less than full symmetry" is: Alan Holden, *Shapes, Space and
-   Symmetry* (Dover, 1971), p. 90 — the earliest known, on the dodecahedron — then Olshevsky
-   (1996), Hart (1996), Matsko (1997), Bulatov's own *270 Dodecahedra* (1997), and Verheyen's
-   *Symmetry Orbits* (Birkhäuser, 1996) for compounds.
+   ancestry of "stellations with less than full symmetry", as Bulatov gives it, is: Alan
+   Holden, *Shapes, Space and Symmetry*, p. 90 — "the earliest known author", on the
+   dodecahedron — then Olshevsky's *36 Dodecahedra* (1996, private communication), Hart's
+   tetrahedral stellations pages (1996), Matsko (1997, private communication), Bulatov's own
+   *270 Dodecahedra* (1997), and Verheyen's *Symmetry Orbits* (Birkhäuser, 1996) for
+   compounds of cubes. **Watch the Holden citation:** Bulatov's reference list gives "Dover,
+   1971", and an earlier draft of this note copied that. The book was published by **Columbia
+   University Press in 1971**; the Dover edition is a later reprint. Cite Columbia 1971.
 3. "Supported" in the tutorial should be defined cell-locally (bottom facets covered) and
    then given the ray test as the memorable equivalent. Messer's stack-of-balls image is the
    best one-line intuition and is safe to paraphrase.
@@ -625,17 +731,27 @@ the tutorial's own observation, not as received theory.
 
 - Whether "fully supported ⊆ Miller's rules" is a theorem or merely an empirical observation.
 - The 226 vs 228 fully-supported RTC discrepancy between Messer's paper and Inchbald's
-  history page.
-- The deltoidal icositetrahedron row disagreement between Messer's table and Webb's
-  (possible OCR artefact).
-- Whether Du Val's e1 is the 20-cell or the 60-cell orbit, beyond Bulatov's single sentence.
-- Why Inchbald and Wikipedia say the icosahedron's cells come in 12 shapes when the orbit
-  count is 11 including the core.
-- N. J. Bridge's given name.
-- The exact content of the McKeown & Badler algorithm (paywalled).
+  history page. (Messer's 226 is confirmed in his own text and abstract; Inchbald's 228 is
+  confirmed as what his page says. One of them is simply wrong and I cannot tell which,
+  though 226 has three independent backers — Messer, Hart, and Webb's 227-minus-core.)
+- Which of Messer and Webb is right about the **trapezoidal icositetrahedron**. Confirmed as
+  a genuine printed disagreement, not an OCR artefact — see §6.
+- Which of the layer-6 pair (30 or 60 cells) is Du Val's g1, beyond Inchbald's "thirty
+  bipyramids" remark. (The e1 question is now closed: Bulatov states it.)
+- N. J. Bridge's given name. English Wikipedia calls him "James Bridge"; the paper says
+  N. J. Bridge; Inchbald's history page and George Hart's bibliography both say N. J. and
+  give no forename.
+- The body of the McKeown & Badler paper (paywalled); the abstract is enough to establish it
+  constructs rather than enumerates.
 - Whether Hudson & Kingston (1988) or Hudson (2009) give an algorithm; I only have secondary
   descriptions of their *rules*.
-- Details of Fleurent's "Symmetry and polyhedral stellation — I" (1989) beyond the citation.
+- Details of Fleurent's "Symmetry and polyhedral stellation — Ia/Ib" (1989) beyond the
+  citation.
+
+*(Closed since the previous draft: the 2006 Gazette issue number is 518. Du Val's e1 is the
+20-cell orbit. The "12 shapes" count is the 11 orbits with f1 counted twice, corroborated by
+Wikipedia's shell-f description and by Inchbald's own 12-bit index scheme. McKeown & Badler
+construct rather than enumerate.)*
 
 ---
 
@@ -683,11 +799,14 @@ Primary / near-primary, in order of usefulness for this note:
   a two-core generalisation; also the source for the Hudson & Kingston citation.
 - MathWorld: "Fully Supported Stellation", "Miller's Rules", "Stellation", "Icosahedron
   Stellations", "Rhombic Triacontahedron Stellations", "Rhombic Dodecahedron Stellations".
-  <https://mathworld.wolfram.com/FullySupportedStellation.html> etc.
+  <https://mathworld.wolfram.com/FullySupportedStellation.html> etc. The "18 of the 59"
+  figure and the "10 different shapes" cell count (attributed there to Wenninger 1989, p. 41)
+  are both on the *Icosahedron Stellations* page, not the *Fully Supported* one.
+- Adrian Rossiter, Antiprism — but the `stellate` program itself is by Roger Kaufman.
 - English Wikipedia, "Stellation" and "The Fifty-Nine Icosahedra".
 - George W. Hart, "Stellations of the Rhombic Triacontahedron".
   <https://www.georgehart.com/virtual-polyhedra/srtc-info.html>
-- Adrian Rossiter, Antiprism `stellate` documentation.
+- Antiprism `stellate` documentation (program by Roger Kaufman, in Adrian Rossiter's suite).
   <https://www.antiprism.com/programs/stellate.html>
 
 Cited but not read directly (paywalled or offline):
@@ -700,10 +819,10 @@ Cited but not read directly (paywalled or offline):
 - J. D. Ede, "Rhombic Triacontahedra", *Math. Gazette* **42** (1958), 98–100.
 - J. L. Hudson & J. G. Kingston, "Stellating polyhedra", *Mathematical Intelligencer*
   **10**(3) (1988), 50–61.
-- J. Hudson, "Further Stellations of the Uniform Polyhedra", *Mathematical Intelligencer*
+- J. L. Hudson, "Further Stellations of the Uniform Polyhedra", *Mathematical Intelligencer*
   **31**(4) (2009), 18–26. <https://doi.org/10.1007/s00283-009-9061-y>
-- G. M. Fleurent, "Symmetry and polyhedral stellation — I", *Comput. Math. Applic.* **17**
-  (1989), 167–193.
+- G. M. Fleurent, "Symmetry and polyhedral stellation — Ia", *Comput. Math. Applic.*
+  **17**(1–3) (1989), 167–175; "— Ib", same issue, 177–193.
 - P. W. Messer & M. J. Wenninger, "Symmetry and polyhedral stellation — II", *Comput. Math.
   Applic.* **17** (1989), 195–201.
 - K. R. McKeown & N. I. Badler, "Creating polyhedral stellations", *ACM SIGGRAPH Computer
@@ -712,5 +831,6 @@ Cited but not read directly (paywalled or offline):
   Univ. of Toronto Press 1938; Springer 1982; Tarquin 3rd edn (Crennell) 1999.
 - M. J. Wenninger, *Polyhedron Models* (CUP 1971), *Spherical Models* (CUP 1979),
   *Dual Models* (CUP 1983).
-- A. Holden, *Shapes, Space and Symmetry*, Dover 1971, p. 90.
+- A. Holden, *Shapes, Space, and Symmetry*, Columbia University Press 1971, p. 90 (Dover
+  reprint later; Bulatov's reference list miscites it as "Dover, 1971").
 - H. F. Verheyen, *Symmetry Orbits*, Birkhäuser 1996.

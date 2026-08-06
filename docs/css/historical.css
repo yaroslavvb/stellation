@@ -1,0 +1,203 @@
+/* The historical page: a timeline you scroll, with live solids in the margin of
+   the story. Shares the walkthrough's document styling and adds the timeline
+   rail, the era headers, and the "build it yourself" banner. */
+
+/* ------------------------------------------------------------------ rail */
+
+#rail a {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 4px 9px;
+}
+#rail a em {
+  flex: none;
+  width: 34px;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------------------ eras */
+
+.era {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 64px 0 -18px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.era::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.doc-body section { padding-top: 42px; }
+
+.when {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font: 600 11.5px var(--mono);
+  letter-spacing: 0.02em;
+}
+.doc-body section h2 { margin-top: 2px; }
+.who {
+  margin: -8px 0 16px;
+  font-size: 13.5px;
+  color: var(--dim);
+}
+
+/* a pull-out for the human detail */
+.person {
+  display: flex;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.person-mark {
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-2) 16%, transparent);
+  color: var(--accent-2);
+  font-size: 15px;
+}
+.person-body { font-size: 14.5px; line-height: 1.62; }
+.person-body b { color: var(--text); }
+.person-body p { margin: 0 0 8px; }
+.person-body p:last-child { margin-bottom: 0; }
+
+/* an unexpected cross-field link */
+.link-out {
+  margin: 20px 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--accent-2);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--accent-2) 7%, transparent);
+  font-size: 14.5px;
+  line-height: 1.62;
+}
+.link-out b { color: var(--text); }
+.link-out .tag {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+/* ------------------------------------------------------------------ build-it banner */
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: -2px 0 11px;
+  padding: 8px 11px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  font-size: 13.5px;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.goal-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.goal-text { flex: 1; min-width: 180px; }
+.goal button {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+  color: var(--dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.goal button:hover { border-color: var(--accent); color: var(--accent); }
+.goal.won {
+  border-style: solid;
+  border-color: #3fbf7f;
+  background: color-mix(in srgb, #3fbf7f 12%, transparent);
+}
+.goal.won .goal-tag { background: #3fbf7f; }
+
+/* ------------------------------------------------------------------ figures */
+
+.hfig {
+  margin: 20px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  min-height: 120px;
+}
+.hfig:empty::after {
+  content: "…";
+  display: block;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--dim);
+}
+.hfig-wide { margin-left: -60px; margin-right: -60px; }
+@media (max-width: 900px) { .hfig-wide { margin-left: 0; margin-right: 0; } }
+
+/* ------------------------------------------------------------------ gallery of eras */
+
+.solids-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.solid-card {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  text-align: center;
+  font-size: 12px;
+}
+.solid-card img {
+  width: 100%; max-width: 72px;
+  border-radius: 6px;
+  background: #fff;
+}
+.solid-card b { display: block; margin-top: 6px; font-size: 12.5px; }
+.solid-card span { color: var(--dim); font-size: 11px; }
+
+/* ------------------------------------------------------------------ sources */
+
+details.sources {
+  margin: 14px 0 0;
+  font-size: 13px;
+}
+details.sources summary {
+  cursor: pointer;
+  color: var(--dim);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+details.sources ul { margin: 8px 0 0; padding-left: 18px; }
+details.sources li { margin: 5px 0; color: var(--dim); line-height: 1.5; }
+details.sources a { color: var(--accent-2); }

@@ -6,6 +6,21 @@ Everything below is about *software*: what exists, when it was written, and — 
 question that matters for the tutorial — **what the user actually clicks on to pick
 cells.**
 
+> **Fact-check pass, 2026-08-05.** Every number, date, name and quotation below was
+> re-checked against the primary source. Confirmed as written: Webb's full enumeration
+> table (icosahedron 8/11/18/59; RTC 13/29/227/358,833,098; truncated dodecahedron
+> 1,141 vs 2,645,087,084,526; pentagonal hexecontahedron 30,049,378,413,796), all seven
+> Bridges papers and page ranges, the whole `layer(type)` / `H:layer(type[sub])` / `S{…}`
+> notation and its worked examples, the Ih orbit sizes 120/60/30/20/12/1, the Th 8+12
+> split, the six-row Cells mouse grammar, the applet class name, MathWorld's
+> 20+30+60+20+60+120+12+30+60+60, Inchbald's 473 finite cells / 12 shapes / 4095, Du Val's
+> A·b…h shell letters, and the Java-applet obsolescence chain. Corrections and downgrades
+> are marked inline; the ones that changed a claim are Bridges 2001's venue (§2.1), the
+> Maeder source book (§4.7), Miller's rules vs the cell diagram (§6), the monoacral count
+> caveat (§3.2), the Fortran Friends "sells" claim and the Crennell attribution (§4.2),
+> Kaleido's "80" (§4.5), a misquotation of Hart (§4.4), the truncation point of Webb's
+> paper (§3.1), and `-O d` vs `-O D` (§4.6).
+
 ---
 
 ## 0. The one-paragraph answer
@@ -30,10 +45,11 @@ facet?" indirectly, and one click can cascade into many cells. Routes 3 and 4 ar
 survey below, only Vladimir Bulatov's programs offer it. The nearest relative is Great
 Stella's *cell diagram*, which is the same information (layers of cell types) drawn as a
 graph with support edges instead of as a grid — and Robert Webb himself warns in his own
-manual that it is "usually not an intuitive way to create stellations." The reason
-Bulatov can make the grid work where Webb could not is that Bulatov's grid carries an
-extra dimension nobody else has: **the sub-cell split induced by choosing a stellation
-symmetry smaller than the polyhedron's own symmetry.**
+manual that it is "usually not an intuitive way to create stellations." Bulatov's grid
+carries an extra dimension the others do not expose: **the sub-cell split induced by
+choosing a stellation symmetry smaller than the polyhedron's own symmetry.** *(That the
+extra dimension is what "makes the grid work where Webb could not" is this note's reading,
+not something either author says.)*
 
 ---
 
@@ -47,8 +63,9 @@ different programs. This matters when you compare them.
   blocks"; infinite ones are discarded.
 - **Complete stellation cell** (Bulatov) / **cell type** (Webb): the whole *orbit* of an
   elementary cell under the symmetry group — i.e. one elementary cell plus every copy of
-  it that symmetry produces. Both authors note that in practice you say "cell" when you
-  mean "cell type", because you almost never want a single loose region.
+  it that symmetry produces. Webb's manual notes the colloquial slippage explicitly ("all
+  cells of a certain type are usually referred to as a single cell"); Bulatov defines the
+  term but does not comment on usage.
   - Webb is explicit that he groups by the **rotational** group only, so a chiral cell
     appears as a left/right *pair* of types. Bulatov instead makes the grouping symmetry a
     user choice (see §2.3).
@@ -112,10 +129,10 @@ useful signal about who the two players were in 2009.
 
 The same 2001 text was also published on the VisMath web journal
 (`mi.sanu.ac.rs/vismath/bulatov/`). **UNCERTAIN:** the VisMath copy is dated 2000 there
-and 2001 in the Bridges archive; treat "Bridges 2001, Wichita/Winfield, Kansas, pp.
-201–212" as the citable version. (Bulatov's own 2009 reference list says "Winfield,
-Kansas"; the 2001 Bridges conference is generally listed as Wichita/Southwestern College,
-Winfield.)
+and 2001 in the Bridges archive; treat "Bridges 2001, Winfield, Kansas, pp. 201–212" as
+the citable version. The Bridges Archive index page for 2001 gives the venue as
+**"Winfield, Kansas, USA, 27–29 July 2001"** (Southwestern College) — *not* Wichita, and
+this matches Bulatov's own 2009 reference list.
 
 ### 2.2 The lineage of the software
 
@@ -123,11 +140,14 @@ Winfield.)
    59 icosahedra as images and VRML, © 1996, with POV-Ray data credited to John Cranmer.
 2. **1997–1998 — the first interactive stellation pages** (`bulatov.org/polyhedra/stellation/`,
    © 1997, VRML 2.0, tested against WorldView 2.0 and CosmoPlayer 2.0). *This is where the
-   Cells table is born.* The page describes a column of red/blue buttons beside the model:
-   red = cell visible, click to toggle; **"Every row of buttons corresponds to one layer of
-   cells"**, and within a layer the cells are ordered by decreasing volume. Six polyhedra
-   are offered, with cell counts running from 11 to 369 symmetric cells. So the
-   layer-per-row grid predates the Java applet by ~3 years and predates Great Stella by ~4.
+   Cells table is born.* The page describes a set of small red/blue buttons to the right of
+   the model: red = cell visible, click to toggle; **"Every row of buttons corresponds to
+   one layer of cells"**, and within a layer the cells are ordered by decreasing volume.
+   Six entries are offered covering five distinct polyhedra — the icosahedron appears twice
+   (12 icosahedral cells, and 42 tetrahedral cells), alongside the triakis tetrahedron (11),
+   the rhombic triacontahedron (37), the deltoidal hexecontahedron (369, first 15 of 28
+   layers) and the small stellated truncated dodecahedron (21). So the layer-per-row grid
+   predates the Java applet by ~3 years and predates Great Stella by ~4.
 3. **2000–2001 — the Java Stellation Applet** (`bulatov.org/polyhedra/stellation_applet/`),
    © 2000, 2001. This is the version the Bridges paper documents.
 4. **Later — a standalone desktop Java program.** The application this project resurrects
@@ -156,6 +176,9 @@ applet is five frames in a browser, Java 1.1, tested on IE 5.0 and Netscape 4.7:
 - **Diagram frame** — the 2D stellation diagram with the facets of the currently selected
   cells. Top facets yellow, bottom facets red, "keep in mind that most facets are top for
   cells below and bottom for cells above". Right-click gives a popup of operations.
+  (**Minor source disagreement:** the help page says top = yellow, bottom = red; the 2001
+  Bridges paper says the opposite — "facets with top attached cells are colored red, with
+  bottom attached cells are colored yellow". Trust the running program, not either text.)
 - **3D view frame** — trackball rotation; **Ctrl+click adds the cell adjacent to the
   clicked facet, Shift+click removes the clicked cell.**
 - **Output frame** — per-layer counts of facets, elementary cells and symmetrical cells.
@@ -173,15 +196,21 @@ program surveyed:
 | Shift + Ctrl + click a cell | clear the selection of all its supporting cells |
 
 Bulatov's paper highlights the Shift-click case as the killer feature: one click on a top
-cell can pull in the entire supporting cone. His example (Fig. 21–22 of the paper) is a
-stellation of the strombic hexecontahedron in which a single mouse click brought in **73
-stellation cells** and several hundred elementary cells.
+cell can pull in the entire supporting cone. His example is **Fig. 21** (Fig. 22 is the
+same model in stereo): the caption reads "Cells of a supported stellation `S{I:16(2[1])}`
+of strombic hexecontahedron (dual to rhombicosidodecahedron) … It consists of 73 stellation
+cells and few hundreds elementary cells, but may be easy generated using one mouse click."
+(The body text of the paper says "73 subcells" for the same figure — the caption's "73
+stellation cells" is the wording to quote.)
 
 Documented limitations, in his own words: some cells in the top few layers of the
 disdyakis triacontahedron and the snub cube come out wrong. Downloads on the page are
-`stellation_010914.zip` (the runnable jar, 14 Sep 2001) and `stellation_src_010907.zip`
-(source, 7 Sep 2001); both still return HTTP 200 as of Aug 2026. The applet class is
-`PVS.polyhedra.stellation.StellationApplet`.
+`stellation_010914.zip` (the runnable jar) and `stellation_src_010907.zip` (source); both
+still return HTTP 200 as of Aug 2026. **UNCERTAIN:** the dates 14 Sep 2001 and 7 Sep 2001
+are *inferred from the `YYMMDD` filenames* and are consistent with the page's "© 2000,
+2001"; the server's `Last-Modified` headers read 2019 (a later site move) and there is no
+dated release note. The applet class is `PVS.polyhedra.stellation.StellationApplet`
+(confirmed from the `CODE` attribute in `stellation_plugin.html`).
 
 **The applet no longer runs in a browser, and hasn't for a decade.** Chrome removed NPAPI
 plugin support in version 45 (Sept 2015); the Applet API was deprecated in JDK 9 (2017),
@@ -249,14 +278,28 @@ different conventions:
   table (1+1+1+1+2+2+2+1). This is also Webb's count, since he lists the chiral pair once
   and tags it "chiral".
 - **12** = orbits under the rotation group `I` including the core — the chiral 120 has
-  split into 60+60. This is Inchbald's count, and it is the count the tutorial's program
-  produces in `Ih / I` mode.
+  split into 60+60. This is the count the tutorial's program produces in `Ih / I` mode.
+  **UNCERTAIN (our reconciliation, not Inchbald's words):** Inchbald only writes "12
+  shapes" and never states his chirality convention. Counting the enantiomorphic pair
+  separately is the only arithmetic that yields 12 from a 473-cell total, and his own
+  2¹² − 1 = 4095 (twelve independently selectable types) points the same way — but he does
+  not say so.
 
-Webb's "max 3 cells per layer" is the same fact seen from the other side: his footnote
-says a chiral pair counts as two, and layer 5 is 12 + 60L + 60R = 3. Likewise, Webb's
-*mainline* stellations (add one whole layer at a time) number "eight in the case of the
-icosahedron" — an independent confirmation of the 8-layer count. Du Val's classical shell
-letters in *The Fifty-Nine Icosahedra* run A (the core) then b…h — also eight.
+Webb's "max 3 cells per layer" is the same fact seen from the other side: his footnote on
+that column says exactly "**Here a pair of chiral cells is counted as two**", and layer 5
+is 12 + 60L + 60R = 3 (the `#Cell types` column, by contrast, counts the pair once — hence
+"11 (10, 1)"). Likewise, Webb's *mainline* stellations (add one whole layer at a time)
+number "eight in the case of the icosahedron" — an independent confirmation of the 8-layer
+count. Du Val's classical shell letters in *The Fifty-Nine Icosahedra* run A (the core)
+then b…h — also eight.
+
+**Note on whose letters these are.** They are **Du Val's**, not Coxeter's and not Miller's:
+Wikipedia's account of the book gives them in exactly that mixed case ("The inner
+icosahedron … is named **A**, the shell with power 1 **b**, the shell with power 2 **c**,
+and so on"), and Fortran Friends' own errata list for the 1999 Tarquin edition contains
+the entry *"p. 67 — Symbols are Du Val's, not Coxeter's"*, i.e. the printed book itself had
+to be corrected for this exact confusion. Anything the tutorial says about "Coxeter's cell
+labels" should be re-attributed to Du Val.
 
 ---
 
@@ -278,7 +321,8 @@ The reference paper is **Webb, R., "Stella: Polyhedron Navigator", *Symmetry: Cu
 Science*, Vol. 11, Nos. 1–4, pp. 231–268, 2000**. Webb notes on his site that the journal
 issue was actually released in 2003 but backdated to 2000. The full text is online at
 software3d.com. **Note for anyone fetching it:** the live PHP page is currently truncated
-after §3.2; a complete copy is in the Internet Archive
+at the end of **§3.1** — §3.2 onward appear in the table of contents but their body text is
+missing. A complete copy is in the Internet Archive
 (`web.archive.org/web/20180710203623id_/https://www.software3d.com/PolyNav/PolyNavigator.php`).
 
 ### 3.2 How Stella lets you pick cells — four routes plus an escape hatch
@@ -304,16 +348,20 @@ From the Great Stella manual (§ *Stellated Polyhedra*) and §3.3–3.5 of the p
    you click regions in situ. Webb calls this "the most intuitive way to create your own
    stellations."
 4. **Modifier combinations, available wherever a cell can be clicked:**
-   - `Ctrl+Left-click` — select/deselect a cell **together with all its supporting cells,
-     recursively down to the core**; when deselecting, the recursion stops at any cell still
-     needed to support something else, "so you can deselect a whole peak without creating a
-     hole right through to the centre".
+   - `Ctrl+Left-click` — takes the whole support cone with the cell: it walks down through
+     every cell that props the clicked one up, stopping at the core (or at a cell already
+     selected). Deselection walks the same tree but halts wherever a cell is still holding
+     up something else, "so you can deselect a whole 'peak' without creating a hole right
+     through to the centre of the model".
    - `Ctrl+Right-click` — select/deselect a **whole layer**.
    - `Stellation → Fill All Inaccessible Cells` — fill hidden internal bubbles (which
      otherwise generate useless extra nets when printing).
 
    These are essentially the same three operations Bulatov binds to Shift/Ctrl on the Cells
-   grid; the two programs converged on the same primitives independently.
+   grid. **UNCERTAIN:** whether the two programs arrived there independently. The dates are
+   suggestive (Bulatov's applet is © 2000–2001, Stella 1.0 is 20 Aug 2001, and Bulatov's
+   button-per-layer VRML pages are © 1997), but neither author's writing mentions the other
+   on this point, so "converged independently" is a guess, not a finding.
 5. **The escape hatch: don't select at all.** Choose a rule set from
    `Stellation → Stellation Criteria`, then walk the whole valid series with the Up/Down
    arrow keys — "hold the keys down to see all the different stellations racing past". Five
@@ -324,13 +372,18 @@ From the Great Stella manual (§ *Stellated Polyhedra*) and §3.3–3.5 of the p
      icosahedron.
    - **Mainline** — add one entire layer at a time; count = number of layers = 8 for the
      icosahedron.
-   - **Primary** (Messer 1989) — faces are single "primary regions" bounded by lines lying
-     in reflection planes; well defined only for reflexible isohedral cores; 7 for the
-     icosahedron.
+   - **Primary** (Messer 1989 — Webb's ref [16], which is actually Messer & Wenninger,
+     *Symmetry and Polyhedral Stellation II*) — every face is a single "primary region",
+     a diagram area fenced in entirely by lines that sit in reflection planes. Webb notes
+     the set only makes sense for reflexible isohedral cores. **Seven** for the icosahedron
+     (his figure, stated in §3.6).
    - **Monoacral / "single peak"** (Messer, unpublished, credited in Webb's paper) — the
-     minimal fully supported stellation containing a chosen seed cell; the count equals the
-     number of cell types. This is *exactly* Bulatov's Shift-click-a-cell operation
-     promoted to an enumeration criterion.
+     minimal fully supported stellation containing a chosen seed cell. This is *exactly*
+     Bulatov's Shift-click-a-cell operation promoted to an enumeration criterion. Webb's
+     **glossary** (not the paper) is where the count is given, and it carries a caveat the
+     tutorial must keep: the number of monoacral stellations is "the same as the number of
+     different cell types — **unless some cell types are unsupportable**". That exception is
+     not hypothetical; see §3.3 on unsupportable finite cells.
 
 Sub-symmetry is supported: the toolbar carries drop-downs of every sub-symmetry group, and
 picking one changes stellation, faceting, augmentation and colouring. Webb cites Ounsted's
@@ -346,8 +399,9 @@ browsing over hand-picking. Selected results:
 
 - Icosahedron: 8 layers, 11 cell types, 18 fully supported, 59 by Miller's rules.
 - Rhombic triacontahedron (dual of the icosidodecahedron): 13 layers, 29 cell types,
-  **227** fully supported (matching Messer's 1995 published catalogue and Pawley's 1975
-  paper title "The 227 Triacontahedra"), but **358,833,098** under Miller's rules.
+  **227** fully supported (MathWorld puts it as "Great Stella … reproduces Messer's 227";
+  the figure also matches the title of Pawley's 1975 paper, "The 227 Triacontahedra"), but
+  **358,833,098** under Miller's rules.
   Webb notes John Gingrich had enumerated this by building a purpose-made circuit board,
   and that he and Gingrich agree the Stella figure is the correct one after a
   misinterpretation of Miller's fifth rule was resolved.
@@ -362,9 +416,13 @@ Two side findings from Webb's research pages, useful for a tutorial's footnotes:
 - **Unsupportable finite cells**: for the snub cube, snub dodecahedron and pentagonal
   hexecontahedron, some finite cells can never be fully supported by other *finite* cells —
   the final stellation is re-entrant. He believes this was previously unnoticed.
-- **Miller's fifth rule** has at least three published interpretations (Gingrich's,
-  Matsko's, Webb's); they agree for the icosahedron (all admit exactly one extra model) but
-  diverge for more complex cores.
+- **Miller's fifth rule** has at least three interpretations in circulation (Gingrich's,
+  Matsko's, Webb's — all three are set out side by side on Webb's page, though only his own
+  is argued for there); they agree for the icosahedron (all admit exactly one extra model)
+  but diverge for more complex cores. Worth quoting for the tutorial, because it cuts
+  against a tempting shortcut: Webb insists "parts", as used in Miller's rules, "refer
+  exclusively to the small indivisible 2D parts in a stellation diagram" — the rules are
+  written about the *stellation diagram*, not about 3D cells.
 
 ---
 
@@ -386,14 +444,23 @@ Webb) — computer *drawing*, not computer *design*.
 
 ### 4.2 Fortran Friends `!Stellate` (RISC OS)
 
-A UK RISC OS user group (Dave Crennell is the name that recurs) sells four polyhedra
-programs; the relevant one is **`!Stellate`, current version 2.23, 7 Feb 2016** — the
-version numbering implies a long life before that. It does "interactive creation of uniform
-polyhedra their stellations, duals and other polyhedra … using stellation diagrams and
-stored inter-planar angles", ships >120 pre-stored models, and can save a Draw file of the
-stellation diagram. Its explanatory page describes the workflow as **selecting areas of the
-stellation diagram to form the faces of a new polyhedron** — i.e. route 1, pure 2D, no cell
-list at all.
+Fortran Friends is a self-help group of RISC OS users organised around the Fortran language
+(PO Box 64, Didcot, Oxon). The recurring names are the **Crennells** — K. M. (Kate)
+Crennell for the software, Dave Crennell for the ray-traced imagery; the 1999 Tarquin
+edition of *The Fifty-Nine Icosahedra* credits its photographs to "K. and D. Crennell".
+They publish four polyhedra programs — `!PolyDraw`, `!PolyNet`, `!PolySymm` and
+`!Stellate`. **Correction:** these are no longer sold. Their products page now states that
+all of the software is free and downloadable from the site, and that they no longer produce
+discs; `!PolyDraw` is additionally marked superseded by `!PolySymm`.
+
+The relevant program is **`!Stellate`, current version 2.23, 7 Feb 2016** — the version
+numbering implies a long life before that. Its own description is "interactive creation of
+uniform polyhedra their stellations, duals and other polyhedra"; the machinery it names is
+stellation diagrams plus stored inter-planar angles. It ships more than 120 pre-stored
+models, and its feature table is the only one of the four with a "save Draw file of
+stellation diag." row. Its explanatory page describes the workflow as **selecting areas of
+the stellation diagram to form the faces of a new polyhedron** — i.e. route 1, pure 2D, no
+cell list at all.
 
 Its historical claim to fame: when Tarquin Publications reissued *The Fifty-Nine
 Icosahedra* as a third edition in **January 1999**, Fortran Friends re-typeset it and
@@ -424,21 +491,30 @@ interactive cell selection whatsoever; you click a number, you get a model.
 Relevant to the sub-symmetry story: Hart's *Tetrahedral Stellations of the Icosahedron*
 (1996) presents "several thousand" possible forms of which he shows 32, numbered 1–32,
 each a VRML link. He says he made them "with a general-purpose stellation program I have
-written, which generates many kinds of stellations of all polyhedra" — **UNCERTAIN:** that
-program was, as far as I can tell, never named or released. Bulatov cites these pages as
-[5] in the 2001 paper.
+written, which generates many kinds of stellations of all kinds of polyhedra", and on the
+same page that "there is no published reference to these" — **UNCERTAIN:** that program
+was, as far as I can tell, never named or released. Bulatov cites these pages as [5] in the
+2001 paper.
 
 ### 4.5 Kaleido (Zvi Har'El) and Poly (Pedagoguery) — *not* stellation programs
 
 Worth listing precisely because they are often name-checked together with the above.
 
 - **Kaleido**, Zvi Har'El (Department of Mathematics, Technion, Haifa), 1993, C source,
-  still online at `harel.org.il/zvi/kaleido/`. It computes the 80 uniform polyhedra and
-  their duals from their kaleidoscopic (Wythoff) construction, per his paper "Uniform
-  Solution for Uniform Polyhedra", *Geometriae Dedicata*, 1993. **It does not stellate.**
-  Its role in this story is as a *source of input polyhedra*, and as the ancestor of
-  Antiprism's bundled `kaleido`. (Roman Mäder ported the same solution to Mathematica in
-  1993 with slightly different indexing.)
+  still online at `harel.org.il/zvi/kaleido/`. It computes uniform polyhedra and their
+  duals from their kaleidoscopic (Wythoff) construction, per his paper "Uniform Solution
+  for Uniform Polyhedra", *Geometriae Dedicata* **47** (1993), 57–110. **Careful with the
+  count:** Har'El's own README says there are **75** uniform polyhedra (5 Platonic + 13
+  Archimedean + 4 Kepler–Poinsot + 53 nonconvex) *plus two infinite families* of prisms and
+  antiprisms; the familiar figure **80** is the size of his *index*, i.e. the 75 plus five
+  prismatic representatives (Antiprism's port states flatly, "There are 80 models which can
+  be generated by indexes"). **It does not stellate.** Its role in this story is as a
+  *source of input polyhedra*, and as the ancestor of Antiprism's bundled `kaleido`. Roman
+  Maeder built a Mathematica program on top of Har'El's C code — his own pages say the
+  graphics data "were computed with a Mathematica program, developed by R. Maeder, based on
+  a C program by Zvi Har'El", published as Chapter 9 of *The Mathematica Programmer II* —
+  and it carries its own numbering: Antiprism's `kaleido` accepts a "Maeder index (`u75`)"
+  and a "Kaleido index (`k75`)" as different things.
 - **Poly**, Pedagoguery Software (peda.com), shareware for classic Mac and Windows: a
   polyhedron browser with 3D, Schlegel-diagram and net views, translated into a dozen
   languages. Platonic/Archimedean/Johnson/Catalan/prisms. **No stellation cells.**
@@ -463,7 +539,8 @@ off_trans -y D5 ico | stellate -f 0,18 -f 3,4,47 -s D5v | antiview
 **stellation-diagram face indices**; repeat `-f` for other base faces. `-s` sets the
 symmetry subgroup in Schoenflies notation (here `D5v`), which is the same sub-symmetry idea
 as Bulatov's Symmetry drop-down. Colouring can be driven "from stellation diagram" (`-F q`),
-and `-O d` renders the diagram itself with used faces highlighted.
+and `-O d` outputs the diagram itself — the *uppercase* `-O D` is the variant documented as
+"diagram faces used highlighted".
 
 Trade-off in the clearest possible form: perfectly scriptable and reproducible, zero
 discoverability. You cannot see the layer structure at all, and you must already know which
@@ -471,19 +548,27 @@ diagram region index you want.
 
 ### 4.7 Mathematica / Wolfram
 
-- **Roman E. Maeder**, "Fifty-Nine Icosahedra", Wolfram Demonstrations Project. The code
-  originates in his book *The Mathematica Programmer* (AP Professional, 1994). Interaction
-  = pick one of the 59 from an index and rotate it. The "Maeder numbering" of the 59
-  (ordered by increasing circumradius) is a separate contribution that shows up in later
-  literature.
-- **Michael Rogers** (Oxford College / Emory University), "Playing with Stellations of the
-  Icosahedron", Wolfram Demonstrations Project; adapted from his own Mathematica code
-  written for a talk at Colby College in **1993**. This one is explicitly about *cells and
-  facets*: colour schemes that distinguish cells from facets, and cut-away segments along a
-  vertex/edge/face axis so you can see inside. Its detail text explicitly frames the design
-  question the tutorial cares about — whether a symmetric selection of cells "deserves to be
-  called a stellation is, to some extent, a matter of taste" — and cites Inchbald's *In
-  Search of the Lost Icosahedra* (*Mathematical Gazette* 86 (506), July 2002, pp. 208–215).
+- **Roman E. Maeder**, "Fifty-Nine Icosahedra", Wolfram Demonstrations Project (published
+  2007). **Correction:** the code does *not* originate in *The Mathematica Programmer*
+  (1994). MathWorld's reference list gives the origin as Maeder, "The Stellated Icosahedra",
+  *Mathematica in Education* **3**, 5–11, 1994, and Maeder's own site says the work comes
+  from that article "with an expanded version in Chapter 10 of *The Mathematica Programmer
+  II*" (1996). Interaction = pick one of the 59 from an index and rotate it. On the
+  numbering: there are **two** Maeder numberings, and only the later one is by circumradius
+  — MathWorld says "the newer Maeder numbering … orders by increasing circumradius R", and
+  Maeder himself notes it differs from "the numbering used in … my original program".
+- **Michael Rogers**, "Playing with Stellations of the Icosahedron", Wolfram Demonstrations
+  Project. This one is about *cells and facets* rather than a fixed list: colour schemes
+  that distinguish cells from facets, and cut-away segments so you can see inside.
+  **UNCERTAIN:** I could not re-verify the specifics from a primary source on this pass —
+  the Demonstrations pages now render client-side and their Details/References text sits
+  behind a Wolfram login, so the affiliation (Oxford College / Emory), the "written for a
+  talk at Colby College in 1993" provenance, the "deserves to be called a stellation is, to
+  some extent, a matter of taste" quotation, and the citation of Inchbald all rest on the
+  earlier reading of that page and should be re-checked before publication. What *is*
+  independently confirmed: the Demonstration exists, is by Michael Rogers, and follows the
+  ordering and notation of Coxeter et al.; and Inchbald's "In Search of the Lost Icosahedra"
+  is indeed *Mathematical Gazette* **86** (506), July 2002, pp. 208–215.
 
 ---
 
@@ -495,20 +580,27 @@ current things exist:
 
 ### 5.1 vZome "The 59 Icosahedra" — `vzome.com/app/59icosahedra/`
 
-By **Scott Vorthmann** (author of vZome), announced around **October 2024**, built on the
-`vzome-viewer` web component. Interaction: you **click or touch the shapes in the 3D view**
-to toggle subsets of the stellation — route 2, and only route 2. It is explicitly inspired
-by **Bob Hearn's physical magnetic model** of the 59 icosahedra, and it is a
-guided-exploration piece rather than a general stellation engine (one polyhedron, the 59
-known forms). Vorthmann presented "The Virtual Fifty-Nine Icosahedra" at Gathering for
-Gardner 15 (February 2024).
+By **Scott Vorthmann** (author of vZome), built on the `vzome-viewer` web component and
+explicitly inspired by **Bob Hearn's physical magnetic model** of the 59 icosahedra (both
+confirmed from vzome.com/docs/online.html). It is a guided-exploration piece rather than a
+general stellation engine (one polyhedron, the 59 known forms). Vorthmann presented "The
+Virtual Fifty-Nine Icosahedra" at **Gathering 4 Gardner 15**, which ran **21–25 February
+2024** in Atlanta — the talk video carries that date. It was doing the rounds on Mathstodon
+on **25 October 2024** (Robin Houston's post, not Vorthmann's own — so "announced October
+2024" overstates it; call it "circulating by late October 2024").
+**UNCERTAIN:** the interaction claim — that you toggle subsets by **clicking or touching
+shapes in the 3D view**, route 2 and only route 2 — could not be re-verified, because the
+app page is a JavaScript shell with no server-rendered text and the docs page describes only
+that it "lets you explore" the 59. Treat "only route 2" in particular as unconfirmed: I have
+no source ruling out a diagram or list view.
 
 ### 5.2 `monman53/stellated-polyhedra-explorer` — the closest thing to a modern general tool
 
 MIT-licensed, TypeScript + Vue 3 + Vite + raw WebGL 1 (no 3D library), live at
-`monman53.github.io/stellated-polyhedra-explorer/`. **Caveat: the GitHub repo was created
-2026-06-11 and last pushed 2026-06-15, with 0 stars — this is brand new and effectively
-unknown; treat it as a data point, not an established tool.** What it does that is relevant:
+`monman53.github.io/stellated-polyhedra-explorer/`. **Caveat: the GitHub API reports the
+repo created 2026-06-11, last pushed 2026-06-15, 0 stars — under two months old as of this
+writing, with no community uptake; treat it as a data point, not an established tool.**
+What it does that is relevant:
 
 - **Editable stellation diagram side by side with the 3D model** — click or *drag-paint*
   regions to add/remove cells. Painting (drag across many regions) is an interaction no
@@ -525,8 +617,10 @@ unknown; treat it as a data point, not an established tool.** What it does that 
   rhombic dodecahedron, rhombic triacontahedron, truncated icosahedron, truncated
   dodecahedron. Its README quotes its own computed figures — e.g. icosidodecahedron 463
   diagram cells in 76 symmetry types; rhombic triacontahedron 193 cells in 54 types;
-  truncated icosahedron/dodecahedron 515 cells in 85 types each. (These are 2D
-  diagram-region counts, not 3D cell counts — don't confuse them with the 473 figure.)
+  truncated icosahedron/dodecahedron 515 cells in 85 types each. **UNCERTAIN:** the README
+  calls these "diagram cells" without saying whether they are 2D stellation-diagram regions
+  or 3D cells, and nobody else has published matching numbers. Either way they are *not*
+  comparable to the icosahedron's 473 — do not put them in the same table.
 
 ### 5.3 What is *not* a stellation tool on the web
 
@@ -550,9 +644,9 @@ structure as a table indexed by layer. Here is the whole landscape at a glance:
 | **Bulatov, Stellation Applet** | **2000–01** | **Java applet** | **layer × cell × sub-cell grid**, + 2D diagram, + 3D picking, + text notation | **yes, primary** | **yes, arbitrary subgroup** |
 | Great Stella / Stella4D | 2001– | Windows | cell-diagram graph, 2D diagram, 3D diagram, criteria stepping | yes, as graph rows | yes |
 | Antiprism `stellate` | ≤2019 | CLI | `-f` list of diagram face indices | no | yes (`-s`) |
-| Maeder demo | 1994/2007 | Mathematica | index into the 59 | no | no |
-| Rogers demo | 1993/2011 | Mathematica | colour-by-cell + cutaway (viewing, not building) | partly | no |
-| vZome *59 Icosahedra* | 2024 | web | click 3D shapes | no | no |
+| Maeder demo | 1994 article / 2007 demo | Mathematica | index into the 59 | no | no |
+| Rogers demo | dates UNCERTAIN | Mathematica | colour-by-cell + cutaway (viewing, not building) | partly | no |
+| vZome *59 Icosahedra* | 2024 | web | click 3D shapes (UNCERTAIN) | no | no |
 | monman53 explorer | 2026 | web | paint 2D diagram + presets | via explode view | chiral halves only |
 
 ### Trade-offs, stated plainly (this is the part the tutorial should use)
@@ -576,19 +670,32 @@ structure as a table indexed by layer. Here is the whole landscape at a glance:
 
 **The cell diagram (support graph)**
 - *For*: it makes support relations — the thing that decides whether a stellation is
-  *fully supported* — into visible edges. Miller's rules 4 and 5 are literally statements
-  about connectivity of this graph, so the graph is the right picture for reasoning about
-  criteria. It comes with pedigree: Messer 1995, after Pawley 1975.
+  *fully supported* — into visible edges. **Corrected claim:** an earlier draft said
+  "Miller's rules 4 and 5 are literally statements about connectivity of this graph". They
+  are not. Per Webb's §3.6, rule 4 requires the 2D elementary regions used for the surface
+  to be accessible from outside, and rule 5 excludes compounds; and Webb argues on his
+  Miller's-5th page that "parts" in the rules means the indivisible 2D regions of the
+  *stellation diagram*. The criterion the cell diagram really does encode is **full
+  support** — Webb: "the term *fully supported* comes from an observation of the cell
+  diagram … any cell reached by following a line downwards from a used cell must also be
+  used." So the graph is the right picture for support, not for Miller. It comes with
+  pedigree: Messer 1995, after Pawley 1975.
 - *Against*: Webb's own verdict, in his own manual — not an intuitive way to build. The
   layout gets unreadable fast (the rhombic triacontahedron already has 29 cell types over 13
   layers; the icosidodecahedron's dual family runs to hundreds).
 
 **The layer × cell × sub-cell table (Bulatov)**
 - *For*: it is the only view that shows the *entire* state space compactly and at constant
-  visual cost per cell — 473 cells collapse to 11 boxes. Rows give you depth for free, so
-  "add the next shell" is one click on a row number. It is the only place the **sub-cell
-  decomposition under a chosen symmetry subgroup** can be displayed at all — that is the
-  feature Bulatov's whole 2001 paper exists to justify, and no other program shows it. It
+  visual cost per cell — 473 cells collapse to 11 boxes under full `Ih` (12 in `Ih / I`
+  mode, once the chiral pair splits). Rows give you depth for free, so "add the next shell"
+  is one click on a row number. It displays the **sub-cell decomposition under a chosen
+  symmetry subgroup**, which is the feature Bulatov's whole 2001 paper exists to justify.
+  **UNCERTAIN:** "no other program shows it" is too strong as an unqualified claim — Great
+  Stella and Antiprism both *support* sub-symmetric stellation (Webb §7.2; `stellate -s`),
+  and what I could not confirm is only whether Stella's cell diagram *visibly splits nodes*
+  for an arbitrary subgroup (it definitely does for chiral pairs). The defensible statement
+  is: no other surveyed program presents the subgroup decomposition as an explicit,
+  addressable column of sub-cells. It
   supports a text serialisation trivially (`{0,1,2,3,4,5(1[1])}`), which is how you
   save/share a stellation. And support-closure operations (Shift/Ctrl-click) have somewhere
   natural to live.
@@ -606,11 +713,15 @@ structure as a table indexed by layer. Here is the whole landscape at a glance:
   you there.
 
 **Practical conclusion for the tutorial:** the Cells table is not a quirky alternative to
-the stellation diagram — it is the *complement* of it, and it is the only widget in the
-history of this software genre that can express "this orbit of 120 cells has split into a
-left-handed 60 and a right-handed 60 because you asked for rotation-only symmetry". That is
-worth saying out loud, because a reader arriving from Great Stella will be looking for a
-cell diagram and won't find one.
+the stellation diagram — it is the *complement* of it. It makes "this orbit of 120 cells has
+split into a left-handed 60 and a right-handed 60 because you asked for rotation-only
+symmetry" a thing you can see and click. (Be precise about the novelty, though: Great
+Stella's cell diagram already splits an enantiomorphic pair into two side-by-side nodes
+joined by a dashed line, and Webb says he prefers that to the single node other authors
+draw. The chiral case is *not* unique to Bulatov. What is unusual is doing it for an
+arbitrary subgroup `H ≤ G` chosen by the user, and giving each piece its own address.) Worth
+saying out loud either way, because a reader arriving from Great Stella will be looking for
+a cell diagram and won't find one.
 
 ---
 
@@ -631,11 +742,24 @@ cell diagram and won't find one.
   by Webb as "Ia & Ib", *Computers and Mathematics with Applications* 17(1–3), pp. 167–193,
   1989; ScienceDirect indexes part Ia alone at pp. 167–175, with a separate Part II by
   Messer & Wenninger at pp. 195–201. Webb's page range covers Ia+Ib.
-- **Minor source disagreement:** "cell shapes" of the icosahedron counted as 10 (MathWorld),
-  11 (Webb) or 12 (Inchbald) — resolved in §2.5; all three are the same structure under
-  different conventions.
-- The monman53 web explorer is days-to-weeks old with no community uptake; do not present
-  it as an established tool.
+- **Minor source disagreement:** "cell shapes" of the icosahedron counted as 10 (MathWorld,
+  which words it "20+30+60+20+60+120+12+30+60+60 cells of 10 different shapes and sizes",
+  crediting Wenninger 1989 p. 41), 11 (Webb's table: "11 (10, 1)") or 12 (Inchbald) —
+  reconciled in §2.5; all three describe the same structure under different conventions,
+  but only the 10 and 11 figures are stated by their sources in a way that pins the
+  convention down.
+- **Minor source disagreement:** facet colouring in Bulatov's applet — help page says top =
+  yellow / bottom = red, the 2001 paper says top = red / bottom = yellow (§2.3).
+- **UNCERTAIN:** Michael Rogers' Wolfram Demonstration — affiliation, the Colby College 1993
+  provenance, the "matter of taste" quotation and the Inchbald citation could not be
+  re-verified (Demonstrations pages are now client-rendered and gated). See §4.7.
+- **UNCERTAIN:** the interaction model of vZome's *59 Icosahedra* app (JS-only page; docs
+  confirm authorship, the `vzome-viewer` component and the Bob Hearn inspiration, nothing
+  about clicking). See §5.1.
+- **UNCERTAIN:** whether monman53's "463 / 193 / 515 cells" README figures are 2D
+  diagram-region counts or 3D cell counts.
+- The monman53 web explorer is under two months old (repo created 2026-06-11) with no
+  community uptake; do not present it as an established tool.
 
 ---
 
@@ -643,7 +767,9 @@ cell diagram and won't find one.
 
 **Bulatov**
 - V. Bulatov, "An Interactive Creation of Polyhedra Stellations with Various Symmetries",
-  *Bridges 2001*, pp. 201–212. https://archive.bridgesmathart.org/2001/bridges2001-201.pdf
+  *Bridges 2001* (Winfield, Kansas, 27–29 July 2001), pp. 201–212.
+  https://archive.bridgesmathart.org/2001/bridges2001-201.pdf ; conference index:
+  https://archive.bridgesmathart.org/2001/
 - Same text on VisMath: https://www.mi.sanu.ac.rs/vismath/bulatov/index.html
 - Polyhedra Stellations Applet (help page, © 2000, 2001):
   http://bulatov.org/polyhedra/stellation_applet/stellation.html
@@ -676,15 +802,30 @@ cell diagram and won't find one.
 - K. R. McKeown, N. I. Badler, "Creating polyhedral stellations", *ACM SIGGRAPH Computer
   Graphics* 14(3), 1980. https://doi.org/10.1145/965105.807463
 - Antiprism `stellate` (Roger Kaufman): https://www.antiprism.com/programs/stellate.html
-- Fortran Friends polyhedra products (incl. `!Stellate` v2.23):
-  https://fortran.orpheusweb.co.uk/Poly/prodp.htm
+- Fortran Friends polyhedra products (incl. `!Stellate` v2.23 and the feature-comparison
+  table): https://fortran.orpheusweb.co.uk/Poly/prodp.htm
+- Fortran Friends products index ("All of these products are now free"):
+  https://fortran.orpheusweb.co.uk/prods.htm
+- Fortran Friends, "Stellations explained" ("select areas of the stellation diagram to form
+  the faces of a new polyhedron"): https://fortran.orpheusweb.co.uk/Poly/Ex/dodstl.htm
+- R. E. Maeder, "The Stellated Icosahedra", *Mathematica in Education* 3, 5–11, 1994
+  (the actual origin of the Maeder code; expanded as Ch. 10 of *The Mathematica Programmer
+  II*, 1996)
 - Fortran Friends, The 59 Icosahedra / Tarquin 3rd edition + errata:
   https://fortran.orpheusweb.co.uk/Poly/59icos.htm
 - G. Hart, *Virtual Polyhedra*: https://georgehart.com/virtual-polyhedra/vp.html ,
   .../stellations-info.html , .../stellations-icosahedron-info.html ,
   .../stellations-icosahedron-tetrahedral.html
-- Z. Har'El, Kaleido: http://harel.org.il/zvi/kaleido/ ; "Uniform Solution for Uniform
-  Polyhedra", *Geometriae Dedicata*, 1993: http://harel.org.il/zvi/docs/uniform.pdf
+- Z. Har'El, Kaleido: http://harel.org.il/zvi/kaleido/ ; README (75 uniform polyhedra + 2
+  infinite prismatic families): http://harel.org.il/zvi/kaleido/README.html ; "Uniform
+  Solution for Uniform Polyhedra", *Geometriae Dedicata* 47 (1993), 57–110:
+  http://harel.org.il/zvi/docs/uniform.pdf
+- Antiprism port of `kaleido` ("There are 80 models which can be generated by indexes";
+  Maeder `u` index vs Kaleido `k` index): https://www.antiprism.com/programs/kaleido.html
+- R. Maeder, *Uniform Polyhedra* (Mathematica program built on Har'El's C code, Ch. 9 of
+  *The Mathematica Programmer II*): http://www.mathconsult.ch/static/unipoly/unipoly.html
+- R. Maeder, *Stellated Icosahedra* (origin of the code and of the circumradius ordering):
+  https://www.mathconsult.ch/static/icosahedra/
 - Pedagoguery Software, Poly: http://www.peda.com/poly/
 - J. McNeill, polyhedra site: https://www.orchidpalms.com/polyhedra/
 - Xah Lee's polyhedron software list: http://xahlee.info/math_software/polytopes.html
@@ -692,14 +833,18 @@ cell diagram and won't find one.
 
 **Web implementations**
 - vZome, The 59 Icosahedra: https://www.vzome.com/app/59icosahedra/ ; docs:
-  https://www.vzome.com/docs/online.html ; announcement:
-  https://mathstodon.xyz/@robinhouston/113368481741273225 ; G4G15 talk:
-  https://www.youtube.com/watch?v=NP4PN1tgGvU
+  https://www.vzome.com/docs/online.html ; third-party signal-boost by Robin Houston,
+  25 Oct 2024 (not an author announcement):
+  https://mathstodon.xyz/@robinhouston/113368481741273225 ; G4G15 talk (G4G15 = 21–25 Feb
+  2024, Atlanta): https://www.youtube.com/watch?v=NP4PN1tgGvU
 - monman53, Stellated Polyhedra Explorer:
   https://github.com/monman53/stellated-polyhedra-explorer (created 2026-06-11, MIT),
   live: https://monman53.github.io/stellated-polyhedra-explorer/
 - Wolfram Demonstrations: "Fifty-Nine Icosahedra" (R. E. Maeder),
-  "Playing with Stellations of the Icosahedron" (M. Rogers)
+  "Playing with Stellations of the Icosahedron" (M. Rogers). **Both pages are now
+  client-rendered SPAs and their Details/References text is gated — do not cite specifics
+  from them without re-reading in a real browser.** The Maeder attribution above comes
+  instead from MathWorld's reference list and Maeder's own mathconsult.ch pages.
 
 **Mathematics used for cross-checking**
 - MathWorld, "Icosahedron Stellations": https://mathworld.wolfram.com/IcosahedronStellations.html

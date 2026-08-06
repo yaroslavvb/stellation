@@ -38,9 +38,11 @@ Jargon, defined once:
 
 * **Stellation** — extending a polyhedron's faces (or a polygon's edges) until they meet
   again, producing a larger, usually star-like figure. From Latin *stella*, star. Kepler
-  gave the first systematic account in *Harmonices Mundi* (1619), where he distinguished
-  edge-extension (*echinus*) from face-extension (*ostrea*). [LIT: Wikipedia, *Stellation*,
-  https://en.wikipedia.org/wiki/Stellation]
+  defined the operation in *Harmonices Mundi* (1619), distinguishing edge-extension
+  (*echinus*, "sea urchin") from face-extension (*ostrea*, "oyster"). [LIT: Wikipedia,
+  *Stellation*, https://en.wikipedia.org/wiki/Stellation, §"Kepler's definition"]
+  (Not "the first systematic account": Inchbald's timeline puts the first known systematic
+  treatment of star polygons at Bradwardine, 14th century.)
 * **Cell** — a bounded three-dimensional region cut out of space by the full arrangement of
   face planes. Term due to Du Val (1938). Our program's "cells" are exactly these.
 * **Shell / layer** — the set of cells at a given distance "outwards" from the core solid.
@@ -52,11 +54,15 @@ Jargon, defined once:
 
 ---
 
-## 2. Who invented it, and when
+## 2. Where it comes from
 
-The short answer: **Edmund Hess, 1876**, with the technique reaching maturity in **Max
-Brückner's 1900 book**, being turned into an enumeration *method* by **A. H. Wheeler in
-1924**, and being made canonical by **Coxeter, Du Val, Flather and Petrie in 1938**.
+**UNCERTAIN — none of the sources I could reach names an inventor.** What they support is a
+sequence of *uses*: the earliest documented one is **Edmund Hess, 1876**; the subject is
+consolidated in **Max Brückner's 1900 book**; the diagram becomes an enumeration *method*
+with **A. H. Wheeler in 1924**; and it becomes canonical with **Coxeter, Du Val, Flather and
+Petrie in 1938**. Wikipedia's *Stellation diagram* article attributes the invention to
+nobody, and Inchbald's history does not credit Hess with it either. Do not write "Hess
+invented the stellation diagram" in the tutorial.
 
 ### 2.1 Before the diagram (1619–1859)
 
@@ -67,20 +73,29 @@ Brückner's 1900 book**, being turned into an enumeration *method* by **A. H. Wh
 * **Cauchy, 1813** — proves the list of four is complete, by treating them as stellations of
   the dodecahedron and icosahedron.
 * **Bertrand, 1858** — derives the same four by *faceting* instead. See §7.
-  [LIT for this paragraph: Wikipedia, *Stellation*; G. Inchbald, "Stellating and Facetting —
-  a Brief History", https://www.steelpillow.com/polyhedra/StelFacet/history.html]
+  [LIT for this paragraph: G. Inchbald, "Stellating and Facetting — a Brief History",
+  https://www.steelpillow.com/polyhedra/StelFacet/history.html; HandWiki, *The Fifty-Nine
+  Icosahedra*. **Note:** Wikipedia's *Stellation* article, cited here in an earlier draft,
+  does **not** mention Poinsot, Cauchy or Bertrand — do not cite it for them.]
 
 None of these authors needed a general diagram: they were dealing with a handful of highly
 symmetric forms that can be described in words.
 
-### 2.2 Hess, 1876 — the first stellation diagrams
+### 2.2 Hess, 1876 — the earliest documented use
 
-**[LIT]** Edmund Hess (1843–1903) used stellation diagrams in 1876 and with them found the
-remaining "main-line" stellated icosahedra. He also first described the compound of five
-cubes, the compound of five octahedra (which is the second stellation of the icosahedron)
-and the compound of ten tetrahedra in the same year.
-[Wikipedia, *Stellation* and *The Fifty-Nine Icosahedra*; Wikipedia, *Compound of five
-octahedra*, https://en.wikipedia.org/wiki/Compound_of_five_octahedra]
+**[LIT]** Edmund Hess (1843–1903) is recorded as having worked with stellation diagrams in
+1876, completing the "main-line" series of stellated icosahedra with their help. The same
+year he gave the first descriptions of three regular compounds — five cubes, five octahedra
+(which is also the icosahedron's second stellation) and ten tetrahedra.
+[Wikipedia and HandWiki, *The Fifty-Nine Icosahedra*; Wikipedia, *Compound of five
+octahedra*, https://en.wikipedia.org/wiki/Compound_of_five_octahedra; Wikipedia, *Compound
+of five cubes*; Wikipedia, *Compound of ten tetrahedra*]
+
+**UNCERTAIN — "used", not "invented".** Both sources say Hess *used* stellation diagrams;
+neither says he originated them. Wikipedia's *Stellation* article does not mention Hess at
+all (it was cited here in an earlier draft — wrongly). Inchbald's timeline has no 1876 Hess
+entry at all; his Hess entry is **1883**, for a later search for uniform polyhedra. So even
+the 1876 date rests on the Wikipedia/HandWiki line alone.
 
 The publication usually cited is Hess, *Über die zugleich gleicheckigen und gleichflächigen
 Polyeder*, Sitzungsberichte der Gesellschaft zur Beförderung der gesamten
@@ -92,11 +107,13 @@ he needed. Secondary sources are consistent that the technique is his.
 ### 2.3 Brückner, 1900 — the diagram in a standard reference
 
 **[LIT]** Max Brückner (1860–1934), *Vielecke und Vielflache: Theorie und Geschichte*
-(Leipzig: B. G. Teubner, 1900) — "Polygons and Polyhedra: Theory and History". It gathered
-essentially everything then known about polyhedra, with hundreds of engraved figures and
-ten photographic plates showing 146 paper models. Brückner extended stellation theory beyond
-the regular star forms and identified ten stellations of the icosahedron, among them the
-*final* (complete) stellation. [Wikipedia, *Stellation*; Wikipedia, *Final stellation of the
+(Leipzig: B. G. Teubner, 1900) — "Polygons and Polyhedra: Theory and History". It is the
+turn-of-the-century survey of the subject: several hundred line engravings, plus ten sheets
+of photographs recording a collection of 146 card models. Brückner also carried stellation
+past the regular star forms — though how far is not agreed. Wikipedia credits him with ten
+stellations of the icosahedron including the *final* (complete) one; Inchbald instead counts
+six that were *new* with him. **UNCERTAIN:** treat "ten" as one source's tally, not a
+settled figure. [Wikipedia, *Final stellation of the
 icosahedron*, https://en.wikipedia.org/wiki/Final_stellation_of_the_icosahedron; G. W. Hart,
 "Max Brückner's Wunderkammer of Paper Polyhedra", *Bridges 2019*, pp. 59–66; Public Domain
 Review, "Max Brückner's Collection of Polyhedral Models (1900)",
@@ -106,11 +123,14 @@ Brückner's book is where later authors — including Coxeter's group — got th
 the state of the art. Its scanned text is online (University of Michigan Historical Math
 Collection, https://quod.lib.umich.edu/u/umhistmath/ABN8316.0001.001).
 
-**UNCERTAIN:** sources credit *Hess*, not Brückner, with introducing the diagram. Brückner's
-book certainly contains plane construction figures and nets, and it is the standard
-19th-century reference for stellations, but I found no source asserting that the stellation
-diagram *originates* with him. Treat "Brückner introduced it" as unsupported; "Brückner
-documented and popularised the subject" is well supported.
+**UNCERTAIN:** no source asserts that the stellation diagram *originates* with Brückner —
+but, per §2.2, none asserts it originates with Hess either, so this is not a case of the
+credit going elsewhere; it is a case of the credit being unassigned. Brückner's book
+certainly contains plane construction figures and nets, and it is the standard 19th-century
+reference for stellations. Wikipedia's *Stellation diagram* article does cite Brückner's
+1900 drawings as its only historical reference, which is the closest thing to an attribution
+I found anywhere. "Brückner documented and popularised the subject" is well supported;
+"Brückner introduced the diagram" is not.
 
 ### 2.4 Wheeler, 1924 — the diagram becomes a method
 
@@ -118,26 +138,30 @@ documented and popularised the subject" is well supported.
 model-maker, was an invited speaker at the International Congress of Mathematicians in
 Toronto in 1924. His paper — "Certain forms of the icosahedron and a method for deriving
 and designating higher polyhedra", *Proceedings of the International Mathematical Congress,
-Toronto* (1924), vol. 1, pp. 701–708 — set out the procedure of **selecting regions of the
-stellation diagram and combining the corresponding cells into new polyhedra**. He published
-a list of twenty stellation forms (twenty-two if reflections are counted separately),
-including the complete stellation. [Wikipedia, *The Fifty-Nine Icosahedra*; Wikipedia,
-*Final stellation of the icosahedron*; Wikipedia, *A. Harry Wheeler*,
-https://en.wikipedia.org/wiki/A._Harry_Wheeler]
+Toronto* (1924), vol. 1, pp. 701–708 — described how to build new figures by **marking out
+areas of the stellation diagram and taking the cells that sit behind them**, hollow forms
+and disconnected sets of cells included. He published a list of twenty stellation forms
+(twenty-two if reflections are counted separately), the complete stellation among them.
+[Wikipedia, *The Fifty-Nine Icosahedra*; Wikipedia, *Final stellation of the icosahedron*;
+Wikipedia, *A. Harry Wheeler*, https://en.wikipedia.org/wiki/A._Harry_Wheeler]
 
 Two things about Wheeler matter for how the diagram is used today.
 
-1. **He worked with the *visible* regions of a face.** Lines crossing the interior of a face
-   were treated as artefacts — "false edges" — rather than as real structure. This is the
-   convention that survives in Miller's rules and hence in the 1938 book. Inchbald calls
-   this the controversial step, because it quietly discards the internal geometry that the
-   cell picture keeps. [LIT: Inchbald, "Stellating and Facetting — a Brief History"]
+1. **He worked with the *visible* regions of a face.** Inchbald marks this as the turn:
+   Wheeler "introduces the idea of describing only the visible regions of a face — it is not
+   clear why", and Miller's rules inherit the habit, so the 1938 enumeration ignores internal
+   structure. **UNCERTAIN:** the phrase "false edges" is Inchbald's, and it belongs to his
+   criticism of *Miller's rules* (they fail "to recognise crossing lines as false edges") —
+   I found no evidence Wheeler used the term, and Inchbald does not call the step
+   "controversial"; he says its motivation is unclear. Do not attribute "false edges" to
+   Wheeler. [LIT: Inchbald, "Stellating and Facetting — a Brief History"]
 2. **He fell out with Coxeter.** Wheeler was originally to be a co-author of the 1938
-   monograph but objected to Coxeter's treatment; the frequently quoted remark is that
-   Coxeter had a way of tying a subject into knots that Wheeler found hard to follow.
-   [LIT: HandWiki, *The Fifty-Nine Icosahedra*]
+   monograph but objected to Coxeter's expository style; Coxeter then replaced his name on
+   the title page. HandWiki quotes Wheeler complaining that Coxeter "has a way of taking a
+   subject and tying it up into knots" that he found hard to follow.
+   [LIT: HandWiki, *The Fifty-Nine Icosahedra*; Wikipedia, *A. Harry Wheeler*]
 
-### 2.5 Miller's rules, late 1920s
+### 2.5 Miller's rules (date uncertain — Inchbald guesses "ca. late 1920s?")
 
 **[LIT]** J. C. P. Miller proposed five conditions for a stellation to count as "properly
 significant and distinct". Paraphrased (the wording below is mine):
@@ -158,20 +182,24 @@ structure hidden inside. Rule 5 rules out duplicates.
 ### 2.6 The Fifty-Nine Icosahedra, 1938
 
 **[LIT]** H. S. M. Coxeter, P. Du Val, H. T. Flather and J. F. Petrie, *The Fifty-Nine
-Icosahedra*, University of Toronto Studies, Mathematical Series 6 (1938), pp. 1–26. Second
-edition Springer-Verlag 1982; third edition Tarquin 1999, ISBN 978-1-899618-32-3.
-[Wikipedia, *The Fifty-Nine Icosahedra*]
+Icosahedra*, University of Toronto Studies, Mathematical Series, No. 6 (1938) — 26 pp. plus
+20 plates. Second edition Springer-Verlag 1982; third edition Tarquin 1999 (with new
+reference material and photographs by K. and D. Crennell), ISBN 978-1-899618-32-3.
+[Wikipedia and HandWiki, *The Fifty-Nine Icosahedra*; contemporary review in *The
+Mathematical Gazette*, which gives the collation]
 
 Division of labour:
 
-* **Coxeter** — the analytic enumeration, working from the face diagram.
+* **Coxeter** — the enumeration, working from the face diagram, using combinatorics and
+  graph theory (novel in a geometric setting at the time).
 * **Du Val** — the *cell* approach: he observed that the extended planes cut space into
   finite regions he named **cells**, that cells of equal power form **shells**, and he built
-  a letter notation for them (§5). He then tested all admissible combinations against
+  a letter notation for them (§4.4). He then tested all admissible combinations against
   Miller's rules and got the same 59, confirming Coxeter.
-* **Petrie** — the isometric (3D) drawings.
+* **Petrie** — the three-dimensional drawings.
 * **Flather** — built card models of all 59; they survive in the mathematics library at
-  Cambridge.
+  Cambridge University. (The same library holds some "non-Miller" models whose maker is not
+  established — Inchbald tentatively attributes them to Flather.)
 [Wikipedia / HandWiki, *The Fifty-Nine Icosahedra*]
 
 This is the moment the stellation diagram becomes standard equipment. The book is also the
@@ -185,23 +213,39 @@ be written down as a list of numbers.
   consistent theory. **UNCERTAIN:** I could not verify a page number for the remark.
   [LIT: Inchbald, "Stellating and Facetting — a Brief History"]
 * **c. 1970, Conway** — proposes finer terminology: *stellation* for extending edges,
-  *greatening* for extending faces. First published in Coxeter, *Regular Complex Polytopes*
-  (1974). [LIT: same source]
+  *greatening* for extending faces, *aggrandizement* for extending the cells of a 4-polytope.
+  Inchbald says the first published reference to the scheme "seems to be" Coxeter, *Regular
+  Complex Polytopes* (1974) — hedged in the source, so hedge it here too. [LIT: same source;
+  Wikipedia, *Stellation*]
 * **Bridge, 1974** — "Facetting the dodecahedron", *Acta Crystallographica* A30, 548–552.
-  Enumerates 22 faceted dodecahedra and explicitly correlates them with stellations of the
-  icosahedron. [LIT: IUCr, https://journals.iucr.org/paper?S0567739474001306]
-* **Pawley, 1973** — applies Miller-style rules to the rhombic triacontahedron and gets
-  358,833,098 stellations (84,959 reflexible, 358,748,139 chiral), which shows how fast the
-  region-colouring problem explodes once the diagram gets complicated.
-  [LIT: HandWiki, *Rhombic triacontahedron*, https://handwiki.org/wiki/Rhombic_triacontahedron]
+  Enumerates 22 faceted dodecahedra and reciprocates them into stellated icosahedra.
+  [LIT: IUCr, https://journals.iucr.org/paper?S0567739474001306; Inchbald, "Stellating and
+  Facetting — a Brief History"]
+* **Pawley, 1975** — enumerates the "non-reentrant" stellations of the rhombic
+  triacontahedron (those with no undercut regions; nowadays called *fully supported*). His
+  paper is titled "The 227 Triacontahedra". Note the year: **1975, not 1973**, and
+  *Geometriae Dedicata* **4**, not 1.
+  [LIT: Inchbald, "Stellating and Facetting — a Brief History"; Wikipedia, *Rhombic
+  triacontahedron*]
+* **The full Miller-rule count for the rhombic triacontahedron** is where the diagram's
+  combinatorial explosion actually shows. MathWorld and Robert Webb's *Great Stella* give
+  **358,833,098** (84,959 reflexible, 358,748,139 chiral); Wikipedia and HandWiki give
+  **358,833,097**. **UNCERTAIN:** the totals differ by one — presumably a convention about
+  the core solid — and I could not settle it. This count is **not Pawley's**; his was the
+  227. [LIT: MathWorld, *Rhombic Triacontahedron Stellations*,
+  https://mathworld.wolfram.com/RhombicTriacontahedronStellations.html; Wikipedia and
+  HandWiki, *Rhombic triacontahedron*]
 * **Hudson & Kingston, 1988** — "Stellating polyhedra", *Mathematical Intelligencer* 10,
   50–61. A cell-based treatment with a much weaker main rule: the chosen cell set need only
   have no interior cavity. [LIT: Inchbald, "Stellating and Facetting — a Brief History"]
 * **Messer, 1995** — "Stellations of the rhombic triacontahedron and beyond", *Structural
-  Topology* 21, 25–46. Enumerates the *fully supported* stellations (no undercuts) of the
-  rhombic triacontahedron. **Sources disagree on the count**: 226, 227 and 228 all appear,
-  the differences apparently coming from whether the original solid is counted and how
-  "fully supported" is defined. [LIT: Messer 1995 via ResearchGate,
+  Topology* 21, 25–46 (updated version reprinted in *Symmetry: Culture and Science* 11
+  (2000), 201–230). Enumerates the *fully supported* stellations (no undercuts) of the
+  rhombic triacontahedron. **Sources disagree on the count**: Wikipedia, HandWiki and
+  *Great Stella* say **227**, matching the title of Pawley's paper; Messer's own text is
+  reported as **226** excluding the core solid; Inchbald's history says **228**. The 226/227
+  gap is just whether the original solid is counted; the 228 I could not reconcile.
+  [LIT: Messer 1995 via ResearchGate,
   https://www.researchgate.net/publication/265206552; HandWiki, *Rhombic triacontahedron*;
   Inchbald, "Stellating and Facetting — a Brief History"]
 * **Inchbald, 2002–2006** — "In search of the lost icosahedra", *The Mathematical Gazette*
@@ -290,9 +334,10 @@ symmetry (see `figures/icosa-stellation-diagram-outline.png`). This is not an ac
 union *is* the face of the **final stellation of the icosahedron** (the "complete
 icosahedron" / echidnahedron), the stellation that uses every cell. **[LIT confirms
 independently:** Wikipedia, *Final stellation of the icosahedron*, states that each of its
-20 faces is an irregular **9/4 star polygon, or enneagram**, and is 2-isogonal — i.e. its
-nine points fall into two symmetry classes. My computation gives exactly that: 9 outer
-regions = one class of 3 + one class of 6.**]**
+20 faces is an irregular **9/4 star polygon, or enneagram**. The same article's diagram
+caption calls the faces "2-isogonal 9/4" — i.e. their nine points fall into two symmetry
+classes — and my computation gives exactly that: 9 outer regions = one class of 3 + one
+class of 6. Note the "2-isogonal" wording is a caption, not body text.**]**
 
 All nine points reach the same radius, 8.32; what makes the star visibly irregular is the
 *notches* between them, which alternate in depth — six deep notches bottoming out at radius
@@ -309,8 +354,13 @@ enneagram's edges cross each other, not extra points. The star has nine points, 
 Zooming in on the middle (`figures/icosa-stellation-diagram-core.png`) the eye sees the
 small central triangle, then a hexagram-like ring, then successively larger triangular and
 star-shaped rings — this inner part is the region of the diagram used by the small, familiar
-stellations (the triakis/small triambic icosahedron, the compound of five octahedra, the
-great icosahedron), while the long spikes belong to the outer shells.
+stellations (the small triambic icosahedron, the compound of five octahedra, the great
+icosahedron), while the long spikes belong to the outer shells. *Not* "the triakis/small
+triambic icosahedron": the first stellation is the **small triambic icosahedron**, whose 20
+faces are triambi. Split each triambus into its three coplanar triangles and you get *one
+form of* a triakis icosahedron, but that is not the Catalan triakis icosahedron (dual of the
+truncated dodecahedron), which has shallower pyramids. Keep the two names apart.
+[LIT: Wikipedia, *Small triambic icosahedron*]
 
 ### 4.4 The cells behind it
 
@@ -336,8 +386,14 @@ Extending all 20 planes cuts space into **473 bounded cells** **[COMP]**. Sortin
 * Inchbald ("In search of the lost icosahedra") gives 473 finite cells in **12** shapes
   arranged in layers. [LIT:
   https://www.steelpillow.com/polyhedra/icosa/searchlost/searchlost.html]
-* HandWiki records Du Val's letters as a, b, c, d, e = e₁+e₂, f = f₁+f₂ = (f₁₁+f₁₂)+f₂,
-  g = g₁+g₂, h — twelve sets. [LIT: https://handwiki.org/wiki/The_Fifty-Nine_Icosahedra]
+* HandWiki spells out Du Val's scheme: the core icosahedron (power 0) is **A**, the power-1
+  shell **b**, power-2 **c**, and so on to **h**; where a shell holds non-congruent cells
+  they are numbered (e₁, e₂); where it holds an enantiomorphic pair, one is set in roman and
+  the other in italic. So shell **f** (power 5) holds three kinds: f₁, *f₁* and f₂. Counting
+  the enantiomorphs separately gives twelve sets.
+  [LIT: https://handwiki.org/wiki/The_Fifty-Nine_Icosahedra]
+  (Careful with the case: HandWiki uses capitals for *stellations* named after their outer
+  shell — B = A + b, De₁ = A + b + c + d + e₁ — and lower case for the shells themselves.)
 
 The 10-vs-11-vs-12 count is not a real disagreement, and it is precisely the *sub-cell* idea
 in our program:
@@ -347,15 +403,20 @@ in our program:
 * Under the **rotation-only** group *I* (order 60) there are **12 orbits**: the single orbit
   of 120 cells (**f₁**) splits into two mirror-image halves of 60. Every other orbit is
   unchanged, because every other cell shape lies on a mirror plane. **[COMP]**
-* Du Val wrote the two halves in roman and italic (f₁ and *f₁*); HandWiki renders them
-  f₁₁ and f₁₂. Counting them separately, plus the core, gives Inchbald's 12.
+* Du Val wrote the two halves in roman and italic, f₁ and *f₁* — HandWiki reproduces exactly
+  that convention, and Inchbald's paper uses it too (his lost stellation De₁f₁f₂ has the
+  enantiomorph De₁*f₁f₂*). Counting the two halves separately, plus the core, gives the 12.
+  (An earlier draft here said HandWiki renders them "f₁₁ and f₁₂"; it does not — there is no
+  double-subscript notation in the source.)
 
 So: **the program's "orbit splits into a chiral pair when the stellation symmetry is I" is
 Du Val's roman/italic distinction, and it happens for exactly one orbit in the icosahedron.**
 
 **UNCERTAIN:** which of e₁/e₂ and g₁/g₂ is the 20-cell and which the 60-cell class. The
-ordering in MathWorld's list implies e₁ = 20, e₂ = 60, g₁ = 30, g₂ = 60, and f₁ = 120 is
-forced (it is the one that splits), but I have not seen Du Val's own definitions.
+ordering in MathWorld's list implies e₁ = 20, e₂ = 60, g₁ = 30, g₂ = 60, but I have not seen
+Du Val's own definitions. The **f** labels are *not* uncertain: HandWiki states that shell f
+holds f₁, *f₁* and f₂ with f₁ the enantiomorphic pair, so f₁ = the 120 that splits 60 + 60
+and f₂ = the 12.
 
 ---
 
@@ -492,11 +553,17 @@ http://steelpillow.com/polyhedra/StelFacet/Bertrand1858EngTrans.html
 **Bertrand's construction**, in one sentence: pick a vertex of a Platonic solid, and look
 for other vertices that together with it form a regular polygon; make that polygon a face.
 Every face of the new solid is such a polygon, so the new solid has exactly the same
-vertices as the old one. Running this over all five Platonic solids produces precisely the
-four Kepler–Poinsot star polyhedra and nothing else — a much cleaner derivation than
-Cauchy's, and the earliest treatment of what we now call faceting. Bertrand also introduced
-the term *étoilé* ("starry"). [LIT: Inchbald's translation and commentary; Inchbald,
-"Stellating and Facetting — a Brief History"]
+vertices as the old one. Bertrand applied it to the **icosahedron and the dodecahedron** and
+recovered the four Kepler–Poinsot star polyhedra — a cleaner derivation than Cauchy's, and
+the earliest treatment of what we now call faceting. (Inchbald's history says "by facetting
+the icosahedron and dodecahedron"; an earlier draft here said "all five Platonic solids",
+which no source supports.)
+
+Bertrand did **not** coin *étoilé*: Inchbald says he uses the term "in a manner which
+suggests that the term was already familiar to his audience." The English "stellated" comes
+from Cayley, who in 1859 translated *étoilé* and gave the four stars their accepted English
+names. [LIT: Inchbald's translation and commentary; Inchbald, "Stellating and Facetting —
+a Brief History"]
 
 ### 7.3 The duality
 
@@ -511,8 +578,13 @@ The concrete pairing that matters here:
 
 * **Stellating the icosahedron ↔ faceting the dodecahedron** (they are dual solids).
 * **Stellating the dodecahedron ↔ faceting the icosahedron.**
-* Bridge (1974) enumerated 22 faceted dodecahedra and matched them one-for-one with
-  stellations of the icosahedron. [LIT: *Acta Cryst.* A30, 548–552]
+* Bridge (1974) enumerated 22 faceted dodecahedra and reciprocated them into stellated
+  icosahedra — but **not** one-for-one with the 59. Inchbald's account is that Bridge's
+  reciprocals include isomorphs of known stellations *and* a stellated icosahedron `Df₂`
+  which is a uniform dual yet is absent from the 59, being forbidden by Miller's rules;
+  Bridge also discarded two of his own facetings because their reciprocals run to infinity.
+  This mismatch is the point of the example, so do not describe it as a clean bijection.
+  [LIT: *Acta Cryst.* A30, 548–552; Inchbald, "Stellating and Facetting — a Brief History"]
 
 ### 7.4 The faceting diagram, and how it mirrors the stellation diagram
 
@@ -524,8 +596,11 @@ Construction. Where a stellation diagram is drawn **in the plane of a face**, a 
 diagram is drawn **around a vertex**. Slice the corner off the polyhedron and you get its
 **vertex figure**, a small polygon (for the dodecahedron, a triangle; for the icosahedron, a
 pentagon). Onto that, mark every *other* vertex reachable from your vertex by a candidate
-new edge, and every candidate new face through it. Inchbald labels faces with lower-case
-letter sets and edges with upper-case ones.
+new edge, and every candidate new face through it — Inchbald calls the result "a kind of
+'complete vertex figure'". His lettering does **not** split faces from edges by case: an
+upper-case letter names a whole symmetry-orbit (of faces, or of edges), and the matching
+lower-case letter names an individual section of it — "sides ***a*** are sections of the
+three congruent faces ***A***". An earlier draft here had this backwards.
 
 Reading it. Instead of shading regions, you **trace closed circuits** through the marked
 edges and faces. Any set of facets that closes up into one or more complete circuits has no
@@ -556,8 +631,9 @@ the tutorial leans on it.
 
 Suggested framing, all supported above:
 
-1. The diagram is a 90-year-old-plus device (Hess 1876, standard since 1938) for turning
-   "which stellation?" into "which regions do I shade?".
+1. The diagram is a device of at least 150 years' standing — in documented use by 1876, and
+   standard equipment since 1938 — for turning "which stellation?" into "which regions do I
+   shade?". Say "in use by 1876", not "invented by Hess in 1876"; see §2.2.
 2. Our program answers the same question with **cells** instead — Du Val's half of the 1938
    book, and the approach later authors (Hudson & Kingston 1988, Inchbald 2002) argued is
    the sounder one.
@@ -565,8 +641,9 @@ Suggested framing, all supported above:
    elementary region of the diagram of the plane it lies in** — but a cell has ~5 faces
    scattered over several planes, and a region has a cell on each side, so there is no
    one-to-one correspondence.
-4. The layer numbers in our Cells table are Du Val's **power** and his shells **A, b, c, d,
-   e, f, g, h**.
+4. The layer numbers in our Cells table are Du Val's **power**, and the layers are his
+   shells: core **A**, then **b, c, d, e, f, g, h**. (Capital letters elsewhere in Du Val's
+   notation name whole *stellations* — B = A + b — so say "shell b", not "shell B".)
 5. The chiral split of the 120-cell orbit into 60 + 60 is Du Val's roman/italic pair f₁ / *f₁*,
    and it is the *only* orbit of the icosahedron that splits when the stellation symmetry
    drops from *Ih* to *I*.
@@ -580,8 +657,10 @@ Suggested framing, all supported above:
 Primary / historical
 
 * J. Kepler, *Harmonices Mundi* (1619).
-* L. Poinsot, "Mémoire sur les polygones et les polyèdres", *J. de l'École Polytechnique* 9 (1810; presented 1809).
+* L. Poinsot, "Mémoire sur les polygones et les polyèdres", *J. de l'École Polytechnique* (1810; work of 1809). **UNCERTAIN:** volume/pages vary by source — Inchbald gives 4, pp. 16–49; other references give 9, pp. 16–48 (probably tome vs. *cahier*). Check before printing.
+* A. L. Cauchy, "Recherches sur les polyèdres", *J. de l'École Polytechnique* 16 (1813), 68–86 (work of 1811–12).
 * J. Bertrand, "Note sur la théorie des polyèdres réguliers", *C. R. Acad. Sci.* 46 (1858), 79–82 (and p. 117). English translation: http://steelpillow.com/polyhedra/StelFacet/Bertrand1858EngTrans.html
+* A. Cayley, "On Poinsot's Four New Regular Solids", *Phil. Mag.* 17 (1859), 123–128 — the source of the English word "stellated", translating Bertrand's *étoilé*.
 * E. Hess, *Über die zugleich gleicheckigen und gleichflächigen Polyeder*, Sitzungsber. Ges. Beförd. gesamten Naturwiss. Marburg (1876).
 * M. Brückner, *Vielecke und Vielflache: Theorie und Geschichte* (Leipzig: Teubner, 1900). Scan: https://quod.lib.umich.edu/u/umhistmath/ABN8316.0001.001
 * A. H. Wheeler, "Certain forms of the icosahedron and a method for deriving and designating higher polyhedra", *Proc. Int. Math. Congress, Toronto* (1924), vol. 1, 701–708.
@@ -591,9 +670,9 @@ Primary / historical
 Later work
 
 * N. J. Bridge, "Facetting the dodecahedron", *Acta Cryst.* A30 (1974), 548–552. https://journals.iucr.org/paper?S0567739474001306
-* G. S. Pawley, "The 227 triacontahedra", *Geometriae Dedicata* 1 (1973), 221–232. (Count cited via HandWiki; **UNCERTAIN** — I did not open the paper.)
+* G. S. Pawley, "The 227 Triacontahedra", *Geometriae Dedicata* **4** (1975), 221–232. (Corrected: an earlier draft said vol. 1, 1973. Year and volume confirmed against Wikipedia, *Rhombic triacontahedron*, and Inchbald's history. I did not open the paper itself.)
 * J. L. Hudson & J. G. Kingston, "Stellating polyhedra", *Math. Intelligencer* 10 (1988), 50–61.
-* P. Messer, "Stellations of the rhombic triacontahedron and beyond", *Structural Topology* 21 (1995), 25–46. https://www.researchgate.net/publication/265206552
+* P. Messer, "Stellations of the rhombic triacontahedron and beyond", *Structural Topology* 21 (1995), 25–46. https://www.researchgate.net/publication/265206552 — updated version reprinted as *Symmetry: Culture and Science* 11 (2000), 201–230.
 * G. Inchbald, "In search of the lost icosahedra", *Math. Gazette* 86 (2002), 208–215. https://www.steelpillow.com/polyhedra/icosa/searchlost/searchlost.html
 * G. Inchbald, "Facetting diagrams", *Math. Gazette* 90 (2006), 253–261. https://www.steelpillow.com/polyhedra/FacetingDiagrams/FacetingDiags.html
 * G. Inchbald, "Stellating and Facetting — a Brief History". https://www.steelpillow.com/polyhedra/StelFacet/history.html
@@ -610,6 +689,10 @@ Reference pages consulted
 * Wikipedia, *Final stellation of the icosahedron* — https://en.wikipedia.org/wiki/Final_stellation_of_the_icosahedron
 * Wikipedia, *Faceting* — https://en.wikipedia.org/wiki/Faceting
 * Wikipedia, *A. Harry Wheeler* — https://en.wikipedia.org/wiki/A._Harry_Wheeler
+* Wikipedia, *Small triambic icosahedron* — https://en.wikipedia.org/wiki/Small_triambic_icosahedron
+* Wikipedia, *Compound of five cubes*, *Compound of ten tetrahedra*
+* Wikipedia, *Rhombic triacontahedron* — https://en.wikipedia.org/wiki/Rhombic_triacontahedron
+* MathWorld, *Rhombic Triacontahedron Stellations* — https://mathworld.wolfram.com/RhombicTriacontahedronStellations.html
 * HandWiki, *The Fifty-Nine Icosahedra* — https://handwiki.org/wiki/The_Fifty-Nine_Icosahedra
 * HandWiki, *Rhombic triacontahedron* — https://handwiki.org/wiki/Rhombic_triacontahedron
 * MathWorld, *Icosahedron Stellations* — https://mathworld.wolfram.com/IcosahedronStellations.html
@@ -620,16 +703,38 @@ Reference pages consulted
 
 ## 10. Open questions / things I could not confirm
 
-1. **What Hess's 1876 figures actually look like.** Secondary sources agree he introduced
-   the diagram; the paper itself was not accessible.
+1. **What Hess's 1876 figures actually look like, and whether 1876 is even the right year.**
+   Secondary sources say he *used* stellation diagrams — none says he introduced them, and
+   Inchbald's timeline dates Hess's work to 1883 instead. The paper itself was not
+   accessible. Do not upgrade "used" to "invented".
 2. **Whether Brückner drew stellation diagrams.** He is credited with documenting and
    extending stellation, not with inventing the diagram. Do not claim otherwise without a
    primary check.
 3. **The 13-vs-15 numbering of region classes** in the icosahedron's diagram (§4.2).
-4. **Which Du Val letter attaches to which cell shape** for e₁/e₂ and g₁/g₂ (§4.4).
+4. **Which Du Val letter attaches to which cell shape** for e₁/e₂ and g₁/g₂ (§4.4). The
+   f-labels are now settled (f₁ = the 120 that splits, f₂ = the 12).
 5. **Messer's rhombic-triacontahedron count** — 226, 227 or 228 depending on source (§2.7).
 6. **A page reference for Coxeter's 1947 reciprocity remark.**
 7. **The dodecahedron shell ↔ named stellation mapping** (§6) — verified geometrically, not
    against a source.
 8. **The itemised stellation/faceting diagram dictionary** in §7.4 is my compression of
    Inchbald's prose.
+9. **The two rhombic-triacontahedron totals**, 358,833,097 vs 358,833,098 (§2.7).
+10. **Brückner's icosahedron-stellation count** — ten (Wikipedia) vs six new ones
+    (Inchbald) (§2.3).
+11. **Poinsot's volume number** (§9).
+
+### Verification note (this pass)
+
+Every **[COMP]** number in §§3–6 was recomputed from scratch in an independent script
+(plane arrangement built from the convex hull, cells and regions enumerated by sign vector,
+symmetry group found by brute force over the vertex set). All of them reproduced: 18 trace
+lines; 48 intersection points at 8 radii with multiplicities 3, 3, 6, 9, 9, 6, 3, 9; the nine
+line-normal angles and their 22.24°/22.24°/15.52° spacing; 67 bounded regions in 15 classes
+(1 + 6×3 + 8×6); an 18-vertex outline with nine points at 8.32 and notches at 2.25 (×6) and
+4.16 (×3); 473 cells in layers 1, 20, 30, 60, 80, 132, 90, 60; 11 orbits under *Ih* and 12
+under *I* with exactly one orbit (the 120) splitting; 2,500 cell–facet incidences (5.285 per
+cell); 58 regions with cells on both sides and 9 with one. The §6 table for the tetrahedron,
+cube, octahedron, dodecahedron and rhombic dodecahedron also reproduced exactly, including
+the dodecahedron's 1 + 5 + 5 + 5 region classes. **The arithmetic in this note is sound; the
+errors found in this pass were all in the history and the citations.**
