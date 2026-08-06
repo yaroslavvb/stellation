@@ -8,9 +8,9 @@
  *
  * Page addressing. The Archive's reader indexes *images*, not printed pages,
  * so every reference here is a 0-based image index ("leaf"). The map from
- * printed page to leaf was taken from the scan's own scandata.xml and the
- * plate leaves were confirmed by eye against the plate captions, so these
- * numbers are checked rather than guessed. See PLATES and PAGES below.
+ * printed page to leaf was taken from the scan's own scandata.xml, and the
+ * plate sheets were checked by eye against the plate captions and the running
+ * foot, so these numbers are checked rather than guessed. See PLATES and PAGES.
  */
 
 import {
@@ -38,8 +38,10 @@ const PAGES = {
   211: 224, 217: 230,
 };
 
-/* The twelve plates. `leaf` is the sheet carrying the plate caption; `sheets`
-   lists every sheet the plate runs across, with the model numbers on each. */
+/* The twelve plates. `leaf` is the plate's FIRST sheet — for I–VII, XI and XII
+   that sheet also carries the "Tafel N" caption, but for VIII, IX and X the
+   caption is on the second sheet (257, 259, 263) and the first carries the
+   running foot instead. `sheets` lists every sheet the plate runs across. */
 const PLATES = [
   { n: 'I',    kind: 'litho', leaf: 243, sheets: [243], note: 'Polygons: construction figures.' },
   { n: 'II',   kind: 'litho', leaf: 245, sheets: [244, 245],
@@ -47,8 +49,8 @@ const PLATES = [
   { n: 'III',  kind: 'litho', leaf: 247, sheets: [246, 247], note: 'Nets and spherical nets.' },
   { n: 'IV',   kind: 'litho', leaf: 249, sheets: [248, 249], note: 'Nets and spherical nets.' },
   { n: 'V',    kind: 'litho', leaf: 251, sheets: [250, 251], note: 'Nets and spherical nets.' },
-  { n: 'VI',   kind: 'litho', leaf: 253, sheets: [252, 253], note: 'Nets and spherical nets.' },
-  { n: 'VII',  kind: 'litho', leaf: 255, sheets: [254, 255], note: 'Face figures of the polyhedra of higher kind.' },
+  { n: 'VI',   kind: 'litho', leaf: 253, sheets: [252, 253], note: 'Elementary and spherical nets, then perspective drawings of the semiregular solids.' },
+  { n: 'VII',  kind: 'litho', leaf: 255, sheets: [254, 255], note: 'Perspective drawings of the polyhedra of higher kind, each with its boundary face lettered on the solid.' },
   { n: 'VIII', kind: 'photo', leaf: 256, sheets: [256, 257], note: 'Models 1–20 on the first sheet. No. 3 is two cubes on a common 3-fold axis; no. 12 the compound of three octahedra — both in Escher’s <i>Stars</i>.' },
   { n: 'IX',   kind: 'photo', leaf: 258, sheets: [258, 259], note: 'The compound plate: nos. 3, 6 and 11 on the first sheet, nos. 20 and 23 on the second. Escher cited this plate twice by number.' },
   { n: 'X',    kind: 'photo', leaf: 260, sheets: [260, 263], note: 'Models 1–21, then 22–33. No. 13 is the first stellation of the rhombic dodecahedron — Escher’s solid.' },

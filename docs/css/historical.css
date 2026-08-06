@@ -253,3 +253,19 @@ details.sources a { color: var(--accent-2); }
   position: absolute; top: 14px; right: 18px;
   border: 0; background: none; color: #fff; font-size: 26px; cursor: pointer;
 }
+
+/* ------------------------------------------------ a row of preset viewers */
+
+.hfig-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+@media (max-width: 760px) { .hfig-trio { grid-template-columns: 1fr; } }
+.hfig-trio figure { margin: 0; }
+.hfig-trio .hfig { margin: 0; padding: 8px; min-height: 0; }
+.hfig-trio figcaption { margin-top: 6px; font-size: 12px; line-height: 1.5; }
+.hfig-trio figcaption b { display: block; color: var(--text); }
+.hfig-trio figcaption span { color: var(--dim); font-size: 11px; }
+.hfig-trio code { font-size: 10.5px; }

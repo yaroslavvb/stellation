@@ -67,19 +67,17 @@ function build(file, symName) {
 // ---------------------------------------------------------------- figure
 
 /*
- * <div class="hfig" data-poly="u10" data-cells="{0,1}" data-parts="cells solid"
- *      data-goal="{0,1}" data-goal-name="the stella octangula">
+ * <div class="hfig" data-poly="u10" data-cells="{0,1}" data-parts="cells solid">
  *
- * With data-goal, the figure becomes a puzzle: the reader has to reach that
- * selection themselves, and the figure says so when they do.
+ * Each figure is a viewer preset to the solid the surrounding text is about.
+ * It stays interactive — the cells and the diagram can be clicked — but it is
+ * not a puzzle: it opens showing the thing being discussed.
  */
 class HFigure {
   constructor(el) {
     this.el = el;
     this.file = el.dataset.poly;
     this.parts = (el.dataset.parts || 'cells solid').split(/\s+/);
-    this.goal = el.dataset.goal || null;
-    this.goalName = el.dataset.goalName || 'it';
     this.started = false;
   }
 
@@ -90,7 +88,7 @@ class HFigure {
     const rec = build(this.file, this.el.dataset.sym);
     this.stel = rec.stel;
     this.outline = rec.outline;
-    this.selected = parseCells(this.stel, this.el.dataset.cells ?? (this.goal ? '{0}' : '{0}'));
+    this.selected = parseCells(this.stel, this.el.dataset.cells ?? '{0}');
     this.render();
     this.refresh();
   }
@@ -98,20 +96,6 @@ class HFigure {
   render() {
     const el = this.el;
     el.innerHTML = '';
-
-    if (this.goal) {
-      const banner = document.createElement('div');
-      banner.className = 'goal';
-      banner.innerHTML =
-        `<span class="goal-tag">Build it</span>` +
-        `<span class="goal-text">Make <b>${this.goalName}</b> from the ${itemFor(this.file)?.name ?? this.file}.</span>` +
-        `<button class="goal-hint">hint</button>` +
-        `<button class="goal-solve">show me</button>`;
-      el.appendChild(banner);
-      this.banner = banner;
-      banner.querySelector('.goal-hint').onclick = () => this.hint();
-      banner.querySelector('.goal-solve').onclick = () => { this.setCells(this.goal); };
-    }
 
     const grid = document.createElement('div');
     grid.className = 'fig-grid parts-' + this.parts.length;
@@ -183,22 +167,6 @@ class HFigure {
     this.refresh();
   }
 
-  /** nudge without solving: name the next layer that is still missing */
-  hint() {
-    const goalSet = parseCells(this.stel, this.goal);
-    for (const k of goalSet) if (!this.selected.has(k)) {
-      const [l, c] = k.split('.');
-      this.info.textContent = `try layer ${l}, cell ${c}`;
-      return;
-    }
-    for (const k of this.selected) if (!goalSet.has(k)) {
-      const [l, c] = k.split('.');
-      this.info.textContent = `layer ${l}, cell ${c} should not be there`;
-      return;
-    }
-    this.info.textContent = 'that is already it';
-  }
-
   refresh() {
     const subs = selectedSubCells(this.stel, this.selected);
     const mesh = extractMesh(subs, this.stel.pool);
@@ -217,20 +185,11 @@ class HFigure {
       });
     }
 
-    const str = formatCells(this.stel, this.selected);
-    this.readout.textContent = str;
+    this.readout.textContent = formatCells(this.stel, this.selected);
     const vol = subs.reduce((a, s) => a + s.volume, 0);
     this.stats.innerHTML = mesh.faces.length
       ? `<b>${mesh.vertices.length}</b> v · <b>${mesh.faces.length}</b> f · vol <b>${vol.toFixed(3)}</b>`
       : 'nothing selected';
-
-    if (this.goal) {
-      const won = str === this.goal;
-      this.banner.classList.toggle('won', won);
-      this.banner.querySelector('.goal-text').innerHTML = won
-        ? `<b>That's it — ${this.goalName}.</b>`
-        : `Make <b>${this.goalName}</b> from the ${itemFor(this.file)?.name ?? this.file}.`;
-    }
   }
 }
 
@@ -264,17 +223,6 @@ async function boot() {
     }
   }, { rootMargin: '300px 0px' });
   figs.forEach((f, id) => io.observe(document.getElementById(id)));
-
-  $$('[data-target]').forEach(btn => {
-    btn.onclick = () => {
-      const f = figs.get(btn.dataset.target);
-      if (!f) return;
-      f.start();
-      if (btn.dataset.cells) f.setCells(btn.dataset.cells);
-      $$(`[data-target="${btn.dataset.target}"]`).forEach(b => b.classList.remove('on'));
-      btn.classList.add('on');
-    };
-  });
 
   const applyTheme = (pref) => {
     const dark = pref === 'dark' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
