@@ -319,8 +319,9 @@
     <p>
       The dodecahedron has exactly three stellations, and all three are famous, so
       walking outward one shell at a time passes through three of the four Kepler–Poinsot
-      solids in order. Kepler had the first and the third. The middle one he did not
-      report.
+      solids in order. Note that the engraving above shows only the <em>first and third</em>
+      of the three below: the great dodecahedron in the middle is not in Kepler's plate
+      because Kepler did not report it. It waited for Poinsot, two centuries later.
     </p>
     <div class="person">
       <span class="person-mark">☾</span>
@@ -707,10 +708,15 @@
       parenthesis of the fourth rule: for some of these solids, exploring the outside
       would require a model of enormous size and a crawling insect.
     </p>
-    <figure class="hist-photo portrait">
-      <img src="img/hist/coxeter.jpg" alt="Photograph of H. S. M. Coxeter" loading="lazy">
-      <figcaption><b>H. S. M. Coxeter (1907–2003).</b> He was thirty-one when the book appeared; Du Val remembered that both of them were still in their twenties when it was written. Coxeter described the work in retrospect as a product of youthful exuberance.
-        <span class="credit">Photograph by Konrad Jacobs, Erlangen. Oberwolfach Photo Collection, CC BY-SA 2.0 DE, via Wikimedia Commons.</span>
+    <figure class="hist-photo">
+      <img src="img/solids/mainline.png" alt="The eight mainline stellations of the icosahedron, A to H" loading="lazy">
+      <figcaption><b>The mainline, A to H.</b> Du Val's capitals name the stellations that
+        take every cell out to a given shell: <b>A</b> the icosahedron itself, then one
+        shell at a time to <b>H</b>, which takes all 473 cells. <b>C</b> is the compound
+        of five octahedra, <b>G</b> the great icosahedron, <b>H</b> the one later
+        nicknamed the echidnahedron. Each is drawn to fit its own frame; in truth
+        <b>H</b> reaches about eight times the radius of <b>A</b>.
+        <span class="credit">Rendered from the meshes this program computes.</span>
       </figcaption>
     </figure>
 
@@ -970,7 +976,14 @@
     <h2>Five-fold symmetry turns up in metal</h2>
     <p class="who">Dan Shechtman</p>
     <p>
-      Crystallography had a theorem: a crystal cannot have five-fold symmetry, because
+      This section is here because of a shape. Every solid on this page has been built
+      inside the symmetry of the icosahedron, and the defining feature of that symmetry —
+      the thing that makes a dodecahedron's face a pentagon and gives the great
+      icosahedron its twelve five-fold spikes — is exactly what crystallography had
+      spent a century proving could not exist in matter.
+    </p>
+    <p>
+      The theorem: a crystal cannot have five-fold symmetry, because
       pentagons do not tile the plane and icosahedra do not fill space. On 8 April 1982,
       on sabbatical at the US National Bureau of Standards, Shechtman put a rapidly
       quenched aluminium–manganese alloy under an electron microscope and recorded a
@@ -985,6 +998,15 @@
         <span class="credit">Electron diffraction pattern of a Zn–Mg–Ho icosahedral quasicrystal. Photo Materialscientist, CC BY-SA 3.0, via Wikimedia Commons. Not Shechtman’s original 1982 plate.</span>
       </figcaption>
     </figure>
+
+    <div class="hfig" id="figFivefold" data-poly="u28" data-sym="Ih"
+         data-cells="{0}" data-parts="solid"></div>
+    <p class="fig-caption">
+      The symmetry in question. Turn the dodecahedron until a face points at you and the
+      five-fold axis is the one running through it — the axis crystallography said a
+      solid could not repeat in space. Shechtman's alloy repeated it anyway, without
+      being periodic.
+    </p>
 
     <div class="link-out">
       <span class="tag">The cost of being right</span>
@@ -1052,6 +1074,14 @@
       </figcaption>
     </figure>
 
+    <div class="hfig" id="figC60" data-poly="u30" data-sym="Ih"
+         data-cells="{0}" data-parts="solid"></div>
+    <p class="fig-caption">
+      The truncated icosahedron — twelve pentagons, twenty hexagons, sixty vertices. It is
+      the carbon skeleton of C₆₀ and the panelling of a football, and it sits in the same
+      icosahedral symmetry as everything else on this page.
+    </p>
+
     <div class="link-out">
       <span class="tag">A living stellation</span>
       <b>Acantharia</b> are marine plankton, and the only organisms known to build
@@ -1081,14 +1111,35 @@
       original Java still compiles and runs, twenty-five years on.
     </p>
     <div class="solids-strip">
-      <div class="solid-card"><img src="img/poly/u39_tmb.gif" alt=""><b>small stellated dodecahedron</b><span>Kepler, 1619</span></div>
-      <div class="solid-card"><img src="img/poly/u40_tmb.gif" alt=""><b>great dodecahedron</b><span>Poinsot, 1809</span></div>
-      <div class="solid-card"><img src="img/poly/u57_tmb.gif" alt=""><b>great stellated dodecahedron</b><span>Kepler, 1619</span></div>
-      <div class="solid-card"><img src="img/poly/u58_tmb.gif" alt=""><b>great icosahedron</b><span>Poinsot, 1809</span></div>
+      <a class="solid-card" href="index.html#u28/Ih/I/d20/%7B0,1%7D">
+        <img src="img/solids/ssd.png" alt="Small stellated dodecahedron" loading="lazy">
+        <b>Small stellated dodecahedron</b>
+        <span>Kepler, 1619 · the dodecahedron plus one shell</span>
+        <em>open in the app →</em>
+      </a>
+      <a class="solid-card" href="index.html#u28/Ih/I/d20/%7B0,1,2%7D">
+        <img src="img/solids/gd.png" alt="Great dodecahedron" loading="lazy">
+        <b>Great dodecahedron</b>
+        <span>Poinsot, 1809 · two shells</span>
+        <em>open in the app →</em>
+      </a>
+      <a class="solid-card" href="index.html#u28/Ih/I/d20/%7B0,1,2,3%7D">
+        <img src="img/solids/gsd.png" alt="Great stellated dodecahedron" loading="lazy">
+        <b>Great stellated dodecahedron</b>
+        <span>Kepler, 1619 · three shells</span>
+        <em>open in the app →</em>
+      </a>
+      <a class="solid-card" href="index.html#u27/Ih/I/d20/%7B0,1,2,3,4,5,6%7D">
+        <img src="img/solids/gi.png" alt="Great icosahedron" loading="lazy">
+        <b>Great icosahedron</b>
+        <span>Poinsot, 1809 · seven shells of the icosahedron</span>
+        <em>open in the app →</em>
+      </a>
     </div>
     <p>
-      All four are in the catalogue, and all four are a handful of clicks from a Platonic
-      solid. <a href="index.html">Open the app →</a>
+      These four are the Kepler–Poinsot solids, drawn here by the program itself. Each
+      card opens the app with that solid already built, so the cell selection that makes
+      it is there to be taken apart.
     </p>
   </section>
 
@@ -1111,9 +1162,10 @@
       Marco panel, Leonardo's drawings, Kepler's engravings, the Poinsot portrait, Hess's
       1876 diagrams and Brückner's photographs are all public domain, and are credited
       individually beneath each figure. The Wheeler photograph is CC0 from the
-      Smithsonian; the Coxeter, Wenninger, quasicrystal, Moravian-star and
+      Smithsonian; the Wenninger, quasicrystal, Moravian-star, obelisk and
       buckminsterfullerene images are used under the Creative Commons licences named in
-      their captions. <b>The three Escher prints remain in copyright</b> — they are
+      their captions. The renders of the solids themselves — the four Kepler–Poinsot
+      cards and the mainline A–H — were made by this program from its own meshes. <b>The three Escher prints remain in copyright</b> — they are
       © The M.C. Escher Company, Baarn, and are reproduced here at low resolution for
       commentary on the works themselves. The official source for Escher's work is
       <a href="https://mcescher.com/" target="_blank" rel="noopener">mcescher.com</a>.

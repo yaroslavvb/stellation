@@ -225,3 +225,38 @@ details.sources a { color: var(--accent-2); }
 .hfig-trio figcaption b { display: block; color: var(--text); }
 .hfig-trio figcaption span { color: var(--dim); font-size: 11px; }
 .hfig-trio code { font-size: 10.5px; }
+
+/* ------------------------------------------------ the Kepler–Poinsot cards */
+
+.solids-strip { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+a.solid-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 10px 11px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+a.solid-card img {
+  width: 100%;
+  max-width: 148px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: none;          /* the renders carry their own transparency */
+  border-radius: 0;
+}
+a.solid-card b { margin-top: 4px; font-size: 13px; line-height: 1.3; }
+a.solid-card span { color: var(--dim); font-size: 11px; line-height: 1.45; }
+a.solid-card em {
+  margin-top: 5px;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+a.solid-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+a.solid-card:hover em { opacity: 1; }
+@media (hover: none) { a.solid-card em { opacity: 1; } }
