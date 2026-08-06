@@ -160,6 +160,16 @@
   cursor: pointer;
 }
 .entry-plate button:hover, .entry-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.entry-plate .row a.gridlink {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 11.5px;
+  text-decoration: none;
+}
+.entry-plate .row a.gridlink:hover { border-color: var(--accent); }
 
 .entry-text { font-size: 14.5px; line-height: 1.62; }
 .entry-text p { margin: 0 0 10px; }
