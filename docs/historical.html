@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/walkthrough.css">
 <link rel="stylesheet" href="css/historical.css">
+<style>
+  @media (max-width: 650px) { .doc-head .optional { display: none; } }
+</style>
 <script>
   (() => {
     const saved = localStorage.getItem('theme') || 'auto';
@@ -24,10 +27,11 @@
   <a class="brand" href="index.html">✦ Stellation</a>
   <span class="crumb">A history</span>
   <div class="spacer"></div>
-  <a class="ghost" href="controls.html">Controls</a>
-  <a class="ghost" href="walkthrough.html">Cells walkthrough</a>
-  <a class="ghost" href="bruckner.html">Brückner 1900</a>
-  <a class="ghost" href="index.html">Open the app →</a>
+  <a class="ghost" href="historical-fact-check.html">Fact-check</a>
+  <a class="ghost optional" href="controls.html">Controls</a>
+  <a class="ghost optional" href="walkthrough.html">Cells walkthrough</a>
+  <a class="ghost optional" href="bruckner.html">Brückner 1900</a>
+  <a class="ghost optional" href="index.html">Open the app →</a>
   <button id="themeBtn" class="ghost icon" title="Light / dark">◐</button>
 </header>
 
@@ -38,54 +42,52 @@
 
   <h1>Six hundred years of stars</h1>
   <p class="standfirst">
-    The people who advanced this subject include a Venetian mosaicist, an imperial
+    The people who advanced this subject include a Florentine painter credited with a
+    Venetian pavement inlay, an imperial
     astronomer who conducted his mother's defence against a witchcraft charge, a Saxon
-    schoolmaster who filled a room with paper models and then gave them away, and a
-    Worcester schoolteacher who withdrew from the definitive book over its prose. What
-    follows is the chronology, with the solids live: every figure opens on the solid its
-    section describes, each can be turned, and most can be taken apart shell by shell in
-    the Cells table beside it.
+    schoolmaster whose collection ran to hundreds of paper models and who later donated
+    more than two hundred of them, and a
+    Worcester schoolteacher who withdrew from a landmark book over its prose. What
+    follows is a chronological spine, with a few thematic excursions and the solids
+    live: every interactive figure opens on the solid its section describes, each can be
+    turned, and most can be taken apart shell by shell in the Cells table beside it.
   </p>
 
   <!-- ══════════════════════════════════════════════ -->
   <div class="era">Before anyone called it mathematics</div>
 
-  <section id="uccello" data-year="c.1430" data-short="A floor in Venice">
-    <span class="when">c. 1430</span>
+  <section id="uccello" data-year="c.1430?" data-short="A floor in Venice">
+    <span class="when">trad. c. 1430?</span>
     <h2>A floor in Venice</h2>
     <p class="who">St Mark's Basilica · attributed to Paolo Uccello</p>
     <p>
-      Set into the marble pavement of the Basilica di San Marco, on the left as one
-      enters by the main west door, is a small panel showing a spiky twelve-pointed
-      solid drawn in perspective. It is a <b>small stellated dodecahedron</b>, and it
-      precedes the first mathematical description of one by roughly two centuries. The
-      surrounding floor is much older still — a medieval <i>opus sectile</i> pavement,
-      far older than the panel — so the polyhedron is an insertion into a medieval
-      scheme, not part of it.
+      Set into the marble pavement of the Basilica di San Marco is a small inlay panel
+      showing a spiky twelve-pointed solid in perspective. It represents a <b>small
+      stellated dodecahedron</b>. If the usual fifteenth-century dating is right, it
+      predates Kepler's 1619 mathematical treatment by nearly two centuries. The
+      basilica's medieval marble pavement is older than the usual date assigned to the
+      panel, so on that dating the panel would be a later insertion.
     </p>
     <p>
-      The attribution to Paolo Uccello is stylistic and modern. There is no contract, no
-      payment record and no contemporary mention; the claim traces to Michelangelo
-      Muraro's paper at the 1955 international art-history congress in Venice, which
-      argued from the handling of the perspectival marble inlay. Treccani's standard
-      Italian biographical dictionary reports it as the most probable attribution rather
-      than as fact, and George Hart, examining it from the polyhedral side, found no
-      documentation for either the attribution or the date.
+      The attribution to Paolo Uccello is modern and stylistic. No contract, payment
+      record or contemporary mention has been identified in the sources checked. The
+      attribution traces to Michelangelo Muraro's contribution to the proceedings of
+      the 1955 international art-history congress in Venice, published in 1956.
+      Treccani reports it as the most probable attribution rather than as fact, while
+      George Hart found no documentation for either the attribution or the date.
     </p>
     <p>
-      The dates in circulation cannot all be right. Mathematical writing generally says
-      c. 1430; some Italian sources tie the panel to Uccello's documented Venetian
-      period of 1425–31; at least one recent history states 1420 flatly, which is
-      impossible if the attribution holds, since Uccello was not in Venice before 1425.
-      What is not in dispute is that somebody in quattrocento Venice worked out how the
-      figure looked from an angle and cut it in stone, for a floor that most visitors
-      cross without looking down.
+      The dates in circulation cannot all be right. About 1430 is often repeated;
+      Uccello's documented Venetian period ran from 1425 to 1430 or early 1431; and at
+      least one modern history gives 1420, which is incompatible with his authorship
+      because he did not leave for Venice until after August 1425. The panel itself
+      demonstrates sophisticated perspectival design translated into stone inlay.
     </p>
     <div class="hfig" id="figUccello" data-poly="u28" data-sym="Ih" data-cells="{0,1}"></div>
     <p class="fig-caption">
       The solid in the pavement, built from the dodecahedron: one shell outward. Seen
-      down a five-fold axis it presents exactly the outline the mosaicist cut — a
-      pentagram of triangular facets inside a ring.
+      down a five-fold axis its pentagram of triangular facets closely resembles the
+      outline cut into the pavement.
     </p>
 
     <div class="photo-row two">
@@ -94,12 +96,12 @@
       <figcaption><b>The panel itself.</b> A small stellated dodecahedron in coloured
         marble, ringed by prisms threaded on a string — an illusionistic necklace
         around an illusionistic star.
-        <span class="credit">Marble pavement panel, Basilica di San Marco, Venice, c. 1430, attributed to Paolo Uccello. Public domain, via Wikimedia Commons.</span>
+        <span class="credit">Marble pavement panel, Basilica di San Marco, Venice, traditionally dated c. 1430 and attributed to Paolo Uccello. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
     <figure class="hist-photo">
       <img src="img/hist/uccello-mazzocchio.jpg" alt="Uccello's perspective study of a mazzocchio" loading="lazy">
-      <figcaption><b>The kind of study Donatello dismissed.</b> Uccello's drawing of a
+      <figcaption><b>The kind of study Vasari says Donatello dismissed.</b> Uccello's drawing of a
         <i>mazzocchio</i>, the ring-frame worn under a Florentine hood, set out as a
         torus of facets.
         <span class="credit">Paolo Uccello, study of a mazzocchio in perspective. Public domain, via Wikimedia Commons.</span>
@@ -111,24 +113,24 @@
       <span class="person-mark">✎</span>
       <div class="person-body">
         <p>
-          Almost everything colourful about Uccello comes from Vasari, writing some
-          seventy-five years after the fact, and it should be read as literature rather
-          than as record. Vasari's portrait is of a man so absorbed in perspective that
-          he worked at it through the night and neglected everything else. The most
-          useful thing in it is an insult: Vasari has Donatello telling Uccello that his
-          polyhedron studies were fit only for men who make marquetry. That is closer to
-          the truth than it was meant to be — the intarsia workshops are exactly where
-          these shapes were living at the time, and the panel in San Marco is inlay work,
-          not painting.
+          Almost everything colourful about Uccello comes from Vasari. Vasari's first
+          edition appeared in 1550, seventy-five years after Uccello's death; its vivid
+          anecdotes are not contemporary evidence. He portrays Uccello as so absorbed
+          in perspective that he worked through the night and neglected everything
+          else, and reports Donatello telling him that such studies would be useful only
+          to makers of intarsia. Intarsia workshops were among the important settings in
+          which perspectival polyhedra appeared, and the San Marco panel itself is stone
+          inlay rather than painting.
         </p>
         <p>
           The documented hardship is separate from Vasari. In his Florentine tax
-          declaration of August 1469 Uccello wrote that he was old, ailing, that his
-          wife was ill, and that he could no longer work — though he was still taking
-          panel commissions as late as 1474, and some historians read the declaration as
-          tax-minimising. His daughter Antonia, who became a Carmelite nun, is recorded
-          in the Florentine death register as <i>pittoressa</i>, a woman painter.
-          Nothing certainly by her survives.
+          declaration of August 1469 Uccello wrote that he was old, without work and
+          unable to practise, and that his wife was ill; Treccani notes that this may
+          have been an effort to reduce his tax assessment. A 1474 lawsuit over payment
+          for two panels sold after 1469 shows that he continued working after the
+          declaration. His daughter Antonia became a Carmelite nun and was recorded in
+          the Florentine death register as <i>pittoressa</i>, “woman painter.” No work
+          can be securely attributed to her.
         </p>
       </div>
     </div>
@@ -139,20 +141,23 @@
     <h2>Pacioli's elevations, drawn by Leonardo</h2>
     <p class="who">Luca Pacioli, <i>De divina proportione</i> · illustrations by Leonardo da Vinci</p>
     <p>
-      Pacioli completed <i>De divina proportione</i> in Milan in February 1498; it was
-      printed in Venice in 1509. It carries some sixty plates drawn by Leonardo,
+      Pacioli composed <i>De divina proportione</i> at Milan in 1497–98; it was printed
+      in Venice in 1509. It contains 59 full-page woodcuts after drawings Leonardo made
+      in 1497,
       including a family of "elevated" solids — <i>elevatus</i> — with a pyramid raised
-      on every face. These are the immediate ancestors of stellations, and the
+      on every face. These are important precursors to later stellation theory, and the
       difference between the two operations is worth stating precisely, because the
       program on this site implements one of them and not the other.
     </p>
     <p>
-      Pacioli's <b>elevation</b> glues a pyramid of equilateral triangles onto each
-      face. It therefore invents new face planes, and it only works where the faces are
+      In Pacioli's construction, <b>elevation</b> glues a pyramid of equilateral
+      triangles onto each face. It therefore invents new face planes, and it only works
+      where the faces are
       triangles, squares or pentagons — a regular hexagon's pyramid would be flat, which
       is why the three Archimedean solids in the book with hexagonal faces get no
       elevated version. Kepler's <b>stellation</b>, a century later, extends the faces a
-      solid already has, within the planes it already has. Nothing is added.
+      solid already has, within the planes it already has. No new face planes are
+      introduced.
     </p>
     <p>
       The consequence is that two objects which look identical from outside can be
@@ -160,16 +165,16 @@
       three-triangle pyramids plus the eight faces of the octahedron underneath, which
       the reader must supply, as he puts it, with the imagination: thirty-two triangles.
       Kepler's stellated octahedron has eight faces — the original eight, extended, and
-      passing through one another. Where the two families genuinely diverge is the
+      passing through one another. The contrast is especially visible in the
       dodecahedron and the icosahedron: Pacioli's <i>icosaedron elevatum</i> is a
-      triakis icosahedron with equilateral pyramids, and reaching the first stellation
-      of the icosahedron means pushing those apexes further out, to the height at which
-      the new triangles fall into the original face planes.
+      non-convex, equilateral-faced relative of the triakis icosahedron, and reaching
+      the first stellation of the icosahedron means pushing those apexes further out,
+      to the height at which the new triangles fall into the original face planes.
     </p>
     <p>
-      Leonardo's plates are also the first well-known use of the open <i>vacuus</i>
-      idiom — solids drawn as struts, so the far side shows through — which became the
-      standard way of depicting a complicated polyhedron and is still in use.
+      The images after Leonardo's drawings also provide the first known examples of the open
+      <i>vacuus</i> idiom — solids drawn as struts, so the far side shows through — a
+      visual technique later artists and model makers continued to use.
     </p>
     <div class="photo-row two">
     <figure class="hist-photo">
@@ -183,15 +188,14 @@
     <figure class="hist-photo">
       <img src="img/hist/leonardo-vacuum.jpg" alt="A solid drawn in the open vacuus style" loading="lazy">
       <figcaption><b>The <i>vacuus</i> idiom, hand-coloured.</b> Drawn as struts, so the
-        far side shows through. It became the standard way to depict a complicated
-        polyhedron and is still in use.
+        far side shows through — a technique later artists and model makers reused.
         <span class="credit">Leonardo da Vinci, drawing for Luca Pacioli's <i>De divina proportione</i>, from the hand-coloured Ambrosiana manuscript of 1498; the 1509 printing used woodcuts based on drawings like it. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
     </div>
 
     <div class="link-out">
-      <span class="tag">The same mistake, four centuries apart</span>
+      <span class="tag">A mistake and an accident, four centuries apart</span>
       Rinus Roelofs rebuilt Leonardo's elevated rhombicuboctahedron by computer and
       found it wrong: a square pyramid sits where a triangular face belongs, and
       triangular pyramids where square ones do. The resulting figure is close to the
@@ -199,8 +203,9 @@
       the twentieth century by accident, while building a model, and which is still
       sometimes called Miller's solid. Roelofs concludes that Leonardo's is simply an
       error rather than a deliberate variant, since the label above the drawing is
-      unambiguous. Miller returns to this page in 1938, as the author of the five rules
-      that fix the number of icosahedral stellations at fifty-nine.
+      unambiguous. Miller returns to this page in 1938: five selection rules attributed
+      to him were applied by Coxeter and his collaborators to enumerate fifty-nine
+      icosahedral stellations.
     </div>
   </section>
 
@@ -212,13 +217,13 @@
     <h2>Kepler on a snowflake</h2>
     <p class="who">Johannes Kepler, <i>Strena seu de nive sexangula</i></p>
     <p>
-      Kepler was Imperial Mathematician in Prague and was not being paid; the imperial
-      exchequer was empty. Owing a New Year's gift to his patron Johann Matthäus Wacker
-      von Wackenfels and having nothing to give, he wrote him a short book instead,
-      asking why snowflakes have six corners. It considers hexagonal packing, honeycomb
-      cells, pomegranate seeds compressed into rhombic dodecahedra, plane tilings and
-      the stacking of cannonballs, and it is generally described as the first printed
-      work of crystallography.
+      Kepler was Imperial Mathematician in Prague, but his salary was badly in arrears
+      because the cash-strapped imperial exchequer often failed to pay. Framing the
+      tract as a New Year's gift for his friend and patron Johann Matthäus Wacker von
+      Wackenfels, he asked why snowflakes are six-cornered. The short book considers
+      honeycomb cells, plane tilings, pomegranate seeds compressed into rhombic
+      dodecahedral cells, equal-sphere packing and the stacking of cannonballs. It is
+      often treated as a foundational work of structural crystallography.
     </p>
     <p>
       The octahedron makes a natural first exercise, because it is the one Platonic
@@ -241,23 +246,23 @@
     </p>
     <div class="link-out">
       <span class="tag">Where the name comes from</span>
-      The name <i>stella octangula</i> is Kepler's, but the sources disagree about which
-      of his books first carries it. MathWorld dates it to this 1611 pamphlet; others to
-      <i>Harmonices Mundi</i> of 1619; a widely copied line dates it to 1609, which is
-      neither book. We have not resolved it, and the
-      1611 tract's own subject is snow. The shape is in any case much older than the
-      name: a thirteenth-century carving in a Turkish caravanserai, Pacioli's
-      <i>octaedron elevatum</i> of 1509, and the perspective books of the 1560s — Stöer
-      in Augsburg, Barbaro in Venice, Jamnitzer in Nuremberg — all precede Kepler. What
-      Kepler contributed was the name and the operation.
+      The solid is conventionally associated with Kepler under the name <i>stella
+      octangula</i>, but the date and context of that name are not secure. The 1611
+      <i>Strena</i> itself concerns snow and sphere packing rather than polyhedral
+      stellation. The shape is older than the disputed naming date: related forms occur
+      in Pacioli's <i>octaedron elevatum</i> of 1509 and Jamnitzer's
+      <i>Perspectiva corporum regularium</i> of 1568. Kepler's securely documented
+      contribution was his general treatment of stellation in <i>Harmonices Mundi</i>
+      (1619).
     </div>
     <div class="link-out">
       <span class="tag">An unexpected afterlife</span>
-      The snowflake book asks why crystals take on regular shapes at all, and proposes
-      that the answer lies in how spheres pack. That proposal — the <b>Kepler
-      conjecture</b> — became part of Hilbert's eighteenth problem in 1900, was proved
-      by Thomas Hales in 1998 with a computer-assisted argument that took referees years
-      to assess, and was finally machine-verified by the Flyspeck project in 2014.
+      In pursuing why snowflakes are six-cornered, Kepler analysed packings of equal
+      spheres and conjectured that the familiar close packing is densest. The <b>Kepler
+      conjecture</b> became part of Hilbert's eighteenth problem in 1900. Thomas Hales
+      and Samuel Ferguson announced a computer-assisted proof in 1998; the main proof
+      was published in 2005 after a long review, and the Flyspeck project completed a
+      formal machine verification in 2014.
     </div>
   </section>
 
@@ -266,11 +271,11 @@
     <h2>Two stars in the <i>Harmony of the World</i></h2>
     <p class="who">Johannes Kepler, <i>Harmonices Mundi</i>, Book II · Linz</p>
     <p>
-      Kepler's definition of stellation — extend the edges or faces of a figure until
-      they meet again — is stated here for the first time. He gives it first for
-      polygons, where the pentagon yields the pentagram, and then carries it into three
-      dimensions, producing the <b>small stellated dodecahedron</b> and the <b>great
-      stellated dodecahedron</b>.
+      In 1619 Kepler gave the first explicit definition conventionally cited in
+      histories of polyhedral stellation: extend a figure's edges or faces until they
+      meet again. He developed the idea first for planar figures, where a pentagon
+      yields a pentagram, and then in three dimensions, producing the <b>small stellated
+      dodecahedron</b> and the <b>great stellated dodecahedron</b>.
     </p>
     <p>
       The decisive step was not finding the shapes, which had been drawn before, but
@@ -292,9 +297,9 @@
     </figure>
     <figure class="hist-photo">
       <img src="img/hist/kepler-hm-title.jpg" alt="Title page of Harmonices Mundi" loading="lazy">
-      <figcaption><b>The book.</b> Printing finished at Linz in 1619, while Kepler was
-        conducting his mother’s defence against a witchcraft charge three hundred
-        miles away.
+      <figcaption><b>The book.</b> Published at Linz in 1619 while the long-running case
+        against Kepler's mother continued in Württemberg, roughly three hundred miles
+        away.
         <span class="credit">Title page, <i>Ioannis Keppleri Harmonices mundi libri V</i>, Linz, 1619. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
@@ -318,37 +323,39 @@
       </figure>
     </div>
     <p>
-      The dodecahedron has exactly three stellations, and all three are famous, so
+      The dodecahedron has three non-trivial stellations in the conventional sequence,
+      and all three are famous, so
       walking outward one shell at a time passes through three of the four Kepler–Poinsot
       solids in order. Note that the engraving above shows only the <em>first and third</em>
       of the three below: the great dodecahedron in the middle is not in Kepler's plate
-      because Kepler did not report it. It waited for Poinsot, two centuries later.
+      because Kepler did not report it. Poinsot gave it a mathematical treatment in
+      1809, although Jamnitzer had pictured a similar form in 1568.
     </p>
     <div class="person">
       <span class="person-mark">☾</span>
       <div class="person-body">
         <p>
-          <b>The circumstances.</b> The star polyhedra are in Book II, on how regular
-          figures fit together; Book V contains the third law of planetary motion, which
-          Kepler dates to a flash on 8 March 1618 that he dismissed as a computing
-          error, and to its recovery on 15 May. Printing finished at Linz in 1619. The
-          Thirty Years' War began the year he completed Book V.
+          <b>The circumstances.</b> The star polyhedra appear in Book II, on the
+          congruence of regular figures; Book V contains the third law of planetary
+          motion. In Book V Kepler says the idea first occurred to him on 8 March 1618,
+          that a faulty calculation led him to reject it, and that it returned on 15
+          May. The book was completed in 1618, as the Thirty Years' War began, and
+          published at Linz in 1619.
         </p>
         <p>
-          <b>Katharina Kepler.</b> In December 1615 Kepler received the letter telling
-          him his mother had been accused of witchcraft at Leonberg. He drafted a brief
-          of some fifty folios answering every accusation in turn, and housed her in Linz
-          for most of a year — she travelled the three hundred miles partly on foot and
-          partly by boat down the Danube. Those are the years in which he was assembling
-          Books I and II, the books that contain the star polyhedra. Proceedings opened
-          in the Leonberg town hall on 9 November 1619, the year <i>Harmonices Mundi</i>
-          appeared. She was arrested in August 1620 and held in custody, at her son's
-          expense, for some fourteen months; in
-          August 1621 the executioner showed her the instruments and she refused to
-          confess, saying they might do as they liked, she had nothing to admit. The
-          Tübingen law faculty found the evidence insufficient and she was released on
-          4 October 1621. She died the following April, aged 74. The defence cost Kepler
-          more than two years' salary.
+          <b>Katharina Kepler.</b> In December 1615 Kepler received a letter reporting
+          that his mother had been accused of witchcraft at Leonberg. He prepared
+          lengthy, point-by-point legal submissions on her behalf. Katharina stayed with
+          him in Linz from January to September 1617 after travelling roughly three
+          hundred miles, partly on foot and partly by boat down the Danube. These events
+          overlapped his work on <i>Harmonices Mundi</i>. Proceedings opened in
+          Leonberg town hall on 9 November 1619, the year the book appeared. She was
+          arrested in August 1620 and held for about fourteen months, while Kepler bore
+          substantial costs of her detention and defence. On 28 September 1621 she was
+          shown the instruments of torture in an attempt to frighten her into confessing,
+          but she still refused. She was acquitted by a ruling of 4 October and released
+          within days. She died on 13 April 1622, aged seventy-four. The case cost Kepler
+          more than nine hundred guilders — over two years of his salary.
         </p>
       </div>
     </div>
@@ -363,8 +370,8 @@
       there for the other two, Poinsot described the <b>great dodecahedron</b> and the
       <b>great icosahedron</b>. His route in was star polygons: he built a general theory
       of the pentagram, heptagram and their relatives, then asked the three-dimensional
-      question. Unlike Kepler he stellated faces rather than edges, and — the move that
-      found the extra two — he allowed the vertex figure itself to be a star polygon.
+      question. Kepler's two solids have pentagram faces; Poinsot's additional two
+      instead have pentagram vertex figures.
     </p>
     <p>
       The great icosahedron is the only one of the four that is a stellation of the
@@ -398,7 +405,7 @@
         <p>
           He published very little, and deliberately: he would release only fully
           worked-out results, and he was a geometer among analysts at the moment when
-          analysis was winning. The one surviving glimpse of him in a room is from the
+          analysis was winning. A vivid surviving glimpse of him in a room is from the
           journal of the English mathematician Thomas Archer Hirst, who visited in
           December 1857 and described a tall, thin man with silver hair in a loose
           dressing gown, talking continuously and well in a low voice and never straying
@@ -413,12 +420,13 @@
       polyèdres" proved that a regular star polyhedron can only be built by extending the
       edges or faces of a convex regular one. Five convex solids yield exactly Poinsot's
       four, so the list of nine regular polyhedra is complete. He cites Poinsot
-      extensively and never mentions Kepler. He wrote it in the evenings while working as
-      a junior military engineer at Cherbourg, building harbour works for the fleet
-      intended to invade England; the same memoir contains Cauchy's rigidity theorem and
-      the first combinatorial proof of Euler's polyhedron formula. In 1813, the year the
-      proof appeared, Cauchy stood for Lagrange's vacant seat at the Académie and lost
-      it — to Poinsot.
+      extensively and never mentions Kepler. He worked on the mathematics despite a
+      heavy engineering workload at Cherbourg, building harbour works for the fleet
+      intended to invade England. The same 1813 cahier contains his first
+      combinatorial-topological proof of Euler's polyhedron formula in Part II of the
+      first memoir, and his rigidity theorem in a separate second memoir. In 1813, the
+      year the proofs appeared, Cauchy stood for Lagrange's vacant seat at the Académie
+      and lost it — to Poinsot.
     </p>
   </section>
 
@@ -430,9 +438,10 @@
     <h2>Hess, and the compounds</h2>
     <p class="who">Edmund Hess, Marburg</p>
     <p>
-      Hess began as an experimental physicist — his 1864 Marburg doctorate was on the
-      outflow of air through narrow openings — and spent his whole career in the town he
-      was born in. In an 1876 paper for the Marburg natural-science society he worked
+      Hess began as an experimental physicist — his 1866 Marburg dissertation was on the
+      outflow of air through narrow openings. Although he also studied at Heidelberg, he
+      earned his doctorate and spent his academic career in his native Marburg. In an
+      1876 paper for the Marburg natural-science society he worked
       from <b>stellation diagrams</b>, the flat radiating pattern a single face plane
       makes when cut by all the others, and by that means completed the main sequence of
       icosahedral stellations. He also described the interpenetrating compounds: five
@@ -441,15 +450,16 @@
       triacontahedron.
     </p>
     <p>
-      The credit is not settled. Brückner's own footnotes of 1900 cite Hess's Kassel
-      paper of 1876 for the method, which is the best evidence there is; but Guy
-      Inchbald's timeline dates Hess's stellation work to the <i>Kugelteilung</i> of 1883
-      instead, and credits the compounds to Cauchy in 1812–13. Any page that presents one
-      of these as settled is oversimplifying.
+      Brückner's §153 cites Hess's 1876 paper for these constructions. A later historical
+      timeline by Guy Inchbald notes that Cauchy was already aware in 1812 of the
+      five- and ten-tetrahedra and five-octahedra compounds. The year 1876 is therefore
+      Hess's publication and systematic-description date, not necessarily the first
+      notice of every compound.
     </p>
     <p>
       The compound of five octahedra is instructive to build, because it invites a
-      specific mistake. Its thirty outer points sit exactly where an octahedron's would,
+      specific mistake. Its thirty outer points sit at the vertices of an
+      icosidodecahedron,
       so it is tempting to take the shell that produces them and stop. That gives the
       correct silhouette and a hollow interior. The compound needs the shell underneath
       as well.
@@ -457,19 +467,17 @@
 <div class="photo-row two">
     <figure class="hist-photo">
       <img src="img/hist/hess-plate-1876.jpg" alt="Hess's 1876 plate of stellation diagrams" loading="lazy">
-      <figcaption><b>The oldest of these diagrams in print.</b> Hess’s plate of 1876:
-        one face plane cut by all the others, the lines running out to the edge of the
-        sheet. Every stellation diagram since — Brückner’s, Coxeter’s, and the
-        one this program draws — is a descendant of these figures.
+      <figcaption><b>An early printed example.</b> Hess’s plate of 1876 contains complete
+        plane-intersection figures of the kind Brückner later used.
         <span class="credit">Edmund Hess, plate from his 1876 Marburg paper. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
     <figure class="hist-photo">
       <img src="img/hist/hess-portrait.jpg" alt="Photograph of Edmund Hess" loading="lazy">
-      <figcaption><b>Edmund Hess (1843–1903).</b> Born, educated, employed and buried
-        in Marburg. He began as an experimental physicist — his doctorate was on the
-        outflow of air through narrow openings — and lent his own polyhedron models to
-        Brückner to copy.
+      <figcaption><b>Edmund Hess (1843–1903).</b> Born in Marburg, he earned his
+        doctorate and spent his academic career there. His dissertation, published in
+        1866, was on the outflow of air through narrow openings; he later lent
+        polyhedron models to Brückner to copy.
         <span class="credit">Photograph by Moritz Paar, from the album presented to Karl Weierstrass. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
@@ -503,16 +511,16 @@
       <i>Vielecke und Vielflache</i> is around 220 pages of dense classical geometry with
       many figures in the text, seven lithographed plates of nets and diagrams, and five
       collotype double-plates. Because each collotype plate is a double leaf, the
-      photographs run across ten sheets, and they show <b>146 paper models</b> that
-      Brückner built himself. Collotype is a continuous-tone photographic process with no
+      photographs run across ten sheets, and they show <b>146 paper models</b> from
+      Brückner's collection. Collotype is a continuous-tone photographic process with no
       halftone screen, which is why the plates have their soft, almost sculptural grey.
-      It was, in George Hart's phrase, the first major work that used photographs to
-      communicate the beauty of mathematics — and the photographs, not the mathematics,
-      are why the book mattered.
+      George Hart argues that it was the first major work to use photographs to
+      communicate the visual appeal of mathematics — and that the photographs, more
+      than the classification, explain the book's afterlife.
     </p>
     <figure class="hist-photo">
       <img src="img/hist/bruckner-plate9.jpg" alt="Brückner’s Plate IX, models 1 to 12" loading="lazy">
-      <figcaption><b>Plate IX, first sheet.</b> Twelve whitewashed paper models on four shelves, each casting its own shadow. No. 3 is the compound of ten tetrahedra, no. 6 the compound of five octahedra, no. 11 the compound of five tetrahedra — the model Escher copied out by hand, citing this plate and this number. <a href="bruckner.html">Open the interactive edition of the book →</a>
+      <figcaption><b>Plate IX, first sheet.</b> Twelve whitewashed paper models on four shelves, each casting its own shadow. No. 3 is the compound of ten tetrahedra, no. 6 the compound of five octahedra, no. 11 the compound of five tetrahedra — the model Escher studied in a hand drawing, citing this plate and this number. <a href="bruckner.html">Open the interactive edition of the book →</a>
         <span class="credit">Max Brückner, <i>Vielecke und Vielflache</i>, Teubner, 1900, Plate IX. Public domain; scan of the University of Toronto copy, Internet Archive.</span>
       </figcaption>
     </figure>
@@ -522,15 +530,16 @@
     <p class="fig-caption">
       The final stellation of the icosahedron — every cell taken — photographed by
       Brückner as Plate XI, no. 14. The nickname "echidnahedron", after the spiny
-      anteater, is modern: it was coined by Andrew Hume in 1995, not by Coxeter.
+      mammal, is modern: Netlib database developer Andrew Hume coined it in 1995.
     </p>
     <p>
       Section 153 of the book is titled <i>Die vollständige Figur der Ebenen des
       Ikosaeders</i> — the complete figure of the planes of the icosahedron. Brückner
       takes one face plane, intersects it with all the others, and numbers the resulting
       points by the concentric ring they lie on. That is the stellation diagram, in the
-      panel on the right of the figure above, and it is the direct ancestor of the
-      diagrams in <i>The Fifty-Nine Icosahedra</i> and of this program's. He reads the
+      panel on the right of the figure above. It uses the same complete
+      plane-intersection construction later used in <i>The Fifty-Nine Icosahedra</i> and
+      in this program. He reads the
       compounds straight off it: the points numbered 3 give the compound of five
       octahedra, the points numbered 6 give the two mirror-image compounds of five
       tetrahedra and, taken together, the compound of ten tetrahedra. He credits the
@@ -540,9 +549,10 @@
       What was new was less the theory than the realisation. Brückner states plainly that
       a large part of the polyhedra on the plates were built for the first time by him,
       and the book shows ten stellations of the icosahedron including the final one.
-      Several of the compounds, however, are Hess's discoveries — Hess had five cubes,
-      five tetrahedra and ten tetrahedra in 1876 — and Brückner's contribution to those
-      is the systematic derivation, the model and the photograph.
+      Several of the compounds, however, had appeared in Hess's work — Hess included
+      five cubes, five octahedra, five tetrahedra and ten tetrahedra in 1876 — and
+      Brückner's contribution to those is the systematic derivation, the model and the
+      photograph.
     </p>
     <div class="person">
       <span class="person-mark">✦</span>
@@ -556,9 +566,9 @@
           collotype, so every one of those had to be painted over white, and to kill the
           shine the white went on as a coat of levigated chalk. Once chalked, the surface
           would no longer hold drawn edge lines. The uniform ghostly matte white of the
-          famous plates is therefore an artefact of what a 1900 camera could do: the
-          models in his room were colour-coded, and the models in the book were
-          whitewashed for the camera.
+          famous plates is therefore a photographic workaround: the isogonal models had
+          been colour-coded, and those photographed for the book were whitewashed for
+          the camera.
         </p>
         <p>
           The same footnote notes that the models are arranged on the plates <em>by
@@ -574,36 +584,37 @@
           The preface thanks Hess for readily lending models from his own collection to
           copy, thanks the Dresden firm of Römmler &amp; Jonas for the photography, and
           <b>invites the reader to come and see the collection</b>: it is in his
-          possession, and interested parties may view it at any time. That is an open
-          invitation, printed in a Teubner monograph, to knock on a schoolmaster's door
-          in Bautzen and be shown a cupboard of paper stars.
+          possession, and interested parties may view it at any time.
         </p>
         <p>
           <b>What happened to them.</b> He kept building — his 1906 monograph adds nine
-          more photographic plates showing 110 further models — and in 1930–31, aged
-          seventy and six years retired, he gave over two hundred models to the
+          more photographic plates showing 110 models — and in 1930–31, when he was
+          about seventy and had been retired for six years, he gave over two hundred models to the
           Mathematical Institute at Heidelberg, which awarded him an honorary doctorate
-          in 1931. After that they disappear. The university has no record of their fate;
-          George Hart notes that they survived the First World War and thinks it hard to
+          in 1931. The later trail is poorly documented. Hart reports that the university has no
+          record of their fate; he notes that they survived the First World War and
+          thinks it hard to
           imagine them surviving the Second, and the German literature on
-          model collections reports the Heidelberg holdings as lost. No Brückner model is
-          known to survive. What does survive, in the Heidelberg university library, is
-          <i>Die Polyeder. Ein Tafelwerk</i> — eighteen manuscript volumes he delivered
-          in person in December 1931 and June 1933.
+          model collections reports the Heidelberg holdings as lost. No original
+          Brückner model was known to survive in the sources consulted. What does
+          survive, in the Heidelberg university library, is
+          <i>Die Polyeder. Ein Tafelwerk</i> — eighteen manuscript volumes delivered in
+          December 1931 and June 1933.
         </p>
         <p>
           The contrast is with two contemporaries. Alicia Boole Stott's paper models of
-          sections of four-dimensional polytopes, made around the same date, are still on
-          display at Cambridge and Groningen. H. T. Flather's card set of all fifty-nine
-          icosahedra, made in the 1930s, is kept in the Cambridge mathematics library.
-          Brückner's are reported to have been cleared out.
+          sections of four-dimensional polytopes, made around the same date, survive in
+          collections at Cambridge and Groningen. H. T. Flather's card set of all
+          fifty-nine icosahedra passed to Cambridge and was photographed for the 1999
+          edition. Brückner's are reported to have been cleared out.
         </p>
       </div>
     </div>
     <div class="link-out">
       <span class="tag">Why the professionals shrugged</span>
       The book contains no group theory whatever, which is remarkable in a student of
-      Klein, whose Erlangen programme of 1872 was precisely about symmetry groups.
+      Klein, whose Erlangen programme of 1872 organised geometries by their
+      transformation groups.
       Klein's own 1908 textbook discusses polyhedra without mentioning his student's
       book, and Branko Grünbaum later judged Brückner's classification ad hoc and
       incomplete. Hart's reading is that the book landed outside the professional
@@ -624,18 +635,19 @@
       International Congress of Mathematicians in Toronto.
     </p>
     <p>
-      What he presented there was a <em>method</em>: select regions of the stellation
-      diagram, take the cells behind them, and generate figures systematically rather
-      than finding them one at a time. He described twenty-two forms, twenty excluding
-      reflections. That method is, in essence, the operation this program performs — and
-      Wheeler's version of it was more permissive than the one that later became
-      standard. He admitted hollow polyhedra and sets of disconnected cells; two of the
+      What he presented there was a <em>method</em>: select symmetric sets of regions —
+      his “elements” — in a face plane and show how copies can be assembled into
+      polyhedra, generating figures systematically rather than finding them one at a
+      time. He listed twenty-two entries, or twenty when two mirror-image pairs are each
+      counted only once. That systematic region-selection idea has a modern analogue in this
+      program, and Wheeler's version was more permissive than the rules that later became
+      standard. He admitted hollow polyhedra and disconnected constructions; two of the
       awkward cases that Coxeter's team would wrestle with, <b>f₂</b> and <b>g₁</b>,
       appear as Wheeler's numbers 21 and 22.
     </p>
     <figure class="hist-photo">
       <img src="img/hist/wheeler.jpg" alt="A. Harry Wheeler with his polyhedron models" loading="lazy">
-      <figcaption><b>Wheeler with the collection.</b> He gave every model a serial number and usually a date in pencil on one face. Over a thousand of them are now in the Smithsonian.
+      <figcaption><b>Wheeler with the collection.</b> He gave every model a serial number and usually a date in pencil on one face. The Smithsonian catalogs more than a thousand model records under his name.
         <span class="credit">Photograph of A. Harry Wheeler, Smithsonian National Museum of American History, object nmah_1157026. CC0.</span>
       </figcaption>
     </figure>
@@ -651,15 +663,14 @@
           off the title page — Flather is on it — but he is still there in the text and
           the tables. One of his models, no. 370, dated in pencil 26 April 1919, is
           the solid Coxeter would call <b>De₁</b> — the seventh stellation, Plate VIII of
-          the 1938 book. It sat on Wheeler's desk for nineteen years before the book
-          appeared.
+          the 1938 book. Wheeler made it nineteen years before the book appeared.
         </p>
         <p>
           <b>The models.</b> They are workshop objects, not fragile abstractions: serial
           numbered, usually dated in pencil on a face, cut from paper — often tan, often
           combined with transparent green celluloid so the interior shows through — and
           sometimes held together entirely by hinged folds with no glue. The Smithsonian
-          holds the bulk of the collection, over a thousand catalogue records. Among them
+          catalogs more than a thousand model records under Wheeler's name. Among them
           is a deltahedron 25.5 cm across, the third stellation of the icosahedron,
           folded without glue in June 1927 by Wheeler and his students, on which
           <b>fifteen of the sixty faces carry photographs of his pupils</b> at North High
@@ -683,13 +694,14 @@
     <p class="who">H. S. M. Coxeter, P. Du Val, H. T. Flather, J. F. Petrie · University of Toronto Press</p>
     <p>
       Twenty-six pages and twenty plates, in paper covers at four shillings and
-      sixpence, and the definitive statement of the problem. The division of labour is
+      sixpence, and the standard 1938 enumeration under Miller's rules. The division of
+      labour is
       worth knowing, because each part of it survives in the program:
     </p>
     <ul class="todo">
-      <li><b>Coxeter</b> did the enumeration, working on a graph of which region-sets
-        adjoin which — the same idea as the support relation <kbd>shift</kbd>-click uses,
-        applied to regions rather than cells.</li>
+      <li><b>Coxeter</b> did the enumeration, using a graph to organise compatible sets
+        of regions in a face plane — analogous to, though not identical with, the
+        support relation that <kbd>shift</kbd>-click uses here.</li>
       <li><b>Du Val</b> invented the cell notation: shells a–h, subscripts for the
         distinct shapes within a shell, roman versus italic for the two hands of a chiral
         one. That is the Cells table, three columns and all.</li>
@@ -725,54 +737,54 @@
       <span class="person-mark">△</span>
       <div class="person-body">
         <p>
-          <b>Flather</b> is nearly invisible. He was not a professional mathematician; he
-          had already made stellated icosahedra, including forms the eventual rules would
-          exclude, before he ever met Coxeter; he completed
-          the whole set of fifty-nine in card; and he died about 1950. His first names,
-          birth date, occupation and nationality do not appear in any source. The models
-          passed to the Cambridge mathematics department and were photographed for the
-          third edition.
+          <b>Flather</b> is nearly invisible. Du Val said he was not a professional
+          mathematician, while Coxeter called him a crystallographer. He had made
+          stellated icosahedra before meeting Coxeter and completed the whole set of
+          fifty-nine in card; Du Val says he died about 1950. His first names and exact
+          vital dates remain elusive in the sources consulted. The models passed to the
+          Cambridge mathematics department and were photographed for the third edition.
         </p>
         <p>
           <b>Petrie</b> was the son of the Egyptologist Flinders Petrie and, by Coxeter's
           repeated testimony, could answer questions about complicated four-dimensional
           figures by visualising them. He read for his degree at UCL, was captured as an
           officer in the Second World War and organised a choir in the prison camp, and
-          spent his later career teaching children other teachers had given up on. He
-          died in a road accident in 1972, aged sixty-four. Petrie polygons are named
-          after him.
+          later taught children who had not been doing well in school. He died in a road
+          accident in 1972. Petrie polygons are named after him.
         </p>
         <p>
           <b>Du Val</b> has a second and larger fame: the <b>Du Val singularities</b> of
-          algebraic geometry — the ADE surface singularities — carry his name. The man
-          who devised the notation for shells of cells around an icosahedron also named a
-          fundamental object in a field with no obvious connection to it.
+          algebraic geometry — the ADE surface singularities — carry his name. The
+          notation's author is also the namesake of a fundamental object in a field with
+          no obvious connection to it.
         </p>
       </div>
     </div>
     <div class="link-out">
-      <span class="tag">Two Millers, one idea</span>
+      <span class="tag">Two different Millers</span>
       <b>J. C. P. Miller</b> of Trinity College, Cambridge gave the rules that decide
       which face-plane regions count. <b>William Hallowes Miller</b> of St John's,
       Cambridge — professor of mineralogy there from 1832 — gave the <b>Miller indices</b>,
-      the (hkl) triples that name <em>the planes of a crystal's faces</em>. They are
-      unrelated. Both are Cambridge men whose lasting contribution is a system for
-      labelling planes. J. C. P. Miller's other career was in computing: he was an early
+      the (hkl) triples that name <em>the planes of a crystal's faces</em>. They were
+      different Cambridge scholars, not two names for one person, and their
+      contributions should not be conflated. J. C. P. Miller's other career
+      was in computing: he was an early
       member of the Cambridge Mathematical Laboratory, and in 1951 he and David Wheeler
       used EDSAC to find a 79-digit prime, then the largest known and among the first
       found by an electronic computer.
     </div>
     <p>
-      The book has been reissued twice: a Springer reprint in 1982 with a new preface by
-      Du Val, and a third edition from Tarquin in 1999, reset and redrawn by <b>Kate and
-      David Crennell</b>, who added the 1–59 index numbering now in general use.
+      The original was reprinted by Toronto in 1951, followed by a Springer edition in
+      1982 with a new preface by Du Val and a third edition from Tarquin in 1999, reset
+      and redrawn by <b>Kate and David Crennell</b>, who introduced a 1–59 index
+      numbering.
     </p>
     <div class="hfig" id="figFiftyNine" data-poly="u27" data-sym="Ih" data-cells="{0,1,2,3,4,5(1[1])}"
          data-parts="cells solid"></div>
     <p class="fig-caption">
       Du Val's <b>Ef₁</b>, one hand of it: the compound of five tetrahedra, Crennell no.
-      47. One of only two chiral stellations that are fully supported, which is why it is
-      such a common paper model — and the figure Brückner photographed as Plate IX,
+      47. One of only two chiral stellations that are fully supported, it is also a
+      familiar paper model — and the figure Brückner photographed as Plate IX,
       no. 11.
     </p>
     <p>
@@ -780,13 +792,12 @@
       <a href="walkthrough.html">Cells walkthrough</a>.
     </p>
     <div class="link-out">
-      <span class="tag">Fifty-nine is not a theorem</span>
-      The number is a consequence of Miller's rules, not of the geometry. Because the
-      rules operate on externally visible regions and on solid blocks of space, they
-      cannot see a solid's internal structure, cannot distinguish true edges from
-      accidental crossing lines, and admit oddities such as <b>f₂</b> — twelve pieces
-      floating unconnected in space — while excluding figures whose faces run
-      continuously across two shells. Guy Inchbald's "In Search of the Lost Icosahedra"
+      <span class="tag">Fifty-nine is conditional</span>
+      The number follows from Miller's chosen rules; it is not forced by the geometry
+      alone. Because the rules judge exposed face regions, they ignore internal
+      structure. They admit oddities
+      such as <b>f₂</b> — twelve disconnected pieces in space — while excluding figures
+      whose faces continue across two shells. Guy Inchbald's "In Search of the Lost Icosahedra"
       (2002) argues the case for the excluded ones; Coxeter himself later described the
       work as a product of youthful exuberance. The number depends on where the line is
       drawn.
@@ -804,9 +815,10 @@
       Escher used star polyhedra and compounds repeatedly: <i>Stars</i> (1948), with two
       chameleons inside an open cage that is a compound of three octahedra; <i>Order and
       Chaos</i> (1950) and <i>Gravitation</i> (1952), both built on the small stellated
-      dodecahedron — the second perforated, with twelve shell-less tortoises living
-      inside it; <i>Waterfall</i> (1961), whose two towers are capped by a compound of
-      three cubes and by the first stellation of the rhombic dodecahedron.
+      dodecahedron — the second perforated, with twelve creatures originally conceived
+      as turtles, their shells replaced by the polyhedron; <i>Waterfall</i> (1961), whose
+      two towers are capped by a compound of three cubes and by the triangular-faced
+      outer hull of the first stellation of the rhombic dodecahedron.
     </p>
     <p>
       He was not inventing these shapes, and the dependence on Brückner is documented
@@ -828,23 +840,25 @@
     <figure class="hist-photo">
       <img src="img/hist/escher-stars.jpg" alt="M. C. Escher, Stars, 1948" loading="lazy">
       <figcaption><b><i>Stars</i>, 1948.</b> Two chameleons inside an open cage that is
-        a compound of three octahedra — Brückner’s Plate VIII, no. 12. A dozen more
-        of the book’s solids drift in the background.
+        a compound of three octahedra — Brückner’s Plate VIII, no. 12. Many more
+        polyhedra and compounds, several matching Brückner's plates, drift in the
+        background.
         <span class="credit">M. C. Escher, <i>Stars</i> (wood engraving, 1948). © The M.C. Escher Company, Baarn. Reproduced here at low resolution for commentary and criticism.</span>
       </figcaption>
     </figure>
     <figure class="hist-photo">
       <img src="img/hist/escher-gravitation.jpg" alt="M. C. Escher, Gravitation, 1952" loading="lazy">
       <figcaption><b><i>Gravitation</i>, 1952.</b> A perforated small stellated
-        dodecahedron with twelve shell-less tortoises living inside it, one to a spike.
-        <span class="credit">M. C. Escher, <i>Gravitation</i> (lithograph, hand-coloured, 1952). © The M.C. Escher Company, Baarn. Reproduced here at low resolution for commentary and criticism.</span>
+        dodecahedron with twelve turtle-like creatures, their shells replaced by the
+        polyhedron, one to a spike.
+        <span class="credit">M. C. Escher, <i>Gravitation</i> (lithograph and watercolour, June 1952). © The M.C. Escher Company, Baarn. Reproduced here at low resolution for commentary and criticism.</span>
       </figcaption>
     </figure>
     <figure class="hist-photo">
       <img src="img/hist/escher-waterfall.jpg" alt="M. C. Escher, Waterfall, 1961" loading="lazy">
       <figcaption><b><i>Waterfall</i>, 1961.</b> The left tower carries the compound of
-        three cubes, Plate IX no. 23; the right tower the first stellation of the rhombic
-        dodecahedron, Plate X no. 13 — the solid now named after him.
+        three cubes, Plate IX no. 23; the right tower the triangular-faced outer hull of
+        the first stellation of the rhombic dodecahedron, corresponding to Plate X no. 13.
         <span class="credit">M. C. Escher, <i>Waterfall</i> (lithograph, 1961). © The M.C. Escher Company, Baarn. Reproduced here at low resolution for commentary and criticism.</span>
       </figcaption>
     </figure>
@@ -852,9 +866,10 @@
 
     <div class="hfig" id="figEscher" data-poly="d12" data-sym="Oh" data-cells="{0,1}"></div>
     <p class="fig-caption">
-      The first stellation of the rhombic dodecahedron — the solid on the right-hand
-      tower of <i>Waterfall</i>, now generally called Escher's solid. Brückner
-      photographed it as Plate X, no. 13.
+      The first stellation of the rhombic dodecahedron. Its triangular outer hull is the
+      solid on the right-hand tower of <i>Waterfall</i>, often called Escher's solid;
+      the stellation itself has twelve self-intersecting hexagonal faces. Brückner
+      photographed the corresponding form as Plate X, no. 13.
     </p>
     <div class="link-out">
       <span class="tag">A reading that has been superseded</span>
@@ -867,9 +882,9 @@
     </div>
     <div class="link-out">
       <span class="tag">Mathematician meets artist</span>
-      Coxeter and Escher corresponded. Coxeter sent him a diagram of a hyperbolic
-      tessellation; Escher, who said more than once that he could not follow the
-      mathematics, took the picture and produced the <i>Circle Limit</i> series from it.
+      Coxeter and Escher corresponded. After Coxeter sent Escher a reprint of his 1957
+      paper containing a hyperbolic tessellation, its Figure 7 gave Escher a way into
+      <i>Circle Limit I</i>; he then developed the four-print series through 1960.
     </div>
   </section>
 
@@ -889,7 +904,7 @@
     <figure class="hist-photo">
       <img src="img/hist/wenninger.jpg" alt="Magnus Wenninger with his polyhedral models" loading="lazy">
       <figcaption><b>Wenninger with the models.</b> A Benedictine of Saint John’s Abbey, Collegeville, who taught mathematics in the Bahamas and built these for decades. His book supplied the nets and put the objects within reach of anyone with card and patience.
-        <span class="credit">Photograph of Magnus Wenninger and his polyhedral models. CC BY 3.0, via Wikimedia Commons.</span>
+        <span class="credit">Photo Tomruen, CC BY 3.0, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
 
@@ -904,7 +919,7 @@
   </section>
 
   <section id="built" data-year="" data-short="Stars on buildings">
-    <span class="when">1586–1897 · off the timeline</span>
+    <span class="when">1589–1899 · off the timeline</span>
     <h2>Star polyhedra as architecture</h2>
     <p class="who">Surveyed by Tibor Tarnai, János Krähling and Sándor Kabai</p>
     <p>
@@ -936,7 +951,7 @@
     </div>
 
     <p>
-      The most striking case cannot be photographed from the ground at all. On the
+      The most striking case is not readily visible from the ground. On the
       sacristy of St Peter's Basilica, built by Carlo Marchionni in 1776–84, the star
       crowning the dome for the arms of Pius VI is an almost exact <b>great stellated
       dodecahedron</b> — Kepler's 1619 solid, executed at architectural scale on a Vatican
@@ -946,26 +961,27 @@
     <div class="hfig" id="figSacristy" data-poly="u28" data-sym="Ih"
          data-cells="{0,1,2,3}" data-parts="solid"></div>
     <p class="fig-caption">
-      The solid on that roof, built here from the dodecahedron: every shell there is.
-      Compare the third of the three above — it is the same figure.
+      The idealized solid behind that roof ornament, built here from the dodecahedron:
+      every shell is present. Compare <a href="#figGSD">the great stellated dodecahedron
+      in the Kepler section</a>. The actual finial omits two pyramids.
     </p>
 
     <div class="link-out">
       <span class="tag">The one in your window</span>
       The <b>Moravian star</b> — the Herrnhuter Stern, hanging in windows and Christmas
       markets across Germany and far beyond — is an elevated rhombicuboctahedron: 26
-      points, 18 on square bases and 8 on triangular. It began as a geometry exercise in
-      a Moravian boys' boarding school at Niesky, in the second quarter of the
-      nineteenth century, where pupils built star polyhedra out of paper and glue as a
-      lesson. A former pupil, Peter Verbeek, was selling them — with printed instructions
-      for making your own — through his Herrnhut bookshop by around 1880; his son founded
-      the factory, which has made them since about 1897. It is almost certainly the most
-      widely distributed stellated polyhedron on earth, and it is rarely recognised as
-      one.
+      points, 18 on square bases and 8 on triangular. The earliest surviving reference
+      describes a large paper star at the Moravian boys' school in Niesky in 1820–21.
+      A former pupil, <b>Pieter Hendrik Verbeek</b>, opened a paper and art shop in
+      Herrnhut in 1894, developed a sturdy demountable version, patented it in 1898 and
+      entered a factory partnership with the Moravian Church in 1899. His son Harry
+      later managed the reorganised company. This is an <em>elevation</em>, not a true
+      face-plane stellation, but it may be the most familiar star polyhedron in everyday
+      life.
     </div>
       <figure class="hist-photo">
       <img src="img/hist/moravian-star.jpg" alt="Herrnhuter Sterne, Moravian stars" loading="lazy">
-      <figcaption><b>The Herrnhuter Stern.</b> Twenty-six points on an elevated rhombicuboctahedron: eighteen on square bases, eight on triangular. It began as a geometry exercise at a Moravian boarding school and has been manufactured at Herrnhut since 1897.
+      <figcaption><b>The Herrnhuter Stern.</b> Twenty-six points on an elevated rhombicuboctahedron: eighteen on square bases, eight on triangular. Documented at a Moravian boarding school in 1820–21, it has been commercially produced at Herrnhut since the 1890s.
         <span class="credit">Herrnhuter Sterne. Photo Gohnarch, CC BY-SA 3.0, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
@@ -977,15 +993,18 @@
     <h2>Five-fold symmetry turns up in metal</h2>
     <p class="who">Dan Shechtman</p>
     <p>
-      This section is here because of a shape. Every solid on this page has been built
-      inside the symmetry of the icosahedron, and the defining feature of that symmetry —
-      the thing that makes a dodecahedron's face a pentagon and gives the great
-      icosahedron its twelve five-fold spikes — is exactly what crystallography had
-      spent a century proving could not exist in matter.
+      This section is here because of a shape. The dodecahedral and icosahedral solids
+      at the centre of this page share icosahedral symmetry. Its five-fold axes — visible
+      in a dodecahedron's pentagonal faces and the great icosahedron's twelve five-fold
+      spikes — are exactly the kind of rotational symmetry that classical crystallography
+      excluded from a periodically repeating lattice.
     </p>
     <p>
-      The theorem: a crystal cannot have five-fold symmetry, because
-      pentagons do not tile the plane and icosahedra do not fill space. On 8 April 1982,
+      The crystallographic restriction allows only one-, two-, three-, four- and six-fold
+      rotational axes in a <em>periodic crystal lattice</em>, so five-fold symmetry is
+      excluded. The familiar facts that regular pentagons do not tile the plane and regular
+      icosahedra do not fill space periodically illustrate the obstruction rather than
+      proving it. On 8 April 1982,
       on sabbatical at the US National Bureau of Standards, Shechtman put a rapidly
       quenched aluminium–manganese alloy under an electron microscope and recorded a
       diffraction pattern with ten evenly spaced bright spots. His notebook entry for
@@ -995,7 +1014,7 @@
     </p>
     <figure class="hist-photo">
       <img src="img/hist/quasicrystal.jpg" alt="Electron diffraction pattern of a quasicrystal showing ten-fold symmetry" loading="lazy">
-      <figcaption><b>The forbidden pattern.</b> An electron diffraction pattern from a Zn–Mg–Ho quasicrystal, showing the ten-fold symmetry that crystallography had proved could not exist. Shechtman’s notebook entry for his 1982 sample reads, in effect, “10 fold” followed by three question marks.
+      <figcaption><b>The forbidden pattern.</b> An electron diffraction pattern from a Zn–Mg–Ho quasicrystal, showing rotational symmetry forbidden to a periodic crystal lattice. Shechtman’s notebook entry for his 1982 sample reads, in effect, “10 fold” followed by three question marks.
         <span class="credit">Electron diffraction pattern of a Zn–Mg–Ho icosahedral quasicrystal. Photo Materialscientist, CC BY-SA 3.0, via Wikimedia Commons. Not Shechtman’s original 1982 plate.</span>
       </figcaption>
     </figure>
@@ -1004,9 +1023,8 @@
          data-cells="{0}" data-parts="solid"></div>
     <p class="fig-caption">
       The symmetry in question. Turn the dodecahedron until a face points at you and the
-      five-fold axis is the one running through it — the axis crystallography said a
-      solid could not repeat in space. Shechtman's alloy repeated it anyway, without
-      being periodic.
+      five-fold axis is the one running through it. Shechtman's alloy exhibited that
+      rotational order in diffraction while lacking periodic translational order.
     </p>
 
     <div class="link-out">
@@ -1030,28 +1048,30 @@
   <section id="biology" data-year="1962" data-short="Viruses & carbon">
     <span class="when">1962 · 1985</span>
     <h2>Icosahedra that build themselves</h2>
-    <p class="who">Caspar and Klug · Kroto, Curl and Smalley</p>
+    <p class="who">Caspar and Klug · Kroto, Heath, O'Brien, Curl and Smalley</p>
     <p>
-      Donald Caspar and Aaron Klug established in 1962 why so many viruses are
-      icosahedral: it is the most economical way to build a closed shell from many copies
-      of a single protein. Some capsids are visibly spiky. Adenovirus carries a trimeric
+      Donald Caspar and Aaron Klug showed in 1962 how icosahedral symmetry lets viruses
+      build large closed shells economically from many equivalent or quasi-equivalent
+      protein subunits. Some capsids are visibly spiky. Adenovirus carries a trimeric
       fibre ending in a knob projecting from each of its twelve vertices, which under the
       electron microscope reads as an unmistakable star. The <b>astroviruses</b> are
       named from the Greek for star because the particles show a five- or six-pointed
       figure on the surface — although only about a tenth of them actually show it.
     </p>
     <p>
-      In 1985 Kroto, Curl and Smalley found C₆₀: sixty carbon atoms at the vertices of a
-      truncated icosahedron, the shape of a football. They named it buckminsterfullerene
-      after the architect of the geodesic dome, and shared the 1996 Nobel Prize in
-      Chemistry for it.
+      In 1985 Harold Kroto, James Heath, Sean O'Brien, Robert Curl and Richard Smalley
+      reported C₆₀: sixty carbon atoms at the vertices of a truncated icosahedron, the
+      shape of a football, and named it buckminsterfullerene after the architect of the
+      geodesic dome. Kroto, Curl and Smalley shared the 1996 Nobel Prize in Chemistry for
+      the discovery of fullerenes.
     </p>
 <div class="photo-row two">
     <figure class="hist-photo">
       <img src="img/hist/adenovirus.jpg" alt="Structure of an adenovirus capsid protein assembly" loading="lazy">
-      <figcaption><b>An icosahedron that assembles itself.</b> Adenovirus builds a closed
-        shell from many copies of one protein, and carries a knobbed fibre projecting from
-        each of its twelve vertices — a capsid that reads, under the microscope, as a star.
+      <figcaption><b>An icosahedron that assembles itself.</b> Adenovirus builds an
+        icosahedral shell from repeated capsid proteins and carries a knobbed fibre
+        projecting from each of its twelve vertices — a capsid that reads, under the
+        microscope, as a star.
         <span class="credit">Adenovirus structure, PDB entry 2BVI, rendered by the Protein Data Bank in Europe. Public domain, via Wikimedia Commons.</span>
       </figcaption>
     </figure>
@@ -1079,37 +1099,36 @@
          data-cells="{0}" data-parts="solid"></div>
     <p class="fig-caption">
       The truncated icosahedron — twelve pentagons, twenty hexagons, sixty vertices. It is
-      the carbon skeleton of C₆₀ and the panelling of a football, and it sits in the same
-      icosahedral symmetry as everything else on this page.
+      the carbon skeleton of C₆₀ and the panelling of a football, and it shares
+      icosahedral symmetry with the dodecahedral and icosahedral examples on this page.
     </p>
 
     <div class="link-out">
       <span class="tag">A living stellation</span>
-      <b>Acantharia</b> are marine plankton, and the only organisms known to build
-      skeletons from celestite — strontium sulfate, the mineral named for its pale blue.
-      The skeleton is twenty radial spines passing through the centre of the cell in a
-      fixed arrangement, set by a nineteenth-century rule of Johannes Müller's: four
-      pairs polar, four pairs tropical, two pairs equatorial, the equatorial ones
-      mutually perpendicular. The arrangement is usually described as icosahedral. They
-      are, functionally, living stellated polyhedra, and they are about a millimetre
-      across.
+      <b>Acantharia</b> are marine plankton and the only organisms known to form entire
+      mineral skeletons of celestite — strontium sulfate. Depending on the lineage, the
+      skeleton has ten diametric or twenty radial spicules. In the familiar twenty-spine
+      form, Müller's law places eight polar, eight tropical and four equatorial spines in
+      a highly regular arrangement. It has often been compared with icosahedral geometry,
+      although “living stellated polyhedron” is a visual analogy rather than a taxonomic
+      description. Species range from tens of micrometres to several millimetres across.
     </div>
   </section>
 
-  <section id="now" data-year="1998" data-short="This program">
-    <span class="when">1998–</span>
+  <section id="now" data-year="1997" data-short="This program">
+    <span class="when">1997–</span>
     <h2>The program you are using</h2>
     <p class="who">Vladimir Bulatov</p>
     <p>
-      The Stellation applet was written between 1998 and 2001 — a Java applet, which is
-      to say software for a web that no longer exists. Its Cells window is Du Val's
-      notation made clickable, and as far as a survey of the field can establish, no
-      other stellation program has offered that particular table.
+      Bulatov's interactive stellation work was online by 1997–98; the Java applet
+      documented in his 2001 paper followed in 2000–01. Its Cells window is Du Val's
+      notation made clickable. A prior-art survey for this project found no other
+      stellation program presenting the notation in quite that table-driven form.
     </p>
     <p>
       This site is a JavaScript port of it, checked against the original: the same facet
       counts, the same cell structure, the same volumes to six decimal places. The
-      original Java still compiles and runs, twenty-five years on.
+      original Java still compiles and runs decades later.
     </p>
     <div class="solids-strip">
       <a class="solid-card" href="index.html#u28/Ih/I/d20/%7B0,1%7D">
@@ -1133,7 +1152,7 @@
       <a class="solid-card" href="index.html#u27/Ih/I/d20/%7B0,1,2,3,4,5,6%7D">
         <img src="img/solids/gi.png" alt="Great icosahedron" loading="lazy">
         <b>Great icosahedron</b>
-        <span>Poinsot, 1809 · seven shells of the icosahedron</span>
+        <span>Poinsot, 1809 · six shells beyond the icosahedron</span>
         <em>open in the app →</em>
       </a>
     </div>
@@ -1147,16 +1166,13 @@
   <section id="sources" data-year="" data-short="Sources">
     <h2>Sources and caveats</h2>
     <p>
-      Dates and attributions here were checked against the literature, and where the
-      sources disagree the text says so rather than picking a winner. Two claims on this
-      page contradict what is commonly repeated elsewhere, and are worth restating:
-      Wheeler's 1924 method was <em>more</em> permissive than the rules that superseded
-      it, not less; and no Brückner model is known to survive. A third is worth stating
-      plainly rather than resolving — the usual attribution of the name <i>stella
-      octangula</i> to the 1611 <i>Strena</i> rests on nothing we could verify, but
-      neither could we establish an alternative. The research notes behind the page — six
-      on the mathematics, six on the history, each fact-checked by a separate pass — are
-      in the repository under <code>notes/</code>.
+      Dates, attributions and anecdotes here were checked claim by claim, and where the
+      sources disagree the text says so rather than picking a winner. The accompanying
+      <a href="historical-fact-check.html">fact-check and source ledger</a> records the
+      evidence for every factual cluster, flags corrections and qualifications, and links
+      to primary or authoritative sources. It also preserves the unresolved question of
+      which Kepler text first used <i>stella octangula</i>. The mathematical research
+      notes used by this port remain in the repository under <code>notes/research/</code>.
     </p>
     <p>
       <b>Images.</b> Most of the pictures on this page are out of copyright: the San
