@@ -38,6 +38,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
   facePlanes, buildStellation, selectedSubCells, extractMesh, formatCells, selKey,
+  orientFaces,
 } from '../web/js/core.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -62,75 +63,12 @@ const toPoly = (g) => {
 
 // ------------------------------------------------------------------ topology
 
-/**
- * Make the surface consistently oriented, or refuse.
- *
- * The catalog lists each face's vertices in *some* order, and nothing in the
- * file format promises those orders agree with one another. They mostly do not:
- * taken as given, a majority of these solids have some directed edge appearing
- * twice, which reads as "not a surface" when it is only "not yet oriented".
- *
- * Orientation is recoverable, and uniquely so on a connected orientable
- * surface: walk the face adjacency, and whenever a neighbour traverses the
- * shared edge the *same* way round, flip it. Two things can go wrong, and both
- * are fatal rather than repairable, so both are refused:
- *
- *   - an undirected edge used by other than two faces — not a closed surface;
- *   - a flip that contradicts one already made — the surface is non-orientable,
- *     a Möbius band or Klein bottle, and has no inside for a winding number to
- *     count.
+/*
+ * Winding repair now lives in core.js (orientFaces) — it is a property of the
+ * catalog data, not of this tool, and anything that ever culls back faces or
+ * integrates a volume will need the same repair. Kept here as a thin alias.
  */
-function orient(poly) {
-  const faces = poly.faces.map(f => f.slice());
-  const edgeFaces = new Map();                     // undirected edge -> [faceIdx…]
-  const ek = (a, b) => (a < b ? `${a}_${b}` : `${b}_${a}`);
-  faces.forEach((f, fi) => {
-    for (let i = 0; i < f.length; i++) {
-      const a = f[i], b = f[(i + 1) % f.length];
-      if (a === b) return;
-      const k = ek(a, b);
-      if (!edgeFaces.has(k)) edgeFaces.set(k, []);
-      edgeFaces.get(k).push(fi);
-    }
-  });
-  for (const [k, fs] of edgeFaces) {
-    if (fs.length !== 2) return { ok: false, why: `edge ${k} borders ${fs.length} faces, not 2 — not a closed surface` };
-  }
-
-  const hasDirected = (f, a, b) => {
-    for (let i = 0; i < f.length; i++) if (f[i] === a && f[(i + 1) % f.length] === b) return true;
-    return false;
-  };
-
-  const done = new Array(faces.length).fill(false);
-  let flips = 0;
-  for (let seed = 0; seed < faces.length; seed++) {
-    if (done[seed]) continue;
-    done[seed] = true;
-    const queue = [seed];
-    while (queue.length) {
-      const fi = queue.pop();
-      const f = faces[fi];
-      for (let i = 0; i < f.length; i++) {
-        const a = f[i], b = f[(i + 1) % f.length];
-        const [x, y] = edgeFaces.get(ek(a, b));
-        const gi = x === fi ? y : x;
-        // a face can meet itself along an edge only in a degenerate listing
-        if (gi === fi) return { ok: false, why: 'a face borders itself across an edge' };
-        const g = faces[gi];
-        const agrees = hasDirected(g, b, a);        // opposite traversal = consistent
-        if (done[gi]) {
-          if (!agrees) return { ok: false, why: 'orientation is contradictory — the surface is non-orientable' };
-          continue;
-        }
-        if (!agrees) { g.reverse(); flips++; }
-        done[gi] = true;
-        queue.push(gi);
-      }
-    }
-  }
-  return { ok: true, faces, flips };
-}
+const orient = orientFaces;
 
 /** every vertex on or inside every face plane */
 function isConvex(poly, planes) {

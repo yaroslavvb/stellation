@@ -115,6 +115,15 @@ export const ACTION = {
   add:    { rgb: [0.29, 0.80, 0.44], css: '#4acb70', off: 'rgba(74,203,112,0.30)' },
   remove: { rgb: [0.94, 0.33, 0.33], css: '#f05454', off: 'rgba(240,84,84,0.30)' },
   none:   { rgb: [1.00, 0.93, 0.30], css: '#ffee4d', off: 'rgba(255,238,77,0.30)' },
+  /*
+   * The diagram's two gestures are TOGGLES — of the cell beneath the plane and
+   * of the cell resting on it — not an add and a remove, so green and red would
+   * lie there: «don't use the red and green because it's confusing; in 3D view
+   * those colors mean deleting and adding». Gold for beneath (toward the core's
+   * warm end of the layer palette), blue for above (the cool end).
+   */
+  below:  { rgb: [0.96, 0.82, 0.30], css: '#f5d24d', off: 'rgba(245,210,77,0.30)' },
+  above:  { rgb: [0.30, 0.64, 0.96], css: '#4da3f5', off: 'rgba(77,163,245,0.30)' },
 };
 
 function compile(gl, type, src) {
@@ -197,24 +206,30 @@ export class Renderer3D {
     const tubes = { pos: [], norm: [], col: [] };
     const discs = { pos: [], norm: [], col: [] };
     if (el) {
-      // reach a little past whatever is currently on screen
-      const R = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
-      const ext = R * 1.18;
-      const rad = R * 0.014;
-      for (const a of (el.axes || [])) tube(tubes, a.dir, ext, rad, [0.25, 0.72, 0.95]);
-      for (const a of (el.improper || [])) tube(tubes, a.dir, ext * 0.94, rad * 0.9, [0.72, 0.45, 0.95]);
       /*
-       * A mirror plane is a *disc*, which is what Vladimir asked for — but I_h
-       * has fifteen of them, and fifteen translucent discs compound into an
-       * opaque ball that hides the solid they are supposed to explain. So each
-       * plane gets a solid rim, which is what actually tells you where it lies,
-       * and only the faintest wash inside it. The rims go in the opaque buffer
-       * so the solid occludes them like everything else; edge-on a flat annulus
-       * collapses to a line, which is exactly right.
+       * Sized to the current selection, reaching a little past it. They do
+       * rescale when the selection's extent changes — raised in the night
+       * session, looked at, and left: «давай это не будем трогать». Sizing them
+       * to the whole arrangement instead keeps them still but makes them dwarf
+       * a small selection, which is worse.
+       */
+      const R = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
+      const ext = R * 1.12;
+      const rad = R * 0.014;
+      // every element carries its own colour: inequivalent elements differ
+      for (const a of (el.axes || [])) tube(tubes, a.dir, ext, rad, a.rgb || [0.25, 0.72, 0.95]);
+      for (const a of (el.improper || [])) tube(tubes, a.dir, ext * 0.94, rad * 0.9, a.rgb || [0.72, 0.45, 0.95]);
+      /*
+       * A mirror plane's rim is a thin TORUS of the same thickness as the axis
+       * cylinders — «пусть mirror plane тоже рисует как цилиндры … тонкие
+       * бублики, такой же толщины, как оси». The flat annulus it replaces
+       * vanished edge-on («сбоку как бесконечно тонкая линия»); a torus reads
+       * from every direction. The faint translucent fill stays: it was noticed,
+       * questioned, and then explicitly kept — «пусть будет, хорошо выглядит».
        */
       for (const m of (el.mirrors || [])) {
-        ring(tubes, m.dir, ext * 0.92, ext * 0.016, [0.42, 0.90, 0.80]);
-        disc(discs, m.dir, ext * 0.92, [0.42, 0.88, 0.80]);
+        torus(tubes, m.dir, ext * 0.92, rad, m.rgb || [0.42, 0.90, 0.80]);
+        disc(discs, m.dir, ext * 0.92, m.rgb || [0.42, 0.88, 0.80]);
       }
     }
     const put = (which, data, count) => {
@@ -258,6 +273,7 @@ export class Renderer3D {
   _ease(target, ms = 420) {
     if (this._anim) cancelAnimationFrame(this._anim);
     if (this._pending) { this._pending.x = 0; this._pending.y = 0; }   // don't fight a glide
+    this._spin = null;                                                 // or a flick's spin
     const d0 = this.distance;
     const q0 = this.rotation.slice();
     const q1 = target.rotation;
@@ -287,7 +303,7 @@ export class Renderer3D {
   }
 
   /** forget the scale so the next mesh sets it — used when the solid changes */
-  resetScale() { this.modelScale = 0; }
+  resetScale() { this.modelScale = 0; this.frameR = 0; }
 
   /*
    * The view as five numbers, so it can be put in a URL and in a saved document
@@ -341,7 +357,11 @@ export class Renderer3D {
     let maxR = 1e-9;
     for (const v of mesh.vertices) maxR = Math.max(maxR, Math.hypot(v.x, v.y, v.z));
     this.lastMaxR = maxR;
-    if (!this.modelScale) this.modelScale = 1 / maxR;
+    if (!this.modelScale) {
+      this.modelScale = 1 / maxR;
+      // the camera frames the arrangement, not the selection — see _camera
+      this.frameR = this._frameWorldR ? this._frameWorldR * this.modelScale : 1;
+    }
     const s = this.modelScale;
 
     mesh.faces.forEach((face, fi) => {
@@ -450,7 +470,7 @@ export class Renderer3D {
     if (!this.count) return;
 
     const cam = this._camera(W, H);
-    const far = cam.dist + cam.R * 3 + 10;      // never clip a big arrangement
+    const far = cam.dist + Math.max(cam.R, cam.meshR) * 3 + 10;   // never clip anything
     const proj = perspective(cam.fovy, cam.aspect, Math.max(0.02, cam.dist * 0.01), far, cam.zoom);
     const view = mat4mul(translation(0, 0, -cam.dist), quatToMat4(this.rotation));
 
@@ -545,15 +565,38 @@ export class Renderer3D {
    * has radius 1 and a full stellation reaches past 6. Retreating and magnifying
    * by the same factor holds both the size and the perspective constant.
    */
+  /*
+   * The stricter rule, from the night review: within one arrangement the camera
+   * NEVER moves. Distance is set once per build, from the radius of the whole
+   * buildable arrangement — not from whatever happens to be selected. The first
+   * fix pinned the ratio distance/boundingRadius, which holds foreshortening
+   * constant for the bounding sphere but still moves the camera as the bound
+   * changes, and a camera that moves changes the perspective of everything that
+   * *didn't* change — «perspective changes when toggling cell». Now toggling a
+   * cell changes distance by exactly nothing; zoom, which is a flat projection
+   * scale and cannot bend a line, does all the framing.
+   */
   _camera(W, H) {
     const fovy = Math.PI / 4.5;
     const aspect = W / H;
     const fit = 1.13 / Math.sin(fovy / 2);          // constant: no aspect, no zoom
-    const R = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
+    const F = Math.max(1e-3, this.frameR || (this.lastMaxR || 1) * (this.modelScale || 1));
+    const meshR = Math.max(1e-3, (this.lastMaxR || 1) * (this.modelScale || 1));
     // A canvas narrower than it is tall sees less sideways than fovy allows;
     // scale the projection down to compensate rather than moving the camera.
     const narrow = Math.min(1, aspect / Math.cos(fovy / 2));
-    return { fovy, aspect, fit, R, dist: fit * R, zoom: (R / this.distance) * narrow };
+    return { fovy, aspect, fit, R: F, meshR,
+             dist: fit * F, zoom: (F / this.distance) * narrow };
+  }
+
+  /**
+   * Radius of the whole buildable arrangement, in world units, set once per
+   * build. Everything the user can ever select fits inside it, so a camera
+   * placed for it is never inside the solid and never needs to move.
+   */
+  setFrameRadius(worldR) {
+    this._frameWorldR = worldR > 0 ? worldR : 0;
+    if (this.modelScale && this._frameWorldR) this.frameR = this._frameWorldR * this.modelScale;
   }
 
   // ---------------------------------------------------------------- picking
@@ -668,6 +711,12 @@ export class Renderer3D {
       if (this.autoRotate && !this.dragging) {
         this.rotation = quatMul(quatFromAxis([0, 1, 0], dt * 0.35), this.rotation);
       }
+      if (this._spin && !this.dragging) {      // a flick's spin, until caught
+        this.rotation = quatMul(
+          quatMul(quatFromAxis([0, 1, 0], this._spin.x * dt),
+                  quatFromAxis([1, 0, 0], this._spin.y * dt)),
+          this.rotation);
+      }
       this._spinStep(dt);
       this.draw();
       this._raf = requestAnimationFrame(tick);
@@ -701,6 +750,7 @@ export class Renderer3D {
     const down = (e) => {
       if (picking(e) || e.button === 2) return;
       this.cancelEase();
+      this._spin = null;                       // catching the solid stops it
       this.dragging = true;
       this._vel = { x: 0, y: 0 };
       const p = point(e, c); px = p.x; py = p.y;
@@ -734,10 +784,22 @@ export class Renderer3D {
     };
     const up = (e) => {
       if (this.dragging) {
-        // a flick coasts: hand the buffer a slice of the speed it ended at
-        const GLIDE = 0.11;                    // seconds of travel to carry on with
-        this._pending.x += this._vel.x * GLIDE;
-        this._pending.y += this._vel.y * GLIDE;
+        const speed = Math.hypot(this._vel.x, this._vel.y);
+        if (speed > 1.4) {
+          /*
+           * A real flick keeps the solid spinning — «add momentum where I can
+           * drag the thing and if I release early enough, it starts spinning»,
+           * which is how the Java applet behaved. The spin holds the release
+           * direction at a capped rate and runs until the next touch; a gentle
+           * release below the threshold just coasts to a stop instead.
+           */
+          const k = Math.min(2.2, speed) / speed;
+          this._spin = { x: this._vel.x * k, y: this._vel.y * k };
+        } else {
+          const GLIDE = 0.11;                  // seconds of travel to carry on with
+          this._pending.x += this._vel.x * GLIDE;
+          this._pending.y += this._vel.y * GLIDE;
+        }
       }
       this.dragging = false;
       c.releasePointerCapture?.(e.pointerId);
@@ -861,19 +923,33 @@ function tube(o, dir, ext, rad, col, sides = 10) {
   }
 }
 
-/** a flat annulus through the origin with normal `dir` — the rim of a mirror plane */
-function ring(o, dir, rad, w, col, sides = 64) {
-  const { w: nrm, u, v } = basis(dir);
-  const at = (t, r) => {
-    const c = Math.cos(t) * r, s = Math.sin(t) * r;
-    return [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s];
+/**
+ * A thin torus in the plane through the origin with normal `dir` — the rim of a
+ * mirror plane. Major radius `rad`, tube radius `tr`; unlike a flat annulus it
+ * has volume, so seen edge-on it is a bar rather than nothing.
+ */
+function torus(o, dir, rad, tr, col, sides = 56, ring = 8) {
+  const { w, u, v } = basis(dir);
+  const P = (t, s) => {
+    // centre circle point + tube offset in the (radial, normal) frame
+    const c = Math.cos(t), sn = Math.sin(t);
+    const radial = [u[0] * c + v[0] * sn, u[1] * c + v[1] * sn, u[2] * c + v[2] * sn];
+    const rr = rad + tr * Math.cos(s), h = tr * Math.sin(s);
+    return {
+      p: [radial[0] * rr + w[0] * h, radial[1] * rr + w[1] * h, radial[2] * rr + w[2] * h],
+      n: [radial[0] * Math.cos(s) + w[0] * Math.sin(s),
+          radial[1] * Math.cos(s) + w[1] * Math.sin(s),
+          radial[2] * Math.cos(s) + w[2] * Math.sin(s)],
+    };
   };
-  const ri = rad - w, ro = rad;
   for (let i = 0; i < sides; i++) {
     const t0 = (i / sides) * Math.PI * 2, t1 = ((i + 1) / sides) * Math.PI * 2;
-    const A = at(t0, ri), B = at(t1, ri), C = at(t1, ro), D = at(t0, ro);
-    push(o, A, nrm, col); push(o, B, nrm, col); push(o, C, nrm, col);
-    push(o, A, nrm, col); push(o, C, nrm, col); push(o, D, nrm, col);
+    for (let j = 0; j < ring; j++) {
+      const s0 = (j / ring) * Math.PI * 2, s1 = ((j + 1) / ring) * Math.PI * 2;
+      const A = P(t0, s0), B = P(t1, s0), C = P(t1, s1), D = P(t0, s1);
+      push(o, A.p, A.n, col); push(o, B.p, B.n, col); push(o, C.p, C.n, col);
+      push(o, A.p, A.n, col); push(o, C.p, C.n, col); push(o, D.p, D.n, col);
+    }
   }
 }
 

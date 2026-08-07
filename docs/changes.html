@@ -65,6 +65,116 @@
 
   <!-- ══════════════════════════════════════════════ -->
   <div class="grp">
+    <h3>Fourth round — night of 6 August</h3>
+    <p class="lead">
+      From the session that tested the third round, plus the addendum about the
+      Java app. The largest item is a rework of what the modifiers mean, per view.
+    </p>
+  </div>
+  <ul class="done">
+    <li><div>
+      <b>The camera never moves within an arrangement.</b> The third-round fix pinned
+      foreshortening to the selection's bounding sphere, but the camera still
+      travelled as that sphere changed — so toggling an outer cell subtly changed the
+      perspective of everything else, on both machines this time. Distance is now set
+      once per build, from the radius of the whole buildable arrangement; selecting
+      and deselecting cells changes it by exactly nothing, and only zoom — a flat
+      projection scale — does the framing.
+      <span class="src">15:08 — "perspective changes when toggling cell"</span>
+    </div></li>
+    <li><div>
+      <b>Each view now works at its own scale.</b> The solid adds or removes
+      <em>one</em> cell: shift the cell sitting on the clicked face, ctrl the one
+      behind it, green and red as before. The diagram <em>toggles</em> the cell on
+      either side of its plane: shift the one beneath, ctrl the one on top — in gold
+      and blue, because those are toggles and green/red would lie. The group
+      operation — a box together with its whole supporting set — lives only in the
+      Cells table, on either modifier, and it too is a toggle. The previous "same
+      gestures everywhere" was this port's invention, not the design.
+      <span class="src">15:10–15:34 — "multiple cell operation only in cell view"; "on 3d view, no toggle, just add or remove"; "one modifier toggles below, another toggles above; don't use the red and green"</span>
+    </div></li>
+    <li><div>
+      <b>The Cells table counts again.</b> Every plain box drew the digit 0 — it was
+      showing its sub-cell index, which is always zero for a box with one sub-cell,
+      instead of its cell index. Visible the moment a low symmetry put several cells
+      in one row.
+      <span class="src">15:28 — "cells view is broken, everything is 0's, but it should be 0, 1, etc"</span>
+    </div></li>
+    <li><div>
+      <b>Du Val's letters, where they exist.</b> For the icosahedron under I<sub>h</sub>
+      the boxes now read a, b, c, d, e₁, e₂, f₂, f₁, g₁, g₂, h rather than positions
+      in a sorted list. The identification of which orbit is which letter is the
+      derivation in the research notes, the same one the walkthrough's Ef₁ preset was
+      verified against. Every other solid keeps indices — no other solid has an
+      accepted lettering.
+      <span class="src">15:59 — "cell numbers are positions — use Du Val's notation when possible"</span>
+    </div></li>
+    <li><div>
+      <b>Scrollbars in the Cells table</b>, horizontal and vertical, drawn when the
+      table overflows and draggable. And switching to a smaller table resets the
+      scroll, so it no longer comes back cropped to where a bigger table left it.
+      <span class="src">15:26, 15:28, 16:06 — "add horizontal scrollbar when needed"; "should scroll to left automatically"</span>
+    </div></li>
+    <li><div>
+      <b>Symmetry elements in class colours, with a legend.</b> Inequivalent
+      elements — axes no operation of the group carries onto each other — get
+      different colours; for I<sub>h</sub> the legend reads C₅ ×6, C₃ ×10, C₂ ×15,
+      m ×15, S₁₀ ×6, S₆ ×10, which is the textbook census. Mirror planes are rimmed
+      with <em>thin tori</em> of the same thickness as the axis cylinders, so an
+      edge-on plane reads as a bar instead of vanishing; the faint translucent fill
+      stays, having been looked at and kept. Checkboxes grey out when the group has
+      none of that kind.
+      <span class="src">15:37–15:40, 16:08 — "use different colors for axes"; "should look like a torus, same thickness as axes"; "non-equivalent planes different colors"; "if missing, checkbox greyed out"; "add legend for colors"</span>
+    </div></li>
+    <li><div>
+      <b>The elements are marked on the diagram too.</b> A dot where each rotation
+      axis pierces the drawing plane, a dashed line where each mirror plane crosses
+      it, in the same class colours — what the Java applet's diagram checkboxes drew.
+      One toggle: <em>mark on the diagram</em>.
+      <span class="src">addendum, 16:56 — "the diagram view has 2 checkboxes which allows me to show intersection with various colors"</span>
+    </div></li>
+    <li><div>
+      <b>A real flick keeps the solid spinning.</b> Release while moving fast enough
+      and it spins on at that rate until you catch it — the Java behaviour. A gentle
+      release still just coasts to a stop.
+      <span class="src">17:13 — "add momentum where I can drag the thing and if I release early enough, it starts spinning"</span>
+    </div></li>
+    <li><div>
+      <b>Make planes, ported.</b> The original program's plane editor: one plane per
+      line — <code>nx ny nz d</code> and optionally a symmetry group to multiply that
+      plane by — seeded from the current solid's own planes, built into an
+      arrangement like any catalog solid, saved into the JSON document. One line,
+      <code>0&nbsp;0&nbsp;1&nbsp;1&nbsp;Ih</code>, builds the rhombic
+      triacontahedron's thirty-plane arrangement.
+      <span class="src">15:53, 16:42, and the doc's final line — "port make planes to javascript stellation app"</span>
+    </div></li>
+    <li><div>
+      <b>Winding repair moved into the engine.</b> The face-orientation repair the
+      derivation tool needed lives in <code>core.js</code> now (<code>orientFaces</code>),
+      because it is a property of the catalog data, not of one tool: most solids in
+      the file are not consistently wound, and anything that ever culls back faces or
+      integrates a volume will need it.
+      <span class="src">16:09 — "add consistent winding as suggested"</span>
+    </div></li>
+    <li><div>
+      <b>Crowding relief for the zoomed-out diagram.</b> Far below 1× the facet
+      strokes thin and fade with the zoom, so the bundle of near-parallel traces
+      shimmers less. This is mitigation, not elimination — at that scale there are
+      more lines than pixels and no stroke width is honest.
+      <span class="src">16:05 — "want no aliasing"</span>
+    </div></li>
+    <li><div>
+      <b>Documented, not changed:</b> the ten hemi-dual solids whose faces are
+      approximations of faces with vertices at infinity (clamped to ~100 in the
+      data, hence genuinely non-planar) are now listed in
+      <code>notes/data-quality.md</code>, and a short how-to for serving this site
+      from GitHub Pages is in <code>notes/github-pages-howto.md</code>.
+      <span class="src">16:11 — "document which solids have vertices in infinity"; 16:11:52 — Pages instructions</span>
+    </div></li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="grp">
     <h3>Third round — evening of 6 August</h3>
     <p class="lead">
       From the third sitting, at home. Each item can be checked on the deployed app;

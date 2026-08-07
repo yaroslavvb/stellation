@@ -52,7 +52,7 @@
           <button id="homeView" title="Canonical orientation: x right, y up, z toward you">home</button>
         </div>
         <div class="view-label">
-          <span>drag to turn · <kbd>shift</kbd>-click <b class="add">adds</b> · <kbd class="kSub">ctrl</kbd>-click <b class="rem">removes</b></span>
+          <span>drag to turn · <kbd>shift</kbd>-click <b class="add">adds a cell</b> · <kbd class="kSub">ctrl</kbd>-click <b class="rem">removes one</b></span>
           <span id="hover3d" class="hover"></span>
         </div>
       </div>
@@ -60,7 +60,7 @@
       <div class="view">
         <canvas id="diagram"></canvas>
         <div class="view-label">
-          <span>stellation diagram · drag to pan · <kbd>shift</kbd>-click <b class="add">adds</b> · <kbd class="kSub">ctrl</kbd>-click <b class="rem">removes</b> · double-click resets</span>
+          <span>stellation diagram · drag to pan · <kbd>shift</kbd>-click toggles the cell <b class="below">beneath</b> · <kbd class="kSub">ctrl</kbd>-click the one <b class="above">on top</b> · double-click resets</span>
           <span id="hover2d" class="hover"></span>
         </div>
       </div>
@@ -96,9 +96,8 @@
         of cells. <a href="controls.html">Controls &amp; views →</a>
       </p>
       <ul class="note keys">
-        <li><kbd>shift</kbd>-click <b class="add">add</b>, with everything under it</li>
-        <li><kbd class="kSub">ctrl</kbd>-click <b class="rem">remove</b>, with everything on it</li>
-        <li><kbd>click</kbd> toggle one cell — in this table only</li>
+        <li><kbd>click</kbd> toggle a cell</li>
+        <li><kbd class="kSub">ctrl</kbd>-click toggle it <b>with everything under it</b> — this table only</li>
         <li><kbd>row №</kbd> whole layer</li>
         <li><kbd>ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>Z</kbd> redo</li>
       </ul>
@@ -128,6 +127,9 @@
         Cells are grouped into orbits of the first group, then split by the second —
         that split is what lets a chiral cell offer just one of its two hands.
       </p>
+      <div class="row buttons">
+        <button id="makePlanes" title="Stellate an arbitrary set of planes instead of a catalog solid — the original program's plane editor">Make planes…</button>
+      </div>
     </details>
 
     <details class="group">
@@ -135,10 +137,12 @@
       <label class="check"><input id="autoRotate" type="checkbox"> spin the solid</label>
       <label class="check"><input id="showEdges" type="checkbox" checked> draw edges</label>
       <fieldset class="sym-elems">
-        <legend title="The symmetry elements of the stellation group, drawn through the origin as real geometry so the solid hides the parts behind it. Use with home.">symmetry elements</legend>
-        <label class="check"><input id="showAxes" type="checkbox"> <i class="sw ax"></i> rotation axes</label>
-        <label class="check" title="Each mirror plane as a translucent disc through the origin"><input id="showMirrors" type="checkbox"> <i class="sw mi"></i> mirror planes</label>
-        <label class="check" title="Rotoreflection (Sₙ) axes — turn, then reflect. The three-dimensional cousin of a glide reflection."><input id="showImproper" type="checkbox"> <i class="sw im"></i> rotoreflection axes</label>
+        <legend title="The symmetry elements of the stellation group, drawn through the origin as real geometry so the solid hides the parts behind it. Inequivalent elements get different colours — the legend below names them.">symmetry elements</legend>
+        <label class="check"><input id="showAxes" type="checkbox"> rotation axes</label>
+        <label class="check" title="Each mirror plane as a rim the thickness of the axes, with a faint translucent fill"><input id="showMirrors" type="checkbox"> mirror planes</label>
+        <label class="check" title="Rotoreflection (Sₙ) axes — turn, then reflect. The three-dimensional cousin of a glide reflection."><input id="showImproper" type="checkbox"> rotoreflection axes</label>
+        <label class="check" title="Mark the same elements on the stellation diagram: a dot where an axis pierces the drawing plane, a dashed line where a mirror plane crosses it"><input id="showDiagElems" type="checkbox"> mark on the diagram</label>
+        <div id="elemLegend" class="legend elem-legend"></div>
       </fieldset>
       <label class="field" title="Thickness of the edge lines, in pixels">
         <span>edge weight <b id="edgeWidthLabel">1.0</b></span>
@@ -201,6 +205,23 @@
   </footer>
 </dialog>
 
+<dialog id="planesDialog">
+  <h2>Make planes</h2>
+  <p class="note">
+    One plane per line — <code>nx ny nz d</code>, then optionally a symmetry group
+    to multiply that plane by (<code>Ih</code>, <code>O</code>, <code>T</code>…).
+    Lines starting with <code>#</code> are comments. The arrangement is built from
+    the union; the symmetry dropdowns then group its cells as usual.
+  </p>
+  <textarea id="planesText" class="mono" rows="14" spellcheck="false"></textarea>
+  <p id="planesInfo" class="note"></p>
+  <div class="row buttons">
+    <button id="planesBuild" class="primary">Build</button>
+    <button id="planesSeed" title="Fill the sheet from the current solid's own face planes">Seed from current solid</button>
+    <button id="planesCancel">Cancel</button>
+  </div>
+</dialog>
+
 <dialog id="helpDialog">
   <h2>Stellation, in one minute</h2>
   <p>
@@ -222,12 +243,18 @@
       of cells; a shaded box with smaller boxes beside it is a cell that splits into
       <b>sub-cells</b>, such as a chiral pair. Bar colours group cells by how many
       congruent pieces they contain.</li>
-    <li>Two gestures mean the same thing in all three views:
-      <kbd>shift</kbd>-click <b>adds</b> a cell together with everything holding it
-      up, and <kbd class="kSub">ctrl</kbd>-click <b>removes</b> it together with
-      everything resting on it. They are inverses, so shift then ctrl puts things
-      back. (On macOS, ctrl-click is the system's secondary click; it is handled,
-      and option-click does the same job.)</li>
+    <li>Each view works at its own scale.
+      In the <b>solid</b>, <kbd>shift</kbd>-click <b class="add">adds</b> the one
+      cell sitting on the clicked face and <kbd class="kSub">ctrl</kbd>-click
+      <b class="rem">removes</b> the one behind it.
+      In the <b>diagram</b>, every region lies between two cells:
+      <kbd>shift</kbd>-click toggles the one <b class="below">beneath</b> the plane,
+      <kbd class="kSub">ctrl</kbd>-click the one <b class="above">on top</b>.
+      In the <b>Cells table</b>, a click toggles a box, and
+      <kbd class="kSub">ctrl</kbd>-click toggles it together with everything
+      supporting it — the group operation lives here and only here.
+      (On macOS, ctrl-click is the system's secondary click; it is handled, and
+      option-click does the same job.)</li>
     <li>A plain click without a modifier <b>turns</b> the solid and <b>pans</b> the
       diagram — it only toggles a cell in the Cells table. A right-click does
       nothing anywhere.</li>

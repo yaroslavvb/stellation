@@ -213,6 +213,108 @@ export function facePlanes(poly) {
 }
 
 /**
+ * A plane arrangement from an explicit list of planes — the "make planes" path.
+ *
+ * The original Java had a dialog for this: type in planes, apply a symmetry
+ * group to each, stellate the result. The engine below never cared where its
+ * planes came from; this is the front door for handing it a list directly.
+ * Input rows are {n:[x,y,z], d} (or {n:{x,y,z}, d}); the same hygiene as
+ * facePlanes applies — normalise, orient away from the origin, skip planes
+ * through the centre (this representation cannot hold them), dedupe — and the
+ * same accounting rides along so the UI can say what was dropped.
+ */
+export function planesFromList(rows) {
+  const out = [];
+  const seen = [];
+  let central = 0, degenerate = 0, duplicate = 0;
+  for (const row of rows) {
+    let n = Array.isArray(row.n) ? v3(row.n[0], row.n[1], row.n[2]) : v3(row.n.x, row.n.y, row.n.z);
+    const L = len(n);
+    if (L < 1e-12) { degenerate++; continue; }
+    n = mul(n, 1 / L);
+    let d = Number(row.d);
+    if (!Number.isFinite(d)) { degenerate++; continue; }
+    if (d < 0) { n = mul(n, -1); d = -d; }
+    if (Math.abs(d) < 1e-9) { central++; continue; }
+    const dup = seen.some(p => Math.abs(p.d - d) < 1e-6 &&
+                               Math.abs(dot(p.n, n) - 1) < 1e-9);
+    if (dup) { duplicate++; continue; }
+    seen.push({ n, d });
+    out.push({ n, d, index: out.length });
+  }
+  out.total = rows.length;
+  out.central = central;
+  out.degenerate = degenerate;
+  out.duplicate = duplicate;
+  return out;
+}
+
+/**
+ * Rewind every face so the surface is consistently oriented, or say why not.
+ *
+ * The catalog lists each face's vertices in *some* order and promises nothing
+ * about agreement between neighbours — most solids in the data disagree
+ * somewhere. Orientation is recoverable, and uniquely so on a connected
+ * orientable surface: walk the face adjacency and flip any neighbour that
+ * traverses the shared edge the same way round. Two failures are fatal rather
+ * than repairable and are reported instead of guessed at: an edge bordering
+ * other than two faces (not a closed surface), and a flip contradicting one
+ * already made (a Möbius-like surface with no consistent orientation — which is
+ * exactly what the hemipolyhedra's data is).
+ *
+ * Returns { ok, faces, flips } or { ok:false, why }.
+ */
+export function orientFaces(poly) {
+  const faces = poly.faces.map(f => f.slice());
+  const edgeFaces = new Map();
+  const ek = (a, b) => (a < b ? `${a}_${b}` : `${b}_${a}`);
+  for (let fi = 0; fi < faces.length; fi++) {
+    const f = faces[fi];
+    for (let i = 0; i < f.length; i++) {
+      const a = f[i], b = f[(i + 1) % f.length];
+      if (a === b) continue;
+      const k = ek(a, b);
+      if (!edgeFaces.has(k)) edgeFaces.set(k, []);
+      edgeFaces.get(k).push(fi);
+    }
+  }
+  for (const [k, fs] of edgeFaces) {
+    if (fs.length !== 2) return { ok: false, why: `edge ${k} borders ${fs.length} faces, not 2 — not a closed surface` };
+  }
+  const hasDirected = (f, a, b) => {
+    for (let i = 0; i < f.length; i++) if (f[i] === a && f[(i + 1) % f.length] === b) return true;
+    return false;
+  };
+  const done = new Array(faces.length).fill(false);
+  let flips = 0;
+  for (let seed = 0; seed < faces.length; seed++) {
+    if (done[seed]) continue;
+    done[seed] = true;
+    const queue = [seed];
+    while (queue.length) {
+      const fi = queue.pop();
+      const f = faces[fi];
+      for (let i = 0; i < f.length; i++) {
+        const a = f[i], b = f[(i + 1) % f.length];
+        const pair = edgeFaces.get(ek(a, b));
+        const gi = pair[0] === fi ? pair[1] : pair[0];
+        if (gi === fi) return { ok: false, why: 'a face borders itself across an edge' };
+        const g = faces[gi];
+        const agrees = hasDirected(g, b, a);       // opposite traversal = consistent
+        if (done[gi]) {
+          if (!agrees) return { ok: false, why: 'orientation is contradictory — the surface is non-orientable' };
+          continue;
+        }
+        if (!agrees) { g.reverse(); flips++; }
+        done[gi] = true;
+        queue.push(gi);
+      }
+    }
+  }
+  return { ok: true, faces, flips };
+}
+
+/**
  * How deep to carve, by default, for a given set of face planes.
  *
  * Depth is the `maxintersection` cap of the original: facets past that many
@@ -699,10 +801,11 @@ export function extractMesh(selectedOrbits, pool) {
  */
 export function buildStellation(poly, matrices, opts = {}) {
   const { maxLayer = 1000, maxIntersection = -1, onProgress = null,
-          subMatrices = null } = opts;
+          subMatrices = null, planes: customPlanes = null } = opts;
 
   const pool = new VertexPool();
-  const planes = facePlanes(poly);
+  // a custom plane list ("make planes") takes the polyhedron's place entirely
+  const planes = customPlanes ? planesFromList(customPlanes) : facePlanes(poly);
   const arrangement = makeArrangement(planes, pool, maxIntersection, onProgress);
   const layers = makeLayers(arrangement);
 
@@ -723,7 +826,23 @@ export function buildStellation(poly, matrices, opts = {}) {
 
   makeConnectivityGraph(cellLayers);
 
-  return { pool, planes, arrangement, layers, cellLayers,
+  /*
+   * The radius of the *buildable* arrangement — the farthest vertex of any cell
+   * that actually exists. The pool's own maximum is useless for this: the seed
+   * polygons are interned at radius FACTOR = 5000, so maxOf(pool) reports the
+   * scaffolding, not the building. The camera needs the building.
+   */
+  let frameRadius = 1e-9;
+  for (const layer of cellLayers)
+    for (const orbit of layer)
+      for (const cell of orbit.cells)
+        for (const f of cell.top)
+          for (const id of f.v) {
+            const r = len(pool.get(id));
+            if (r > frameRadius) frameRadius = r;
+          }
+
+  return { pool, planes, arrangement, layers, cellLayers, frameRadius,
            maxRadius: maxOf(pool.pts, len) };
 }
 
@@ -993,7 +1112,9 @@ export function writeStel({ polyhedron, polySymmetry, stellSymmetry, cells, expo
  */
 export function createDiagram(stel, planeIndex, selectedOrbits, vertexUp = 0) {
   const { pool, arrangement } = stel;
-  const facets = arrangement[planeIndex];
+  // an out-of-range index — or an arrangement with no planes at all, which a
+  // make-planes sheet of nothing but central planes can produce — draws nothing
+  const facets = arrangement[planeIndex] || [];
   if (!facets.length) return null;
 
   // the facet nearest the origin defines the frame
@@ -1022,6 +1143,11 @@ export function createDiagram(stel, planeIndex, selectedOrbits, vertexUp = 0) {
     return [p.x, p.y];
   };
 
+  // the projection frame, so the caller can put OTHER world geometry — the
+  // symmetry axes' crossing points, the mirror planes' trace lines — onto the
+  // same drawing. R is row-major 3x3; a world point maps as R·(p − center).
+  const frame = { R: [...R], center: [center.x, center.y, center.z] };
+
   // which facets are on the visible surface of the current selection
   const selected = new Set();
   const kind = new Map();
@@ -1039,6 +1165,7 @@ export function createDiagram(stel, planeIndex, selectedOrbits, vertexUp = 0) {
 
   return {
     planeIndex,
+    frame,
     facets: facets.map(f => ({
       facet: f,
       layer: f.layer,

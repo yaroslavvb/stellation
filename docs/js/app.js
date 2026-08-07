@@ -21,7 +21,7 @@ const $$ = sel => [...document.querySelectorAll(sel)];
  * app.js and there was no way to tell from the screen. `_headers` stops that
  * happening; this makes it checkable when it does.
  */
-export const BUILD = '2026-08-06 · home-session fixes';
+export const BUILD = '2026-08-06 · night-session fixes (round 4)';
 
 const state = {
   catalog: null, symmetry: null, geometry: null,
@@ -98,8 +98,10 @@ async function boot() {
   diagram = new DiagramView($('#diagram'), {
     onToggle: (facet, mod) => applyToFacet(facet, mod),
     onHover: (facet) => {
+      // name both neighbours, since the two gestures reach one each
       $('#hover2d').textContent = facet
-        ? `layer ${facet.layer}${facet.ref ? ` · cell ${facet.ref[1]}${facet.ref[2] ? '[' + facet.ref[2] + ']' : ''}` : ''}`
+        ? `beneath ${facet.refBelow ? facet.refBelow.join('.') : '—'} · ` +
+          `above ${facet.refAbove ? facet.refAbove.join('.') : '—'}`
         : '';
     },
   });
@@ -232,29 +234,33 @@ function redo() {
 
 // ------------------------------------------------------------------ picking
 
-/**
- * A click on a diagram region or on a face of the solid.
- *   plain  toggle this cell
- *   shift  add it, and everything supporting it, down to the core
- *   ctrl   remove exactly that same set again
+/*
+ * What a click means, per view — settled in the night session of 6 August.
  *
- * The two act on the same set, in the same direction — inward, toward the
- * centre — so ctrl undoes a shift exactly. An earlier version had ctrl remove
- * the cell's *dependents* instead, which reads as the natural opposite but is
- * not an inverse: shift reached inward and ctrl reached outward, so the pair
- * never cancelled and which cells vanished depended on what was already built.
+ * The previous round made one pair of gestures mean one thing everywhere,
+ * which turned out to be MY consistency, not the design's. The design is:
+ * the group operation — a cell together with everything supporting it — lives
+ * in the Cells table and nowhere else («multiple cell operation only in cell
+ * view»). The two graphical views work one cell at a time, because there you
+ * are pointing at a *place*:
+ *
+ *   3-D solid   shift adds the one cell sitting on the clicked face,
+ *               ctrl removes the one cell behind it. Add and remove, not
+ *               toggles — the cell you add is not visible until you add it,
+ *               and the one you remove stops being clickable once gone.
+ *               Green and red.
+ *   diagram     every region lies between two cells: shift toggles the one
+ *               beneath the plane, ctrl the one resting on it. Toggles, so
+ *               their own colours — gold and blue, not green and red.
+ *   Cells       a bare click toggles a box; one modifier toggles it together
+ *               with its whole supporting set.
  */
-function applyToCell(key, mod) {
+
+/** toggle a single sub-cell — the console/API entry point */
+function applyToCell(key) {
   if (!key) return;
   mark();
-  const sel = state.selected;
-  if (mod.shift) {
-    for (const k of cells.supportKeys(key)) sel.add(k);
-  } else if (mod.ctrl) {
-    for (const k of cells.supportKeys(key)) sel.delete(k);
-  } else {
-    sel.has(key) ? sel.delete(key) : sel.add(key);
-  }
+  state.selected.has(key) ? state.selected.delete(key) : state.selected.add(key);
   refresh();
 }
 
@@ -267,36 +273,17 @@ function applyChange(keys, add) {
   return changed;
 }
 
-/** everything resting on `key`, transitively — mirror of CellsPanel.supportKeys */
-function dependentKeys(key) {
-  const out = new Set([key]);
-  const stack = [key];
-  while (stack.length) {
-    const k = stack.pop();
-    for (const t of (cells.byKey.get(k)?.sub.top || [])) {
-      if (!out.has(t)) { out.add(t); stack.push(t); }
-    }
-  }
-  return out;
-}
-
+/** a diagram click: toggle the cell beneath this region, or the one on top */
 function applyToFacet(facet, mod) {
-  if (!facet?.ref) return;
-  applyToCell(facet.ref.join('.'), mod);
+  if (!facet) return;
+  const ref = mod.shift ? facet.refBelow : mod.ctrl ? facet.refAbove : null;
+  if (!ref) {
+    setStatus(mod.ctrl ? 'nothing rests on this region — raise the build depth'
+                       : 'no cell beneath this region', false);
+    return;
+  }
+  applyToCell(ref.join('.'));
 }
-
-/*
- * Clicking a cell means the same thing in all three views.
- *
- *   shift  add this cell and everything holding it up
- *   ctrl   remove this cell and everything resting on it
- *
- * They are inverses, so "click again to change your mind" is shift then ctrl
- * rather than a second click of the same kind. An earlier version made a
- * repeated shift-click undo itself, which read as shift-click sometimes
- * removing — the operation you asked for depended on what you had done last.
- * Two explicit gestures are worth more than one clever one.
- */
 
 function onPick3D(hit, mod) {
   const mesh = state.mesh;
@@ -304,14 +291,16 @@ function onPick3D(hit, mod) {
   const inside = mesh.faceInside[hit.face];
   const outside = mesh.faceOutside[hit.face];
 
+  // One cell at a time here — «в трёхмерном вью только одну ячейку добавляет,
+  // убирает, должна». The group walk belongs to the Cells table alone.
   if (mod.shift) {
     if (!outside) { setStatus('nothing further out on that face — raise the build depth', false); return; }
     mark();
-    applyChange(cells.supportKeys(outside), true);
+    applyChange([outside], true);
   } else if (mod.ctrl) {
     if (!inside) { setStatus('no cell inside that face', false); return; }
     mark();
-    applyChange(cells.supportKeys(inside), false);   // the exact inverse of shift
+    applyChange([inside], false);
   } else {
     return;
   }
@@ -339,7 +328,7 @@ function onHover3D(hit, mod) {
   const live = !!key && !!action;
   renderer?.setHighlight(hit.face, action, live || !action);
   $('#hover3d').textContent = !action ? ''
-    : key ? `${mod.shift ? 'grow' : 'carve'} ${key}`
+    : key ? `${mod.shift ? 'add' : 'remove'} cell ${key}`
     : (mod.shift ? 'nothing further out on this face' : 'nothing behind this face');
 }
 
@@ -426,6 +415,7 @@ function updateCatCount() {
 
 async function select(item, opts = {}) {
   if (!item) return;
+  state.customPlanes = null;         // picking a solid leaves make-planes mode
   state.current = item;
   state.polySym = opts.polySym || item.symmetry || 'Ih';
   state.stellSym = opts.stellSym || defaultStellSym(state.polySym);
@@ -518,10 +508,14 @@ function fillSelect(id, names, value) {
 
 function syncSymmetrySelects() {
   // the solid's own point group bounds the polyhedron symmetry; that in turn
-  // bounds the stellation symmetry, which must be a subgroup of it
-  const own = state.current?.symmetry || 'Ih';
-  const polyNames = subgroupsOf(own);
-  if (!polyNames.includes(state.polySym)) state.polySym = polyNames[0] || own;
+  // bounds the stellation symmetry, which must be a subgroup of it. A custom
+  // plane set has no "own" group, so there the first choice is unrestricted.
+  const own = state.customPlanes ? null : (state.current?.symmetry || 'Ih');
+  const polyNames = own
+    ? subgroupsOf(own)
+    : Object.keys(state.symmetry).filter(n => state.symmetry[n].order > 0)
+        .sort((a, b) => state.symmetry[b].order - state.symmetry[a].order || a.localeCompare(b));
+  if (!polyNames.includes(state.polySym)) state.polySym = polyNames[0] || 'E';
   fillSelect('#polySym', polyNames, state.polySym);
 
   const stellNames = subgroupsOf(state.polySym);
@@ -605,53 +599,108 @@ function rotationAxis(a, b, c, d, e, f, g, h, i) {
 
 /*
  * Every symmetry element of a group, sorted into the three kinds that can be
- * drawn — asked for at 13:54: «add checkbox to show rotating planes (translucent
- * disks) separate from axes, and a third one for зеркально-винтовой плоскость».
+ * drawn, and further into INEQUIVALENT CLASSES, each with its own colour —
+ * «оси разного порядка разным цветом … и неэквивалентные разным цветом».
  *
- *   axes      proper rotations (det +1)
- *   mirrors   reflections (det -1, trace +1) — reported as the plane's normal
- *   improper  rotoreflections S_n, the "glide reflection in 3D" (det -1, other)
+ *   axes      proper rotations (det +1), classified by order and by orbit
+ *   mirrors   reflections (det -1, trace +1), classified by orbit
+ *   improper  rotoreflections S_n (det -1, other), by order and orbit
  *
- * The trick for the improper ones is that if M is improper then -M is a proper
- * rotation (in 3D, det(-M) = -det(M)), so the same axis extraction works on it.
- * For a plain mirror -M is the half-turn about the plane's normal, which is
- * exactly the number needed to orient the disc. The inversion centre is neither
- * a line nor a plane and is left out.
+ * Two elements are equivalent when some operation of the group carries one onto
+ * the other — the same containment idea the subgroup test uses, applied to the
+ * elements themselves. In O_h that puts the three 4-fold axes, the four 3-fold
+ * and the six 2-fold in three classes; in D2, whose three half-turn axes no
+ * operation exchanges, each axis is its own class and gets its own colour.
+ *
+ * If M is improper then -M is a proper rotation, so one axis extractor serves
+ * all three kinds; for a mirror, -M is the half-turn about the plane's normal.
+ * The inversion centre is a point, not a line or plane, and is left out —
+ * confirmed once more in the night session («не надо его делать»).
  */
+const CLASS_PALETTE = ['#4da3f5', '#f2b23c', '#a06ef2', '#f2646c', '#3cc98f',
+                       '#f28c3c', '#45d9c0', '#e058c8', '#8fd24d', '#f5d24d',
+                       '#5f7df2', '#d9a45a'];
+
 function symmetryElements(name) {
   const G = state.symmetry[name];
-  const out = { axes: [], mirrors: [], improper: [] };
+  const out = { axes: [], mirrors: [], improper: [], classes: [] };
   if (!G?.matrices?.length) return out;
-  const seen = { axes: [], mirrors: [], improper: [] };
 
-  const add = (bucket, v) => {
+  const three = (m) => m.length === 9
+    ? m
+    : [m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]];
+  const mats = G.matrices.map(three);
+
+  // the zero threshold matches near()'s tolerance — a looser sign rule than the
+  // comparison would let ±1e-8 wobble flip signs inconsistently and split an axis
+  const canon = (v) => (v[0] < -1e-6 || (Math.abs(v[0]) <= 1e-6 && (v[1] < -1e-6 ||
+      (Math.abs(v[1]) <= 1e-6 && v[2] < 0)))) ? v.map(x => -x) : v;
+  const near = (u, v) => Math.abs(u[0] - v[0]) + Math.abs(u[1] - v[1]) + Math.abs(u[2] - v[2]) < 1e-4;
+  const apply = (m, v) => canon([
+    m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+    m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+    m[6] * v[0] + m[7] * v[1] + m[8] * v[2]]);
+
+  // collect unique element lines, remembering the largest order seen on each
+  const collect = (list, v, order) => {
     if (!v) return;
-    // ±v are the same line, and the same plane; pick one lexicographically
-    if (v[0] < -1e-9 || (Math.abs(v[0]) <= 1e-9 && (v[1] < -1e-9 ||
-        (Math.abs(v[1]) <= 1e-9 && v[2] < 0)))) v = v.map(x => -x);
-    if (seen[bucket].some(u => Math.abs(u[0] - v[0]) + Math.abs(u[1] - v[1]) +
-                               Math.abs(u[2] - v[2]) < 1e-4)) return;
-    seen[bucket].push(v);
-    out[bucket].push({ dir: v });
+    v = canon(v);
+    const hit = list.find(x => near(x.dir, v));
+    if (hit) hit.order = Math.max(hit.order, order);
+    else list.push({ dir: v, order });
   };
 
-  for (const m of G.matrices) {
-    const [a, b, c, d, e, f, g, h, i] = m.length === 9
-      ? m
-      : [m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]];   // 4x4 row-major
+  for (const m of mats) {
+    const [a, b, c, d, e, f, g, h, i] = m;
     const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
     const trace = a + e + i;
-    if (det > 0) { add('axes', rotationAxis(a, b, c, d, e, f, g, h, i)); continue; }
-    if (trace < -2.999) continue;                  // the inversion centre: a point
-    const n = rotationAxis(-a, -b, -c, -d, -e, -f, -g, -h, -i);
-    add(Math.abs(trace - 1) < 1e-6 ? 'mirrors' : 'improper', n);
+    if (det > 0) {
+      if (trace > 2.999) continue;                     // identity
+      const th = Math.acos(Math.min(1, Math.max(-1, (trace - 1) / 2)));
+      collect(out.axes, rotationAxis(a, b, c, d, e, f, g, h, i), Math.round(2 * Math.PI / th));
+    } else {
+      if (trace < -2.999) continue;                    // inversion centre
+      const n = rotationAxis(-a, -b, -c, -d, -e, -f, -g, -h, -i);
+      if (Math.abs(trace - 1) < 1e-6) collect(out.mirrors, n, 2);
+      else {
+        const th = Math.acos(Math.min(1, Math.max(-1, (trace + 1) / 2)));
+        collect(out.improper, n, Math.round(2 * Math.PI / th));
+      }
+    }
+  }
+
+  // orbit partition: same class iff some group element maps one line to another
+  const classify = (list) => {
+    const cls = [];
+    for (const el of list) {
+      const found = cls.find(cl => cl.some(other => mats.some(m => near(apply(m, el.dir), other.dir))));
+      if (found) found.push(el);
+      else cls.push([el]);
+    }
+    return cls;
+  };
+
+  let ci = 0;
+  for (const [kind, label] of [['axes', n => `C${sub(n)}`], ['mirrors', () => 'm'],
+                               ['improper', n => `S${sub(n)}`]]) {
+    const groups = classify(out[kind]).sort((x, y) => y[0].order - x[0].order || y.length - x.length);
+    for (const members of groups) {
+      const css = CLASS_PALETTE[ci % CLASS_PALETTE.length];
+      const rgb = hexRgb(css);
+      for (const el of members) { el.css = css; el.rgb = rgb; }
+      out.classes.push({ kind, label: label(members[0].order), count: members.length, css });
+      ci++;
+    }
   }
   return out;
 }
 
-/** what the three "show" checkboxes currently want to see */
+const sub = n => String(n).replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);
+const hexRgb = (hex) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+/** the current group's elements, filtered to the checked kinds */
 function shownElements() {
-  const el = symmetryElements(state.stellSym);
+  const el = state.elements || symmetryElements(state.stellSym);
   return {
     axes: $('#showAxes')?.checked ? el.axes : [],
     mirrors: $('#showMirrors')?.checked ? el.mirrors : [],
@@ -660,9 +709,81 @@ function shownElements() {
 }
 
 function refreshElements() {
-  if (!renderer) return;
-  const any = ['#showAxes', '#showMirrors', '#showImproper'].some(id => $(id)?.checked);
-  renderer.setElements(any ? shownElements() : null);
+  state.elements = symmetryElements(state.stellSym);
+  const el = state.elements;
+
+  // a checkbox for something the group does not have is a trap; disable it —
+  // «если их нету, чтобы она загреяла их»
+  for (const [id, list] of [['#showAxes', el.axes], ['#showMirrors', el.mirrors],
+                            ['#showImproper', el.improper]]) {
+    const box = $(id);
+    if (!box) continue;
+    box.disabled = !list.length;
+    box.closest('label')?.classList.toggle('off', !list.length);
+  }
+
+  // the colour legend: one chip per inequivalent class
+  const legend = $('#elemLegend');
+  if (legend) {
+    const shownKinds = new Set([$('#showAxes')?.checked && 'axes',
+                                $('#showMirrors')?.checked && 'mirrors',
+                                $('#showImproper')?.checked && 'improper'].filter(Boolean));
+    const rows = el.classes.filter(c => shownKinds.has(c.kind));
+    legend.innerHTML = rows.length
+      ? rows.map(c => `<span class="legend-item"><i style="background:${c.css}"></i>${c.label} ×${c.count}</span>`).join('')
+      : '';
+  }
+
+  if (renderer) {
+    const any = ['#showAxes', '#showMirrors', '#showImproper'].some(id => $(id)?.checked);
+    renderer.setElements(any ? shownElements() : null);
+  }
+  refreshDiagramOverlay();
+}
+
+/*
+ * The same elements, marked on the 2-D diagram: the point where each axis
+ * pierces the drawing plane, the line where each mirror plane crosses it —
+ * what the Java applet's diagram checkboxes drew. Same colours as the solid,
+ * so the dot and the cylinder read as one object.
+ */
+function refreshDiagramOverlay() {
+  if (!diagram) return;
+  const frame = state.diagramFrame;
+  if (!frame || !$('#showDiagElems')?.checked) { diagram.setOverlay(null); return; }
+
+  const R = frame.R, c = frame.center;
+  const n = [R[6], R[7], R[8]];                       // the drawing plane's normal
+  const nc = n[0] * c[0] + n[1] * c[1] + n[2] * c[2];
+  const dotv = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  const proj = (p) => {
+    const q = [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
+    return [R[0] * q[0] + R[1] * q[1] + R[2] * q[2],
+            R[3] * q[0] + R[4] * q[1] + R[5] * q[2]];
+  };
+
+  const el = shownElements();
+  const out = [];
+  for (const a of [...(el.axes || []), ...(el.improper || [])]) {
+    const nd = dotv(n, a.dir);
+    if (Math.abs(nd) < 1e-9) continue;                // parallel: never crosses
+    const t = nc / nd;
+    out.push({ kind: 'point', p: proj([a.dir[0] * t, a.dir[1] * t, a.dir[2] * t]), color: a.css });
+  }
+  for (const m of (el.mirrors || [])) {
+    const u = [m.dir[1] * n[2] - m.dir[2] * n[1],
+               m.dir[2] * n[0] - m.dir[0] * n[2],
+               m.dir[0] * n[1] - m.dir[1] * n[0]];
+    if (Math.hypot(...u) < 1e-9) continue;            // the drawing plane itself
+    const mm = dotv(m.dir, m.dir), mn = dotv(m.dir, n), nn = dotv(n, n);
+    const det = mm * nn - mn * mn;
+    if (Math.abs(det) < 1e-12) continue;
+    const al = -nc * mn / det, be = mm * nc / det;
+    const p0 = [al * m.dir[0] + be * n[0], al * m.dir[1] + be * n[1], al * m.dir[2] + be * n[2]];
+    out.push({ kind: 'line', p: proj(p0),
+               q: proj([p0[0] + u[0], p0[1] + u[1], p0[2] + u[2]]), color: m.css });
+  }
+  diagram.setOverlay(out);
 }
 
 // ------------------------------------------------------------------ build
@@ -672,7 +793,7 @@ async function build(cellsString) {
   state.building = true;
   setStatus('building the plane arrangement…', true);
 
-  const g = state.geometry[state.current.file];
+  const g = state.customPlanes ? null : state.geometry[state.current.file];
   renderer?.resetScale();      // a new arrangement re-frames; edits within one do not
   clearHistory();              // a different arrangement: nothing earlier applies
   const polyM = state.symmetry[state.polySym]?.matrices || state.symmetry.E.matrices;
@@ -680,12 +801,17 @@ async function build(cellsString) {
 
   try {
     const info = await call('build', {
-      geometry: g, matrices: polyM, subMatrices: subM,
+      geometry: g, customPlanes: state.customPlanes || null,
+      matrices: polyM, subMatrices: subM,
       maxIntersection: state.depth >= NO_LIMIT ? -1 : state.depth, maxLayer: 1000,
     }, ({ done, total }) => setStatus(`intersecting plane ${done} of ${total}…`, true, done / total));
 
     state.outline = info.outline;
+    state.diagramFrame = null;       // the old arrangement's frame is meaningless now
     cells.setOutline(info.outline);
+    cells.setLabels(duValLabels());
+    // fix the camera for this whole arrangement — see Renderer3D._camera
+    renderer?.setFrameRadius(info.frameRadius || 0);
     fillFaceSelect(info.faces);
     refreshElements();
     renderLegend();
@@ -712,9 +838,11 @@ async function build(cellsString) {
   } catch (err) {
     setStatus('failed: ' + err.message, false);
     startWorker();
+    return false;
   } finally {
     state.building = false;
   }
+  return true;
 }
 
 async function refresh() {
@@ -725,6 +853,8 @@ async function refresh() {
   state.mesh = mesh;
   renderer?.setMesh(mesh, mesh.faceLayers);
   diagram.setData(dia);
+  state.diagramFrame = dia?.frame || null;
+  refreshDiagramOverlay();
   cells.setSelected(state.selected);
 
   $('#stats').innerHTML =
@@ -778,6 +908,32 @@ function fillFaceSelect(faces) {
     return `<option value="${f.index}"${f.index === state.planeIndex ? ' selected' : ''}>` +
            `${shape} · ${f.count} plane${f.count === 1 ? '' : 's'}</option>`;
   }).join('');
+}
+
+/*
+ * Du Val's letters for the icosahedron — «use Du Val's notation when possible».
+ *
+ * The identification is the derivation in notes/research/r1: the 20-cell orbit
+ * of layer 4 is e₁ and the 60-cell orbit e₂, f₂ is the 12 trapezohedra on the
+ * vertex axes and f₁ the 120 chiral tetrahedra, g₁ the 30 bipyramids on the
+ * edge axes and g₂ the 60. Our orbits sort by ascending primitive count, which
+ * fixes which index is which; the Ef₁ preset on the walkthrough page was
+ * verified against the literature with exactly this correspondence.
+ *
+ * Only the icosahedron has an accepted lettering, so everything else keeps its
+ * indices — inconsistent, and the call made in the review: «убирать легче, чем
+ * добавлять». Valid whenever the orbits are grouped under the full I_h, which
+ * is what the letters name; the sub-cell split below them can be anything.
+ */
+const DU_VAL_U27 = {
+  '0.0': 'a', '1.0': 'b', '2.0': 'c', '3.0': 'd',
+  '4.0': 'e₁', '4.1': 'e₂', '5.0': 'f₂', '5.1': 'f₁',
+  '6.0': 'g₁', '6.1': 'g₂', '7.0': 'h',
+};
+
+function duValLabels() {
+  return (!state.customPlanes && state.current?.file === 'u27' && state.polySym === 'Ih')
+    ? DU_VAL_U27 : null;
 }
 
 /** the key to the bar colours: one swatch per distinct number of congruent pieces */
@@ -852,10 +1008,32 @@ function wireControls() {
   $('#fitView').onclick = () => { renderer?.fit(); setStatus('rescaled to fit', false); };
   $('#homeView').onclick = () => { renderer?.home(); setStatus('canonical orientation', false); };
 
-  for (const id of ['#showAxes', '#showMirrors', '#showImproper']) {
+  for (const id of ['#showAxes', '#showMirrors', '#showImproper', '#showDiagElems']) {
     const el = $(id);
     if (el) el.onchange = refreshElements;
   }
+
+  $('#makePlanes').onclick = () => {
+    $('#planesText').value = seedPlanesText();
+    $('#planesInfo').textContent = '';
+    $('#planesDialog').showModal();
+  };
+  $('#planesSeed').onclick = () => {
+    // re-seed from the current catalog solid. In custom mode there is no solid
+    // to seed from — wiping the sheet (and with it the saved document's source)
+    // would be the only possible outcome, so refuse with a reason instead.
+    if (!state.geometry[state.current?.file]) {
+      $('#planesInfo').textContent = 'nothing to seed from — pick a catalog solid first';
+      return;
+    }
+    state.planesText = null;
+    $('#planesText').value = seedPlanesText();
+    $('#planesInfo').textContent = '';
+  };
+  $('#planesCancel').onclick = () => $('#planesDialog').close();
+  $('#planesBuild').onclick = async () => {
+    if (await buildCustomPlanes($('#planesText').value)) $('#planesDialog').close();
+  };
 
   installSplitters();
 
@@ -870,7 +1048,8 @@ function wireControls() {
   $('#cellsString').onchange = async (e) => {
     try {
       const { selected } = await call('parseCells', { cells: e.target.value });
-          state.selected = new Set(selected);
+      mark();                        // a typed string replaces the whole selection
+      state.selected = new Set(selected);
       refresh();
     } catch (err) { setStatus('could not read that cell string: ' + err.message, false); }
   };
@@ -890,6 +1069,7 @@ function wireControls() {
       showAllFacets: $('#showAllFacets').checked,
       spin: $('#autoRotate').checked,
       view: renderer?.getView() || null,
+      planesText: state.customPlanes ? state.planesText : null,
     }), 'application/json');
   };
   $('#exportStel').onclick = () => download(`${name()}.stel`, writeStel({
@@ -956,6 +1136,102 @@ function wireControls() {
   $('#catalogDialog').addEventListener('cancel', () => { $('#search').value = ''; });
 }
 
+// ------------------------------------------------------------------ make planes
+
+/*
+ * The "make planes" dialog — the original Java program's plane-set editor,
+ * ported. «Задать эти независимо плоскости … к этим плоскостям примени
+ * симметрию OH, а к этим примени симметрию I»: each line is one plane and,
+ * optionally, the group that multiplies it. The engine has been plane-based
+ * from the start; this is the front door the port never had (its absence is
+ * what Vladimir noted in the addendum session — the API could read the files,
+ * «но нету UI для создания»).
+ *
+ * Line format:  nx ny nz d [GROUP]
+ * The seed button fills the sheet from the current solid's own face planes,
+ * which is exactly what the Java dialog used as its starting values.
+ */
+function parsePlaneRows(text) {
+  const rows = [];
+  const errors = [];
+  text.split('\n').forEach((line, li) => {
+    const s = line.replace(/#.*$/, '').trim();
+    if (!s) return;
+    const parts = s.split(/[\s,]+/);
+    const nums = parts.slice(0, 4).map(Number);
+    const group = parts[4] || 'E';
+    if (parts.length < 4 || nums.some(v => !Number.isFinite(v))) {
+      errors.push(`line ${li + 1}: expected "nx ny nz d [group]", got "${s}"`);
+      return;
+    }
+    if (parts[4] && !(state.symmetry[group]?.order > 0)) {
+      errors.push(`line ${li + 1}: no symmetry group named "${group}"`);
+      return;
+    }
+    rows.push({ n: [nums[0], nums[1], nums[2]], d: nums[3], group });
+  });
+  return { rows, errors };
+}
+
+/** each row multiplied by its group — the worker dedupes and counts */
+function expandPlaneRows(rows) {
+  const out = [];
+  for (const r of rows) {
+    const M = state.symmetry[r.group]?.matrices || state.symmetry.E.matrices;
+    for (const m of M) {
+      const [a, b, c, d, e, f, g, h, i] = m.length === 9
+        ? m : [m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]];
+      out.push({
+        n: [a * r.n[0] + b * r.n[1] + c * r.n[2],
+            d * r.n[0] + e * r.n[1] + f * r.n[2],
+            g * r.n[0] + h * r.n[1] + i * r.n[2]],
+        d: r.d,
+      });
+    }
+  }
+  return out;
+}
+
+function seedPlanesText() {
+  if (state.customPlanes && state.planesText) return state.planesText;
+  const g = state.geometry[state.current?.file];
+  if (!g) return '';
+  const planes = facePlanes(toPoly(g));
+  const f = v => (Math.abs(v) < 1e-12 ? 0 : v).toFixed(6);
+  return `# one plane per line: nx ny nz d [group to multiply it by]\n` +
+         `# seeded from ${state.current.name} — ${planes.length} planes\n` +
+         planes.map(p => `${f(p.n.x)} ${f(p.n.y)} ${f(p.n.z)} ${f(p.d)} E`).join('\n');
+}
+
+async function buildCustomPlanes(text) {
+  const { rows, errors } = parsePlaneRows(text);
+  const info = $('#planesInfo');
+  if (errors.length) { info.textContent = errors.slice(0, 3).join(' · '); return false; }
+  if (!rows.length) { info.textContent = 'no planes yet — one per line: nx ny nz d [group]'; return false; }
+  const expanded = expandPlaneRows(rows);
+  info.textContent = '';
+  const prev = { planesText: state.planesText, customPlanes: state.customPlanes, current: state.current };
+  state.planesText = text;
+  state.customPlanes = expanded;
+  state.current = { file: 'custom', name: `custom planes (${rows.length} rows → ${expanded.length})`, symmetry: null };
+  $('#pickName').textContent = 'custom planes';
+  $('#pickThumb').removeAttribute('src');
+  syncSymmetrySelects();
+  const ok = await build();
+  if (!ok) {
+    // a failed build must not leave the app claiming to BE the failed sheet —
+    // keep the dialog open with the reason, and put the state back
+    info.textContent = $('#status').textContent;
+    Object.assign(state, prev);
+    if (state.current) {
+      $('#pickName').textContent = state.current.name;
+      if (state.current.file !== 'custom') $('#pickThumb').src = `img/poly/${state.current.file}_tmb.gif`;
+    }
+    syncSymmetrySelects();
+  }
+  return ok;
+}
+
 // ------------------------------------------------------------------ theme
 
 function cycleTheme() {
@@ -994,6 +1270,31 @@ async function openDocument(text, filename = '') {
     doc = readDocument(text);
   } catch (err) {
     setStatus(`could not read ${filename || 'that file'}: ${err.message}`, false);
+    return;
+  }
+
+  // a make-planes document rebuilds from its own plane sheet, no catalog item
+  if (doc.planesText) {
+    if (doc.polySymmetry) state.polySym = doc.polySymmetry;
+    if (doc.stellSymmetry) state.stellSym = doc.stellSymmetry;
+    if (doc.planeDepth != null) setDepth(doc.planeDepth, false);
+    // the display settings save the same way for custom documents as for
+    // catalog ones, so they restore the same way too
+    state.planeIndex = doc.diagramFace || 0;
+    if (doc.source === 'json') {
+      for (const [id, val] of [['#showEdges', doc.showEdges], ['#showAllFacets', doc.showAllFacets], ['#autoRotate', doc.spin]]) {
+        $(id).checked = !!val;
+        $(id).dispatchEvent(new Event('change'));
+      }
+    }
+    const ok = await buildCustomPlanes(doc.planesText);
+    if (ok && doc.cells) {
+      const { selected } = await call('parseCells', { cells: doc.cells });
+      state.selected = new Set(selected);
+      await refresh();
+    }
+    if (ok && doc.view) renderer?.setView(doc.view);
+    setStatus(ok ? `opened ${doc.name || filename} (custom planes)` : 'could not build that plane sheet', false);
     return;
   }
 

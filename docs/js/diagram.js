@@ -54,7 +54,10 @@ export class DiagramView {
       }
       const i = this.hitTest(e);
       const m = mods(e);
-      const act = m.shift ? 'add' : m.ctrl ? 'remove' : null;
+      // both diagram gestures are toggles — of the cell beneath this region and
+      // of the one resting on it — so they get their own colours, not the 3-D
+      // view's add-green and remove-red
+      const act = m.shift ? 'below' : m.ctrl ? 'above' : null;
       if (i !== this.hover || act !== this.hoverAction) {
         this.hover = i;
         this.hoverAction = act;
@@ -71,7 +74,7 @@ export class DiagramView {
      */
     const replay = (e) => {
       if (!this._last || down) return;
-      const act = e.shiftKey ? 'add' : (e.ctrlKey || e.metaKey || e.altKey) ? 'remove' : null;
+      const act = e.shiftKey ? 'below' : (e.ctrlKey || e.metaKey || e.altKey) ? 'above' : null;
       if (act === this.hoverAction) return;
       this.hoverAction = act;
       this.draw();
@@ -114,8 +117,11 @@ export class DiagramView {
       e.preventDefault();
       down = null;
       if (!e.ctrlKey) return;
+      // shift wins even here, matching the hover colour: a macOS ctrl+shift-click
+      // arrives as this event but the user meant the shift gesture
       const i = this.hitTest(e);
-      if (i >= 0) this.onToggle?.(this.data.facets[i], { shift: false, ctrl: true });
+      if (i >= 0) this.onToggle?.(this.data.facets[i],
+        e.shiftKey ? { shift: true, ctrl: false } : { shift: false, ctrl: true });
     });
 
     canvas.addEventListener('wheel', (e) => {
@@ -141,6 +147,12 @@ export class DiagramView {
     this.data = data;
     this.hover = -1;
     if (changedPlane) this.resetView(); else this.draw();
+  }
+
+  /** symmetry-element marks: [{kind:'point'|'line', p:[x,y], q?, color}] or null */
+  setOverlay(overlay) {
+    this.overlay = overlay;
+    this.draw();
   }
 
   resetView() {
@@ -290,9 +302,18 @@ export class DiagramView {
       ctx.fill();
     }
 
-    // 3. the plane traces — every facet outline drawn thin
-    ctx.strokeStyle = dark ? 'rgba(190,205,235,0.45)' : 'rgba(20,25,40,0.42)';
-    ctx.lineWidth = Math.max(0.6, f.dpr * 0.6);
+    /*
+     * 3. the plane traces — every facet outline drawn thin.
+     *
+     * Zoomed far out the traces crowd to within a pixel of each other and the
+     * bundle shimmers («aliasing … want no aliasing»). There is no extra
+     * resolution to be had at that scale, so shed weight instead: below 1×
+     * zoom the strokes thin and fade with the zoom, which is what the same
+     * drawing printed small would do.
+     */
+    const crowd = Math.min(1, Math.max(0.3, this.zoom));
+    ctx.strokeStyle = dark ? `rgba(190,205,235,${0.45 * crowd})` : `rgba(20,25,40,${0.42 * crowd})`;
+    ctx.lineWidth = Math.max(0.5, f.dpr * 0.6 * crowd);
     for (const facet of facets) { this._path(ctx, facet.poly, f); ctx.stroke(); }
 
     // 4. selected outlines, heavier — dashed where the face looks inward
@@ -308,6 +329,46 @@ export class DiagramView {
       ctx.stroke();
     }
     ctx.setLineDash([]);
+
+    /*
+     * 4½. the symmetry elements, where they meet this plane.
+     *
+     * The Java original draws these on its diagram: the point where each
+     * rotation axis pierces the drawing plane, and the line where each mirror
+     * plane crosses it — «на двумерной диаграмме рисует точки пересечения,
+     * куда выходят оси симметрии и плоскости симметрии». Colours match the
+     * 3-D view's, so the dot on the diagram and the cylinder in the solid
+     * read as the same object.
+     */
+    if (this.overlay) {
+      for (const el of this.overlay) {
+        if (el.kind === 'line') {
+          const x1 = f.cx + el.p[0] * f.scale, y1 = f.cy - el.p[1] * f.scale;
+          const x2 = f.cx + el.q[0] * f.scale, y2 = f.cy - el.q[1] * f.scale;
+          let dx = x2 - x1, dy = y2 - y1;
+          const L = Math.hypot(dx, dy) || 1;
+          dx /= L; dy /= L;
+          const R = Math.hypot(f.w, f.h);
+          ctx.strokeStyle = el.color;
+          ctx.lineWidth = Math.max(1.1, f.dpr * 1.1);
+          ctx.setLineDash([7 * f.dpr, 5 * f.dpr]);
+          ctx.beginPath();
+          ctx.moveTo(x1 - dx * R, y1 - dy * R);
+          ctx.lineTo(x1 + dx * R, y1 + dy * R);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        } else {
+          const x = f.cx + el.p[0] * f.scale, y = f.cy - el.p[1] * f.scale;
+          ctx.beginPath();
+          ctx.arc(x, y, 4.2 * f.dpr, 0, Math.PI * 2);
+          ctx.fillStyle = el.color;
+          ctx.fill();
+          ctx.lineWidth = 1.4 * f.dpr;
+          ctx.strokeStyle = dark ? '#0e1014' : '#ffffff';
+          ctx.stroke();
+        }
+      }
+    }
 
     /*
      * 5. hover highlight, coloured by what a click would do.

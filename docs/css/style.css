@@ -573,3 +573,23 @@ main { grid-template-columns: minmax(0, 1fr) 6px var(--panel-w, 322px); }
 .buttons button.icon { width: 26px; padding: 4px 0; text-align: center; }
 .buttons button:disabled { opacity: 0.35; cursor: default; }
 .buttons button:disabled:hover { border-color: var(--line); color: inherit; }
+
+/* the diagram's two toggle colours — gold beneath the plane, blue above */
+:root { --below: #b98d10; --above: #2f7cc9; }
+:root[data-theme="dark"] { --below: #f5d24d; --above: #4da3f5; }
+.below { color: var(--below); }
+.above { color: var(--above); }
+
+/* element checkboxes grey out when the group has none of that kind */
+.sym-elems .check.off { opacity: 0.4; }
+.elem-legend { margin-top: 4px; }
+.elem-legend:empty { display: none; }
+
+/* the make-planes sheet */
+#planesDialog { width: min(560px, 92vw); }
+#planesDialog textarea {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+  font-size: 12px; line-height: 1.5;
+}

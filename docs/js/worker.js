@@ -9,7 +9,7 @@
 
 import {
   buildStellation, extractMesh, parseCells, formatCells, selectedSubCells,
-  createDiagram, selKey, subCellForFacet, diagramFaces,
+  createDiagram, selKey, subCellForFacet, cellsAcrossFacet, diagramFaces,
 } from './core.js';
 
 let stel = null;
@@ -78,15 +78,26 @@ function diagramFor(planeIndex, selected) {
   return {
     planeIndex: d.planeIndex,
     extent: d.extent,
+    frame: d.frame,                // projection basis, for the element overlay
     facets: d.facets.map(f => {
       const sc = subCellForFacet(f.facet);
+      /*
+       * Every region of the diagram sits between two three-dimensional cells:
+       * the one it caps (below the plane, toward the centre) and the one that
+       * rests on it (above). The two references let a click mean "toggle the
+       * cell under this region" or "toggle the one on top of it" — which is how
+       * the Java original works, and what the 6 August night session asked for.
+       */
+      const across = cellsAcrossFacet(f.facet);
+      const key = s => s ? [s.layer, s.cellIndex, s.index] : null;
       return {
         poly: f.poly,
         layer: f.layer,
         selected: f.selected,
         facing: f.facing,          // 1 outward, 0 inward (lines a cavity)
-        // which sub-cell a click here should toggle
-        ref: sc ? [sc.layer, sc.cellIndex, sc.index] : null,
+        ref: sc ? key(sc) : null,
+        refBelow: key(across.below),
+        refAbove: key(across.above),
       };
     }),
   };
@@ -101,14 +112,21 @@ self.onmessage = (e) => {
     switch (type) {
 
       case 'build': {
-        const { geometry, matrices, subMatrices, maxIntersection, maxLayer } = payload;
+        const { geometry, customPlanes, matrices, subMatrices, maxIntersection, maxLayer } = payload;
         const t0 = performance.now();
-        stel = buildStellation(toPoly(geometry), matrices, {
+        // "make planes": an explicit plane list replaces the polyhedron entirely
+        stel = buildStellation(customPlanes ? null : toPoly(geometry), matrices, {
+          planes: customPlanes || null,
           subMatrices, maxIntersection, maxLayer,
           onProgress: (done, total) =>
             self.postMessage({ id, progress: { done, total } }),
         });
         meta = { ms: performance.now() - t0 };
+        if (!stel.planes.length) {
+          const c = stel.planes.central || 0;
+          throw new Error('no usable planes' +
+            (c ? ` — all ${c} pass through the centre, which this representation cannot hold` : ''));
+        }
         reply({
           planes: stel.planes.length,
           /*
@@ -125,6 +143,8 @@ self.onmessage = (e) => {
           planesDuplicate: stel.planes.duplicate ?? 0,
           // the inequivalent faces to offer as diagram planes
           faces: diagramFaces(stel, subMatrices || matrices),
+          // the buildable arrangement's radius — what the camera should frame
+          frameRadius: stel.frameRadius,
           layers: stel.cellLayers.length,
           vertices: stel.pool.size,
           facets: stel.arrangement.reduce((s, a) => s + a.length, 0),

@@ -11,10 +11,10 @@
  * for one particular number of congruent pieces, so cells that are the "same
  * kind of thing" read alike at a glance across the whole table.
  *
- * Mouse, as in the original:
+ * Mouse:
  *   click              toggle this cell (a header toggles all its sub-cells)
- *   shift-click        add it AND everything holding it up
- *   ctrl / cmd-click   remove it and its supporting set
+ *   modifier + click   toggle it together with its whole supporting set —
+ *                      the group operation, which lives in this table only
  *   click layer number act on the whole layer
  */
 
@@ -39,8 +39,6 @@ const SUB_H    = 20;
 const TWISTY_W = 19;   // the expand/collapse arrow beside a group
 const FONT = (px, weight = 600) =>
   `${weight} ${px}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
-
-import { ACTION } from './render3d.js';
 
 export class CellsPanel {
   constructor(canvas, { onChange, onHover, onBeforeChange } = {}) {
@@ -72,7 +70,9 @@ export class CellsPanel {
       this._lastMove = e;
       const h = this.hitTest(e);
       const m = modifiersOf(e);
-      const act = m.shift ? 'add' : m.ctrl ? 'remove' : null;
+      // one modifier here, and it means the group toggle — not add, not remove,
+      // so it gets the accent rather than the 3-D view's green and red
+      const act = (m.shift || m.ctrl) ? 'group' : null;
       const same = (a, b) => a === b || (a && b && a.key === b.key && a.kind === b.kind);
       if (!same(h, this.hover) || act !== this.hoverAction) {
         this.hover = h;
@@ -99,16 +99,25 @@ export class CellsPanel {
     };
     canvas.addEventListener('pointerdown', (e) => {
       if (e.button === 2) return;
-      down = { x: e.clientX, y: e.clientY, sx: this.scrollX, sy: this.scroll };
+      // grabbing a scrollbar thumb scrolls; anywhere else pans as before
+      const r = canvas.getBoundingClientRect();
+      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const inBar = (bar) => bar && px >= bar.tx && px <= bar.tx + bar.tw &&
+                             py >= bar.y - 3 && py <= bar.y + bar.h + 3;
+      const inVBar = (bar) => bar && py >= bar.ty && py <= bar.ty + bar.th &&
+                              px >= bar.x - 3 && px <= bar.x + bar.w + 3;
+      const mode = inBar(this._hbar) ? 'h' : inVBar(this._vbar) ? 'v' : null;
+      down = { x: e.clientX, y: e.clientY, sx: this.scrollX, sy: this.scroll, mode };
       moved = 0;
       capture(e, true);
     });
     canvas.addEventListener('pointerup', (e) => {
       if (!down) return;
       const wasDrag = moved > 3;
+      const onBar = !!down.mode;
       down = null;
       capture(e, false);
-      if (wasDrag) return;
+      if (wasDrag || onBar) return;      // a scrollbar press never toggles a cell
       const h = this.hitTest(e);
       if (h) this.apply(h, modifiersOf(e));
     });
@@ -119,20 +128,31 @@ export class CellsPanel {
       const dx = e.clientX - down.x, dy = e.clientY - down.y;
       moved = Math.max(moved, Math.hypot(dx, dy));
       if (moved <= 3) return true;
-      this.scrollX = down.sx - dx;
-      this.scroll = down.sy - dy;
+      if (down.mode === 'h') {
+        // dragging the thumb: content moves by the track-to-content ratio
+        const k = this.contentWidth / this.canvas.clientWidth;
+        this.scrollX = down.sx + dx * k;
+      } else if (down.mode === 'v') {
+        const k = this.contentHeight / this.canvas.clientHeight;
+        this.scroll = down.sy + dy * k;
+      } else {
+        this.scrollX = down.sx - dx;
+        this.scroll = down.sy - dy;
+      }
       this._clampScroll();
-      canvas.style.cursor = 'grabbing';
+      canvas.style.cursor = down.mode ? 'default' : 'grabbing';
       this.draw();
       return true;
     };
     // macOS turns ctrl-click into the secondary click, so the page is handed a
-    // contextmenu event and never a ctrl-click. Take that event as "carve", the
-    // same as a right-click, which is what a user reaching for ctrl meant.
+    // contextmenu event and never a ctrl-click. The event still carries ctrlKey,
+    // which is how it is told apart from a real right-click — the ctrl case does
+    // the group toggle, a genuine right-click does nothing, as documented.
     canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
+      if (!e.ctrlKey) return;
       const h = this.hitTest(e);
-      if (h) this.apply(h, { shift: e.shiftKey, ctrl: !e.shiftKey });
+      if (h) this.apply(h, { shift: false, ctrl: true });
     });
     canvas.addEventListener('wheel', (e) => {
       const overY = this.contentHeight - canvas.clientHeight;
@@ -150,8 +170,7 @@ export class CellsPanel {
     // keys, so the green never outlives the shift that produced it
     const replay = (e) => {
       if (!this._lastMove) return;
-      const act = e.shiftKey ? 'add'
-                : (e.ctrlKey || e.metaKey || e.altKey) ? 'remove' : null;
+      const act = (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) ? 'group' : null;
       if (act === this.hoverAction) return;
       this.hoverAction = act;
       this.draw();
@@ -171,7 +190,10 @@ export class CellsPanel {
    */
   setOutline(outline) {
     this.outline = outline;
+    // both axes, or coming back from a wide table leaves a narrow one scrolled
+    // out of sight — «should scroll to left automatically, otherwise cuts off»
     this.scroll = 0;
+    this.scrollX = 0;
     this.palette = buildPalette(outline);
     this.byKey = new Map();
     for (const layer of outline)
@@ -197,6 +219,9 @@ export class CellsPanel {
   }
 
   setSelected(selected) { this.selected = selected; this.draw(); }
+
+  /** optional display names for cells — { "layer.cell": "e₁", … } or null */
+  setLabels(labels) { this.labels = labels; this.draw(); }
 
   /** what each bar colour means: one entry per distinct piece-count */
   legend() { return this.palette?.entries ?? []; }
@@ -242,14 +267,18 @@ export class CellsPanel {
 
     if (mod.shift || mod.ctrl) {
       /*
-       * Both gestures walk the same way — inward, to the cells holding this one
-       * up — so that ctrl undoes a shift exactly. Reaching outward for the
-       * carve reads as the natural opposite, but then the pair does not cancel:
-       * what disappears depends on what was already standing above.
+       * The group operation, and this table is the only place it lives — «в
+       * трёхмерном вью она только одну ячейку должна; multiple cell operation
+       * only in cell view». One modifier, and it is a TOGGLE of the whole
+       * supporting set: a lit cell goes out together with everything holding it
+       * up, an unlit one comes on the same way, and pressing again reverses it —
+       * «Control всё вниз убрали; ещё раз нажали — Control всё вниз добавили».
+       * shift and ctrl both mean it, so there is nothing to mis-remember.
        */
+      const on = keys.every(k => sel.has(k));
       const all = new Set();
       for (const k of keys) for (const s of this.supportKeys(k)) all.add(s);
-      for (const k of all) mod.shift ? sel.add(k) : sel.delete(k);
+      for (const k of all) on ? sel.delete(k) : sel.add(k);
     } else {
       const anyOff = keys.some(k => !sel.has(k));
       for (const k of keys) anyOff ? sel.add(k) : sel.delete(k);
@@ -373,11 +402,8 @@ export class CellsPanel {
         const some = any && b.layer.cells.some(c => c.subCells.some(s => sel.has(`${L}.${c.index}.${s.index}`)));
 
         if (hoverKey === `L${L}`) {
-          const act = ACTION[this.hoverAction];
           roundRect(ctx, b.x, b.y, b.w, b.h, 7);
-          ctx.fillStyle = act
-            ? `rgba(${act.rgb.map(v => Math.round(v * 255)).join(',')},0.26)`
-            : S.rowHover;
+          ctx.fillStyle = this.hoverAction === 'group' ? S.accentFaint : S.rowHover;
           ctx.fill();
         }
         ctx.fillStyle = on ? S.accent : some ? S.accentSoft : S.line;
@@ -445,21 +471,16 @@ export class CellsPanel {
         : sel.has(key);
       const part = isHeader && !on && b.cell.subCells.some(s => sel.has(`${L}.${b.cell.index}.${s.index}`));
 
-      // box. A hovered box is outlined in the colour of what a click would do:
-      // green to add, red to carve, the accent when a bare click just toggles.
-      const act = hovered ? ACTION[this.hoverAction] : null;
+      // box. Everything here is a toggle, so the hover stays in the accent —
+      // green and red belong to the 3-D view, where they mean add and remove.
+      // A modifier (the group toggle) draws the heavier double-weight outline.
+      const group = hovered && this.hoverAction === 'group';
       roundRect(ctx, b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1, 7);
       ctx.fillStyle = on ? S.accent : part ? S.accentFaint : S.boxFill;
       ctx.fill();
-      if (act) {
-        const rgb = act.rgb.map(v => Math.round(v * 255)).join(',');
-        ctx.fillStyle = `rgba(${rgb},0.30)`;
-        ctx.fill();
-        ctx.strokeStyle = `rgb(${rgb})`;
-      } else {
-        ctx.strokeStyle = hovered || on ? S.accent : S.boxLine;
-      }
-      ctx.lineWidth = hovered ? 2 : 1;
+      if (group) { ctx.fillStyle = S.accentFaint; ctx.fill(); }
+      ctx.strokeStyle = hovered || on ? S.accent : S.boxLine;
+      ctx.lineWidth = group ? 2.4 : hovered ? 1.8 : 1;
       ctx.stroke();
 
       // the colour bar, in its own lane at the foot of the box — never under the digit
@@ -471,13 +492,49 @@ export class CellsPanel {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // the digit, centred in the space above the bar
-      const label = String(isHeader ? b.cell.index : b.sub.index);
+      /*
+       * The digit, centred in the space above the bar.
+       *
+       * A single-sub-cell box shows its CELL index, not its sub-cell index —
+       * the sub index is always 0 for such a box, so every plain box in a row
+       * used to read "0" («everything is 0's, but it should be 0, 1, etc»).
+       * Only the small boxes inside an opened group show sub indices, where
+       * they mean something. Du Val letters take over where we know them.
+       */
+      const label = b.kind === 'sub'
+        ? String(b.sub.index)
+        : (this.labels?.[`${L}.${b.cell.index}`] || String(b.cell.index));
       ctx.fillStyle = on ? S.onText : S.text;
       ctx.font = FONT(isHeader || b.kind === 'cell' ? 14 : 12, isHeader || b.kind === 'cell' ? 640 : 480);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(label, b.x + b.w / 2, b.y + (b.h - BAR_LIFT - BAR_H) / 2 + 1);
     });
+
+    /*
+     * Scrollbars, drawn only when there is somewhere to go.
+     *
+     * The table already pans by drag and by wheel, but nothing on screen said
+     * so — «было не очевидно, что её можно тащить … добавить в Cell View
+     * scroll bar». The thumbs are draggable; their size is the visible
+     * fraction, as a scrollbar's should be.
+     */
+    const cw = this.canvas.clientWidth, ch = this.canvas.clientHeight;
+    this._hbar = this._vbar = null;
+    ctx.fillStyle = S.faint;
+    if ((this.contentWidth || 0) > cw + 1) {
+      const track = cw - 10, y = ch - 7;
+      const tw = Math.max(24, track * cw / this.contentWidth);
+      const tx = 5 + (track - tw) * (this.scrollX / Math.max(1, this.contentWidth - cw));
+      roundRect(ctx, tx, y, tw, 4, 2); ctx.fill();
+      this._hbar = { tx, y, tw, h: 4 };
+    }
+    if ((this.contentHeight || 0) > ch + 1) {
+      const track = ch - 10, x = cw - 7;
+      const th = Math.max(24, track * ch / this.contentHeight);
+      const ty = 5 + (track - th) * (this.scroll / Math.max(1, this.contentHeight - ch));
+      roundRect(ctx, x, ty, 4, th, 2); ctx.fill();
+      this._vbar = { x, ty, w: 4, th };
+    }
   }
 
   /** the info line the original shows while hovering */
@@ -505,10 +562,11 @@ export class CellsPanel {
 }
 
 /**
- * "Carve" has to be reachable on every platform. ctrl is the obvious key but on
- * macOS it is the secondary-click gesture and never arrives, so alt/option and
- * cmd both mean the same thing, and a right-click does too (see the contextmenu
- * handlers). shift always wins, so shift-alt is still "add".
+ * The modifier has to be reachable on every platform. ctrl is the obvious key
+ * but on macOS ctrl-click is the secondary-click gesture and arrives only as a
+ * contextmenu event (handled above, told apart from a real right-click by the
+ * ctrlKey it carries); alt/option and cmd mean the same thing. A genuine
+ * right-click does nothing, as documented.
  */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();

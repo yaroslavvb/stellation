@@ -34,44 +34,57 @@
 
   <h1>Controls &amp; views</h1>
   <p class="standfirst">
-    There are three views of the same thing, and two gestures. The gestures mean the
-    same in every view, so there is nothing to remember per pane.
+    Three views of one selection, and each view works at its own scale: the solid
+    adds and removes one cell, the diagram toggles the cell on either side of its
+    plane, and the Cells table — only the Cells table — moves whole supporting sets.
   </p>
 
   <!-- ══════════════════════════════════════════════ -->
   <section id="gestures">
-    <h2>The two gestures</h2>
+    <h2>The gestures, per view</h2>
 
     <table class="keys-table">
       <thead>
-        <tr><th>Gesture</th><th>Does</th></tr>
+        <tr><th>View</th><th><kbd>shift</kbd> + click</th><th><kbd class="kSub">ctrl</kbd> + click</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td><kbd>shift</kbd> + click</td>
-          <td><b>Add</b> this cell, and everything holding it up. The result always
-            rests on the core, so it is a solid you could actually build.</td>
+          <td><b>solid</b></td>
+          <td><b class="add">Add</b> the one cell sitting on the clicked face.</td>
+          <td><b class="rem">Remove</b> the one cell behind it.</td>
         </tr>
         <tr>
-          <td><kbd class="kSub">ctrl</kbd> + click</td>
-          <td><b>Remove</b> this cell, and everything resting on it. Nothing is ever
-            left floating.</td>
+          <td><b>diagram</b></td>
+          <td><b class="below">Toggle</b> the cell beneath the plane — the one this
+            region caps.</td>
+          <td><b class="above">Toggle</b> the cell resting on it, above the plane.</td>
+        </tr>
+        <tr>
+          <td><b>Cells table</b></td>
+          <td colspan="2">Either modifier: <b>toggle the box together with its whole
+            supporting set</b> — on if it was off, down to the core; off if it was on.
+            A bare click toggles just the box.</td>
         </tr>
       </tbody>
     </table>
 
     <p>
-      The two are inverses: <kbd>shift</kbd> then <kbd class="kSub">ctrl</kbd> on the
-      same spot puts you back where you started. Neither ever toggles — shift always
-      adds and ctrl always removes, whatever the cell was doing before.
+      Why the difference: in the two graphical views you are pointing at a
+      <em>place</em>, and the natural unit there is the single cell on one side of
+      it. The group operation — a cell with everything supporting it — needs the
+      table, where the support structure is actually visible. The colours say which
+      is which: <b class="add">green adds</b> and <b class="rem">red removes</b> in
+      the solid; the diagram's toggles are <b class="below">gold for beneath</b> and
+      <b class="above">blue for above</b>, because there a click is a toggle, not an
+      add or a remove.
     </p>
 
     <aside class="note-box" id="platform">
-      <b>Windows, Linux and macOS.</b> <kbd>ctrl</kbd>-click is the remove gesture on
-      all of them. On macOS ctrl-click is also the system's secondary click, so the
-      page receives it as a context-menu event rather than as a click; that case is
-      handled, and <kbd>⌥ option</kbd>-click does the same job if you prefer it.
-      A plain right-click does nothing, deliberately.
+      <b>Windows, Linux and macOS.</b> <kbd>ctrl</kbd>-click works on all of them. On
+      macOS ctrl-click is also the system's secondary click, so the page receives it
+      as a context-menu event rather than as a click; that case is handled, and
+      <kbd>⌥ option</kbd>-click does the same job if you prefer it. A plain
+      right-click does nothing, deliberately.
       <span id="youAreOn" class="you"></span>
     </aside>
   </section>
@@ -91,13 +104,13 @@
         <ul>
           <li><b>drag</b> — turn it</li>
           <li><b>scroll</b> — zoom</li>
-          <li><kbd>shift</kbd>-click a face — add the cell just outside it</li>
-          <li><kbd class="kSub">ctrl</kbd>-click a face — remove the cell just inside it</li>
+          <li><kbd>shift</kbd>-click a face — <b class="add">add</b> the cell just outside it</li>
+          <li><kbd class="kSub">ctrl</kbd>-click a face — <b class="rem">remove</b> the cell just inside it</li>
         </ul>
         <p class="tip">
           You are always pointing at a <em>face</em>, which has a cell on each side.
-          Shift takes the one further out, ctrl the one further in — so you grow and
-          carve at the surface you can see.
+          Shift takes the one further out, ctrl the one further in — one cell at a
+          time, so you grow and carve exactly at the surface you can see.
         </p>
       </article>
 
@@ -108,7 +121,8 @@
           <li><b>drag</b> — pan</li>
           <li><b>scroll</b> — zoom about the pointer</li>
           <li><b>double-click</b> — reset the view</li>
-          <li><kbd>shift</kbd> / <kbd class="kSub">ctrl</kbd>-click a region — as above</li>
+          <li><kbd>shift</kbd>-click a region — <b class="below">toggle the cell beneath it</b></li>
+          <li><kbd class="kSub">ctrl</kbd>-click — <b class="above">toggle the cell on top of it</b></li>
         </ul>
         <p class="tip">
           This is the classic stellation diagram, and it draws the <em>surface</em> of
@@ -122,10 +136,11 @@
         <h3>3 · The Cells table</h3>
         <p class="what">Every cell there is, whether or not you can see it.</p>
         <ul>
-          <li><b>click</b> — toggle one cell (this view only)</li>
+          <li><b>click</b> — toggle one cell</li>
           <li><b>click a row number</b> — the whole layer</li>
-          <li><b>drag</b> — scroll, when a row runs wide</li>
-          <li><kbd>shift</kbd> / <kbd class="kSub">ctrl</kbd>-click a box — as above</li>
+          <li><b>drag, wheel or the scrollbars</b> — move about a wide table</li>
+          <li><kbd class="kSub">ctrl</kbd>-click a box — toggle it <b>with its whole
+            supporting set</b> (this view only)</li>
         </ul>
         <p class="tip">
           Rows are shells with the core at the bottom, each built on the one below.
@@ -169,8 +184,22 @@
         <kbd>shift</kbd>-click reports nothing further out.</dd>
 
       <dt>diagram face</dt>
-      <dd>Which face's plane the diagram is drawn on. Solids with more than one kind
-        of face have a different diagram for each.</dd>
+      <dd>Which face's plane the diagram is drawn on. Only faces the chosen symmetry
+        cannot carry onto one another are listed — the rest would give the same
+        picture.</dd>
+
+      <dt>symmetry elements</dt>
+      <dd>The group's rotation axes, mirror planes and rotoreflection axes, drawn as
+        solid geometry through the origin so the stellation hides what is behind
+        them. Inequivalent elements get different colours; the legend names each
+        class, and <em>mark on the diagram</em> shows where the same elements meet
+        the diagram's plane.</dd>
+
+      <dt>Make planes…</dt>
+      <dd>Stellate an arbitrary set of planes instead of a catalog solid — the
+        original program's plane editor. One plane per line, each optionally
+        multiplied by a symmetry group; the sheet can be seeded from the current
+        solid's own face planes, and saves into the JSON document.</dd>
     </dl>
   </section>
 

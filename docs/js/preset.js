@@ -46,7 +46,7 @@ export function writePreset({
   name, polyhedron, file, polySymmetry, stellSymmetry,
   planeDepth, cells, diagramFace,
   showEdges = true, showAllFacets = true, spin = false,
-  view = null,
+  view = null, planesText = null,
   exportLengthUnit = 0.01,
 }) {
   return JSON.stringify({
@@ -66,6 +66,9 @@ export function writePreset({
        */
       display: { diagramFace, showEdges, showAllFacets, spin },
       camera: view ? { view } : undefined,
+      // the make-planes sheet, verbatim: the source of a custom arrangement is
+      // the text the user wrote, so that is what round-trips
+      planes: planesText ? { text: planesText } : undefined,
       export: { lengthUnit: exportLengthUnit },
     },
   }, null, 4) + '\n';
@@ -129,6 +132,7 @@ export function readPreset(doc) {
     showAllFacets: p.display?.showAllFacets ?? true,
     spin: p.display?.spin ?? false,
     view: Array.isArray(p.camera?.view) ? p.camera.view : null,
+    planesText: typeof p.planes?.text === 'string' ? p.planes.text : null,
     exportLengthUnit: p.export?.lengthUnit ?? 0.01,
   };
 }
