@@ -33,17 +33,40 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 ---
 
+## The short answer
+
+```bash
+cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect
+/opt/homebrew/opt/openjdk@11/bin/java -jar stellation-latest.jar
+```
+
+That is a fresh build of the newest source with the drag fix in it, packaged
+with the geometry so it needs nothing else. Everything below explains why the
+*shipped* jar needs more care.
+
+---
+
 ## 1. Run the shipped jar
+
+**`stellation.jar` does not contain the polyhedron geometry.** It carries the
+304 thumbnail GIFs but **zero** `.off` files — all 150 of those live in
+`resources/images/off/`, which was never packaged. `StellationMain` asks the
+classpath for `/images/off/u27.off`, gets nothing, and comes up with
+`faces: 0, vertices: 0` and an empty 3-D view. So `java -jar stellation.jar`
+alone does not work, and never did:
 
 ```bash
 cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect/fork
-/opt/homebrew/opt/openjdk/bin/java -jar stellation.jar
+/opt/homebrew/opt/openjdk/bin/java -cp "stellation.jar:resources" PVS.polyhedra.stellation.Main
 ```
 
+`resources` on the classpath is the missing piece.
+
 It prints a `usage:` block and a page of symmetry matrices to the terminal before
-the window appears — that is normal chatter, not an error. The jar is
-self-contained: all 304 polyhedron thumbnails are inside it, so it does not
-matter what directory you launch from.
+the window appears — that is normal chatter, not an error.
+
+The 3-D view starts **blank** until you press **Fit** once. That is the app's own
+behaviour, not a fault.
 
 It also takes arguments if you want to skip the picker:
 
@@ -90,8 +113,9 @@ find src/main/java src/ui/java -name '*.java' > /tmp/stel-srcs.txt
 "$J/bin/java" -cp "$OUT" pvs.polyhedra.stellation.ui.StellationMain
 ```
 
-Already done once, and packaged as **`stellation-latest.jar`** in the repository
-root (outside the `fork/` checkout, so it does not show up as untracked):
+Already done, and packaged as **`stellation-latest.jar`** in the repository root
+(outside the `fork/` checkout, so it does not show up as untracked). Unlike the
+shipped jar this one has the geometry inside it, so it needs no classpath:
 
 ```bash
 cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect
@@ -101,9 +125,31 @@ cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect
 Rebuild it with:
 
 ```bash
+cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect/fork
+J=/opt/homebrew/opt/openjdk@11
+OUT=/tmp/stel-classes && rm -rf $OUT && mkdir -p $OUT
+find src/main/java src/ui/java -name '*.java' > /tmp/srcs.txt
+$J/bin/javac -nowarn -d $OUT @/tmp/srcs.txt
+cp -R resources/images "$OUT/"          # the .off geometry AND the thumbnails
 printf 'Main-Class: pvs.polyhedra.stellation.ui.StellationMain\n' > /tmp/stel.mf
-/opt/homebrew/opt/openjdk@11/bin/jar -cfm stellation-latest.jar /tmp/stel.mf -C /tmp/stel-classes .
+$J/bin/jar -cfm ../stellation-latest.jar /tmp/stel.mf -C $OUT .
 ```
+
+### The drag fix
+
+The newest source now also contains the fix for the solid vanishing while you
+drag it. Regression test:
+
+```bash
+cd ~/Library/CloudStorage/Dropbox/git0/stellation-resurrect/fork
+J=/opt/homebrew/opt/openjdk@11
+OUT=/tmp/stel-test && rm -rf $OUT && mkdir -p $OUT
+$J/bin/javac -nowarn -d $OUT $(find src/main/java src/ui/java src/test/java/pvs/g3d/ui -name '*.java')
+$J/bin/java -cp "$OUT:resources" pvs.g3d.ui.DragProbe
+```
+
+It should print `PASS`. Against the unfixed source it prints `FAIL: view matrix
+destroyed`. See `notes/java-drag-fix.md`.
 
 **Ignore `pom.xml`.** It is configured for JSweet — Vladimir's own Java→TypeScript
 transpiler experiment — not for building the desktop app, and its
